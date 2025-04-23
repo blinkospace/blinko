@@ -1,6 +1,4 @@
 # docker-compose.dev.yml
-version: '3'
-
 networks:
   blinko-network:
     driver: bridge

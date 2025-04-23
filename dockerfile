@@ -1,5 +1,9 @@
+# ---------------------
+# Builder Stage
+# ---------------------
 FROM node:22-alpine AS builder
 
+# Install build dependencies
 RUN apk add --no-cache \
     python3 \
     python3-dev \
@@ -15,8 +19,10 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-ENV NEXT_PRIVATE_STANDALONE=true
+# Optional: flag for using mirror registry
+ARG USE_MIRROR
 
+# Copy package info and install deps
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma
 
@@ -28,25 +34,35 @@ RUN npm install -g pnpm@9.12.2 && \
     fi && \
     pnpm install
 
-
+# Generate Prisma client
 RUN npx prisma generate
 
+# Copy the rest of the source
 COPY . .
+
+# Build the Next.js app and seed data
 RUN pnpm build
 RUN pnpm build-seed
-# remove onnxruntime-node
+
+# Optionally remove onnxruntime if not needed
 RUN find /app -type d -name "onnxruntime-node*" -exec rm -rf {} +
 
+# ---------------------
+# Runner Stage
+# ---------------------
 FROM node:22-alpine AS runner
 
-RUN apk add --no-cache \
-    curl \
-    tzdata \
-    openssl
+# Install tini and runtime dependencies
+RUN apk add --no-cache tini curl tzdata openssl
 
-RUN npm install -g prisma
+# Use tini to reap zombies
+ENTRYPOINT ["/sbin/tini", "--"]
 
 WORKDIR /app
+
+# Copy only what's needed for runtime
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
@@ -55,29 +71,22 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/seed.js ./seed.js
 COPY --from=builder /app/resetpassword.js ./resetpassword.js
 
-# copy .pnpm files
-RUN --mount=type=bind,from=builder,source=/app/node_modules/.pnpm,target=/src \
-    for dir in $(find /src -maxdepth 1 -type d -name "@prisma*" -o -name "prisma*" -o -name "@libsql+linux-arm64-musl*" -o -name "@libsql+linux-arm64-gnu*" -o -name "@libsql+linux-x64-musl*" -o -name "sqlite3*"); do \
-        target_dir="./node_modules/.pnpm/$(basename "$dir")"; \
-        if [ ! -d "$target_dir" ]; then \
-            mkdir -p "$target_dir"; \
-            echo "Copying $dir to $target_dir"; \
-            cp -r "$dir"/* "$target_dir"/; \
-        else \
-            echo "Skipping $dir, already exists"; \
-        fi; \
-    done
-
-COPY --from=builder /app/node_modules/@libsql ./node_modules/@libsql
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+# Optional: copy needed node_modules from .pnpm if required
+COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
+COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/sqlite3 ./node_modules/sqlite3
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 
+# Install Prisma CLI for runtime usage (optional)
+RUN npm install -g prisma
+
+# Set runtime env
 ENV NODE_ENV=production \
     PORT=1111 \
     HOSTNAME=0.0.0.0
 
 EXPOSE 1111
 
-CMD ["sh", "-c", "prisma migrate deploy && node seed.js && node server.js"]
+# Launch app
+CMD ["sh", "./docker-entrypoint.sh"]
+
