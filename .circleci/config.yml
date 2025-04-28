@@ -1,53 +1,8 @@
-# This config was automatically generated from your source code
-# Stacks detected: cicd:github-actions:.github/workflows,deps:node:.,deps:rust:app/src-tauri
-version: 2.1
-orbs:
-  node: circleci/node@5
 jobs:
-  test-node:
-    # Install node dependencies and run tests
-    executor: node/default
+  build:
+    docker:
+      - image: docker:latest
     steps:
       - checkout
-      - node/install-packages:
-          cache-path: ~/project/node_modules
-          override-ci-command: npm install
-      - run:
-          name: Run tests
-          command: npm test --passWithNoTests
-  test-rust:
-    docker:
-      - image: cimg/rust:1.70
-    working_directory: ~/project/app/src-tauri
-    steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          key: cargo-{{ checksum "Cargo.lock" }}
-      - run:
-          command: cargo test
-      - save_cache:
-          key: cargo-{{ checksum "Cargo.lock" }}
-          paths:
-            - ~/.cargo
-  deploy:
-    # This is an example deploy job, not actually used by the workflow
-    docker:
-      - image: cimg/base:stable
-    steps:
-      # Replace this with steps to deploy to users
-      - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
-      - run:
-          name: found github actions config
-          command: ':'
-workflows:
-  build-and-test:
-    jobs:
-      - test-node
-      - test-rust
-    # - deploy:
-    #     requires:
-    #       - test-node
-    #       - test-rust
+      - setup_remote_docker
+      - run: docker build -t blinko .
