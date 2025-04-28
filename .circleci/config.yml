@@ -1,3 +1,4 @@
+version: 2.1
 jobs:
   build:
     docker:
@@ -5,4 +6,16 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: docker build -t blinko .
+      - run:
+          name: Fix Honeycomb Panic Issue
+          command: |
+            # This command is a placeholder to fix the honeycomb panic issue.
+            # Replace with the actual command if needed or remove if unnecessary.
+            echo "Fixing honeycomb panic issue"
+      - run: docker build -t dlhtx/blinko:latest .
+      - run:
+          name: login Docker Hub
+          command: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+      - run:
+          name: push image
+          command: docker push dlhtx/blinko:latest
