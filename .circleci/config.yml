@@ -1,0 +1,14 @@
+jobs:
+  build:
+    docker:
+      - image: docker:latest
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: docker build -t dlhtx/blinko:latest .
+      - run:
+          name: login Docker Hub
+          command: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+      - run:
+          name: push image
+          command: docker push dlhtx/blinko:latest

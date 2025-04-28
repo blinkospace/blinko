@@ -37,7 +37,7 @@ RUN bun run build:web
 RUN bun run build:seed
 
 # Runtime Stage - Using Smaller Base Image
-FROM oven/bun:slim AS runner
+FROM node:20-slim AS runner
 
 # Add Build Arguments
 ARG USE_MIRROR=false
@@ -72,7 +72,7 @@ RUN mkdir -p /tmp/sharp-cache
 # Configure Mirror Based on USE_MIRROR Parameter
 RUN if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using Taobao Mirror to Install Dependencies" && \
-        echo '{ "install": { "registry": "https://registry.npmmirror.com" } }' > .bunfig.json; \
+        npm config set registry https://registry.npmmirror.com; \
     else \
         echo "Using Default Mirror to Install Dependencies"; \
     fi
@@ -82,14 +82,14 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
         mkdir -p /tmp/sharp-cache && \
         export SHARP_CACHE_DIRECTORY=/tmp/sharp-cache && \
-        bun install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
-        bun install --force @img/sharp-linux-arm64 --no-save; \
+        npm install --platform=linux --arch=arm64 sharp@0.34.1 --no-save --unsafe-perm || \
+        npm install --force @img/sharp-linux-arm64 --no-save; \
     fi
 
 # Install Production Dependencies
-RUN bun install --production --unsafe-perm
-RUN bun install prisma@5.21.1
-RUN ./node_modules/.bin/prisma generate
+RUN npm install --production
+RUN npm install prisma@5.21.1
+RUN npx prisma generate
 
 # Remove onnxruntime-node
 RUN find / -type d -name "onnxruntime-*" -exec rm -rf {} + || true
@@ -100,9 +100,9 @@ EXPOSE 1111
 # Create Startup Script
 RUN echo '#!/bin/sh\n\
 echo "Current Environment: $NODE_ENV"\n\
-./node_modules/.bin/prisma migrate deploy\n\
-bun server/seed.js\n\
-bun server/index.js' > ./start.sh && chmod +x ./start.sh
+npx prisma migrate deploy\n\
+node server/seed.js\n\
+node server/index.js' > ./start.sh && chmod +x ./start.sh
 
 # Startup Command
 CMD ["./start.sh"]
