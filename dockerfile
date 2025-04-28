@@ -87,8 +87,8 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
     fi
 
 # Install Production Dependencies
-RUN npm install --production
-RUN npm install prisma@5.21.1
+RUN npm install --production --legacy-peer-deps
+RUN npm install prisma@5.21.1 --legacy-peer-deps
 RUN npx prisma generate
 
 # Remove onnxruntime-node
