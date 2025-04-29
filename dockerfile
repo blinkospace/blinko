@@ -84,7 +84,7 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
 
 # Install Production Dependencies
 # RUN npm install --production
-RUN npm install @node-rs/crc32 lightningcss llama-index onnxruntime-node onnxruntime-web @libsql/core @libsql/client @langchain/community sharp sqlite3
+RUN npm install @node-rs/crc32 lightningcss llamaindex onnxruntime-node onnxruntime-web @libsql/core @libsql/client @langchain/community sharp sqlite3
 RUN npm install prisma@5.21.1
 RUN npx prisma generate
 
