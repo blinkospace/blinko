@@ -62,12 +62,8 @@ RUN apt-get update -y && apt-get install -y openssl libvips-dev && \
 
 # Copy Build Artifacts and Necessary Files
 COPY --from=builder /app/dist ./server
-COPY --from=builder /app/server/package.json ./package.json
 COPY --from=builder /app/server/lute.min.js ./server/lute.min.js
 COPY --from=builder /app/prisma ./prisma
-
-# Prepare Sharp cache directory
-RUN mkdir -p /tmp/sharp-cache
 
 # Configure Mirror Based on USE_MIRROR Parameter
 RUN if [ "$USE_MIRROR" = "true" ]; then \
@@ -87,7 +83,8 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
     fi
 
 # Install Production Dependencies
-RUN npm install --production
+# RUN npm install --production
+RUN npm install @node-rs/crc32 lightningcss llama-index onnxruntime-node onnxruntime-web @libsql/core @libsql/client @langchain/community sharp sqlite3
 RUN npm install prisma@5.21.1
 RUN npx prisma generate
 
