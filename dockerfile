@@ -36,7 +36,10 @@ RUN bun install --unsafe-perm
 RUN bun run build:web
 RUN bun run build:seed
 
-# Runtime Stage - Using Smaller Base Image
+RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate deploy\nnode server/seed.js\nnode server/index.js\n' > start.sh && \
+    chmod +x start.sh
+
+# Runtime Stage - Using Alpine as required
 FROM node:20-alpine AS runner
 
 # Add Build Arguments
@@ -55,7 +58,6 @@ ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
 
-# 安装必要的依赖，使用alpine特有的包管理器，合并RUN命令减少层数
 RUN apk add --no-cache openssl vips-dev && \
     if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using Taobao Mirror to Install Dependencies" && \
@@ -68,8 +70,11 @@ RUN apk add --no-cache openssl vips-dev && \
 COPY --from=builder /app/dist ./server
 COPY --from=builder /app/server/lute.min.js ./server/lute.min.js
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/start.sh ./
 
-# 合并安装步骤减少层数
+RUN chmod +x ./start.sh && \
+    ls -la start.sh
+
 RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         echo "Detected ARM architecture, installing sharp platform-specific dependencies..." && \
         mkdir -p /tmp/sharp-cache && \
@@ -86,12 +91,4 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
 # Expose Port (Adjust According to Actual Application)
 EXPOSE 1111
 
-# Create Startup Script
-RUN echo '#!/bin/sh\n\
-echo "Current Environment: $NODE_ENV"\n\
-npx prisma migrate deploy\n\
-node server/seed.js\n\
-node server/index.js' > ./start.sh && chmod +x ./start.sh
-
-# Startup Command
-CMD ["./start.sh"]
+CMD ["/app/start.sh"]
