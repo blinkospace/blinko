@@ -47,6 +47,8 @@ export const useEditorInit = (
       hint: {
         extend: mode != 'comment' ? Extend : AIExtend
       },
+      // @ts-expect-error
+      icon: false,
       cdn: getBlinkoEndpoint('').replace(/\/$/, ""),
       async ctrlEnter(md) {
         await store.handleSend()
