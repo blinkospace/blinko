@@ -161,10 +161,10 @@ router.get(/.*/, async (req: Request, res: Response) => {
       expiresIn: MAX_PRESIGNED_URL_EXPIRY
     });
 
-    res.set({
-      'Cache-Control': `public, max-age=${CACHE_DURATION}, immutable`,
-      'Expires': new Date(Date.now() + CACHE_DURATION * 1000).toUTCString()
-    });
+    // res.set({
+    //   'Cache-Control': `public, max-age=${CACHE_DURATION}, immutable`,
+    //   'Expires': new Date(Date.now() + CACHE_DURATION * 1000).toUTCString()
+    // });
 
     return res.redirect(signedUrl);
   } catch (error) {
