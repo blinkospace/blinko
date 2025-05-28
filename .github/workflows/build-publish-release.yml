@@ -126,8 +126,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            blinkospace/blinko
-            ghcr.io/blinkospace/blinko
+            shnulaa/blinko
+            ghcr.io/shnulaa/blinko
           tags: |
             type=raw,value=${{ env.VERSION }}
           flavor: |
@@ -146,7 +146,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ github.workflow }}-${{ matrix.platform }}
           cache-to: type=gha,scope=${{ github.workflow }}-${{ matrix.platform }},mode=max
-          outputs: type=image,name=blinkospace/blinko,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=shnulaa/blinko,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
@@ -225,15 +225,15 @@ jobs:
         working-directory: /tmp/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf 'blinkospace/blinko@sha256:%s ' *)
+            $(printf 'shnulaa/blinko@sha256:%s ' *)
           
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON" | sed 's/blinkospace\/blinko/ghcr.io\/blinkospace\/blinko/g') \
-            $(printf 'blinkospace/blinko@sha256:%s ' *)
+            $(printf 'shnulaa/blinko@sha256:%s ' *)
 
       - name: Inspect image
         run: |
-          docker buildx imagetools inspect blinkospace/blinko:${{ env.VERSION }}
-          docker buildx imagetools inspect ghcr.io/blinkospace/blinko:${{ env.VERSION }}
+          docker buildx imagetools inspect shnulaa/blinko:${{ env.VERSION }}
+          docker buildx imagetools inspect ghcr.io/shnulaa/blinko:${{ env.VERSION }}
 
   trigger-app-release:
     name: Trigger App Build Release
