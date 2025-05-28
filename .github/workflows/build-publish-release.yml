@@ -210,8 +210,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            blinkospace/blinko
-            ghcr.io/blinkospace/blinko
+            shnulaa/blinko
+            ghcr.io/shnulaa/blinko
           tags: |
             type=raw,value=${{ env.VERSION }}
           flavor: |
@@ -225,7 +225,7 @@ jobs:
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
             $(printf 'shnulaa/blinko@sha256:%s ' *)
           
-          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON" | sed 's/blinkospace\/blinko/ghcr.io\/blinkospace\/blinko/g') \
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON" | sed 's/shnulaa\/blinko/ghcr.io\/shnulaa\/blinko/g') \
             $(printf 'shnulaa/blinko@sha256:%s ' *)
 
       - name: Inspect image
