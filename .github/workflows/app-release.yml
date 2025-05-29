@@ -198,7 +198,7 @@ jobs:
           tagName: ${{ needs.set-version.outputs.version }}
           releaseName: Blinko ${{ needs.set-version.outputs.version }}
           releaseBody: "Under construction, full changelog will be updated after build completion..."
-          releaseDraft: true
+          draft: false
           prerelease: false
 
   # Android Platform Build Task
@@ -319,7 +319,7 @@ jobs:
           files: app/src-tauri/gen/android/app/build/outputs/apk/universal/release/Blinko_${{ needs.set-version.outputs.version }}_universal.apk
           tag_name: ${{ needs.set-version.outputs.version }}
           body: "Under construction, full changelog will be updated after build completion..."
-          draft: true
+          draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
