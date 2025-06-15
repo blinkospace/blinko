@@ -205,7 +205,8 @@ router.get('/:providerId', logOAuthRequest('Custom'), (req, res, next) => {
   }
   
   passport.authenticate(providerId, {
-    scope: ['openid', 'profile', 'email']
+    scope: ['openid', 'profile', 'email'],
+    state: Math.random().toString(36).substring(2, 12)
   })(req, res, next);
 });
 
