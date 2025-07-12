@@ -18,8 +18,7 @@ import { ShowTwoFactorModal } from '@/components/Common/TwoFactorModal';
 import { ToastPlugin } from './module/Toast/Toast';
 import { StorageState } from './standard/StorageState';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
-import { isAndroid, isInTauri, setTauriTheme } from '@/lib/tauriHelper';
-import { setStatusBarColor } from 'tauri-plugin-blinko-api';
+import { isInTauri, setTauriTheme } from '@/lib/tauriHelper';
 
 export class UserStore implements Store {
   sid = 'user';
@@ -265,6 +264,19 @@ export class UserStore implements Store {
         lightElement.style.setProperty('--primary', config.themeColor)
         //@ts-ignore
         lightElement.style.setProperty('--primary-foreground', config.themeForegroundColor)
+      }
+    } else {
+      if (darkElement) {
+        //@ts-ignore
+        darkElement.style.setProperty('--primary', '#f9f9f9')
+        //@ts-ignore
+        darkElement.style.setProperty('--primary-foreground', '#000000')
+      }
+      if (lightElement) {
+        //@ts-ignore
+        lightElement.style.setProperty('--primary', '#000000')
+        //@ts-ignore
+        lightElement.style.setProperty('--primary-foreground', 'hsl(210 40% 98%)')
       }
     }
 
