@@ -27,6 +27,8 @@
 
 [![Run on PikaPods](https://www.pikapods.com/static/run-button.svg)](https://www.pikapods.com/pods?run=blinko)
 
+[![](https://raw.githubusercontent.com/ClawCloud/Run-Template/refs/heads/main/Run-on-ClawCloud.svg)](https://template.run.claw.cloud/?openapp=system-fastdeploy%3FtemplateName%3Dblinko)
+
 Blinko 是一个创新的开源项目，专为那些想要快速捕捉和组织灵感的人设计。它允许用户在灵感闪现的瞬间无缝记录想法，确保不错过任何创意火花。
 
 <img style="border-radius:20px" src="./app/public/home.webp" alt="Blinko" />
