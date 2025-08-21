@@ -22,7 +22,7 @@ export default defineConfig({
         manifest: false,
         workbox: {
           maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-          navigateFallbackDenylist: [/^\/api\/auth\/.*/],
+          navigateFallbackDenylist: [/^\/api\/.*/],
         }
       })
     ] : [])
