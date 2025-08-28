@@ -546,6 +546,22 @@ export const userRouter = router({
           where: { userId: id }
         })
 
+        await prisma.noteInternalShare.deleteMany({
+          where: { accountId: id }
+        })
+
+        await prisma.follows.deleteMany({
+          where: { accountId: id }
+        })
+
+        await prisma.notifications.deleteMany({
+          where: { accountId: id }
+        })
+
+        await prisma.conversation.deleteMany({
+          where: { accountId: id }
+        })
+
         await prisma.accounts.delete({
           where: { id }
         })
