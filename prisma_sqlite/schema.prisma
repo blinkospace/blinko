@@ -1,0 +1,305 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "linux-arm64-openssl-3.0.x", "linux-musl-arm64-openssl-3.0.x"]
+  previewFeatures = ["driverAdapters"]
+}
+
+// generator zod {
+//   provider = "zod-prisma-types"
+// }
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../server/.blinko/sqlite/sqlite.db"
+}
+
+model accounts {
+  id            Int                 @id @default(autoincrement())
+  name          String              @default("")
+  nickname      String              @default("")
+  password      String              @default("")
+  image         String              @default("")
+  apiToken      String              @default("")
+  description   String              @default("")
+  note          Int                 @default(0)
+  role          String              @default("")
+  loginType     String              @default("")
+  linkAccountId Int?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  notes         notes[]
+  configs       config[]
+  tags          tag[]
+  comments      comments[]
+  attachments   attachments[]
+  follows       follows[]
+  notifications notifications[]
+  conversations conversation[]
+  sharedNotes   noteInternalShare[]
+}
+
+model attachments {
+  id            Int      @id @default(autoincrement())
+  isShare       Boolean  @default(false)
+  sharePassword String   @default("")
+  name          String   @default("")
+  path          String   @default("")
+  size          Float     @default(0)
+  type          String   @default("")
+  noteId        Int?
+  accountId     Int?
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  perfixPath    String?  @default("") // folder1,folder2,folder3
+  depth         Int?
+  metadata      Json?
+
+  note    notes?    @relation(fields: [noteId], references: [id])
+  account accounts? @relation(fields: [accountId], references: [id])
+}
+
+model config {
+  id     Int       @id @default(autoincrement())
+  key    String    @default("")
+  config Json?
+  userId Int?
+  user   accounts? @relation(fields: [userId], references: [id])
+}
+
+model notes {
+  id                Int                 @id @default(autoincrement())
+  type              Int                 @default(0)
+  content           String              @default("")
+  isArchived        Boolean             @default(false)
+  isRecycle         Boolean             @default(false)
+  isShare           Boolean             @default(false)
+  isTop             Boolean             @default(false)
+  isReviewed        Boolean             @default(false)
+  sharePassword     String              @default("")
+  shareEncryptedUrl String?
+  shareExpiryDate   DateTime?
+  shareMaxView      Int?                @default(0)
+  shareViewCount    Int?                @default(0)
+  metadata          Json?
+  accountId         Int?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  attachments       attachments[]
+  tags              tagsToNote[]
+  account           accounts?           @relation(fields: [accountId], references: [id])
+  referencedBy      noteReference[]     @relation("ReferencedNote")
+  references        noteReference[]     @relation("ReferencingNote")
+  comments          comments[]          @relation("NoteComments")
+  histories         noteHistory[]
+  internalShares    noteInternalShare[]
+}
+
+model comments {
+  id        Int      @id @default(autoincrement())
+  content   String
+  accountId Int?
+  guestName String?
+  guestIP   String?
+  guestUA   String?
+  noteId    Int
+  parentId  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  note    notes      @relation("NoteComments", fields: [noteId], references: [id])
+  account accounts?  @relation(fields: [accountId], references: [id])
+  parent  comments?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies comments[] @relation("CommentReplies")
+}
+
+model tag {
+  id         Int          @id @default(autoincrement())
+  name       String       @default("")
+  icon       String       @default("")
+  parent     Int          @default(0)
+  accountId  Int?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  tagsToNote tagsToNote[]
+  sortOrder  Int          @default(0)
+  account    accounts?    @relation(fields: [accountId], references: [id])
+}
+
+model tagsToNote {
+  noteId Int @default(0)
+  tagId  Int @default(0)
+
+  note notes @relation(fields: [noteId], references: [id])
+  tag  tag   @relation(fields: [tagId], references: [id])
+
+  @@id([noteId, tagId])
+}
+
+model scheduledTask {
+  name      String   @id
+  schedule  String
+  lastRun   DateTime @default(now())
+  isSuccess Boolean  @default(true)
+  isRunning Boolean  @default(false)
+  output    Json?
+}
+
+model noteReference {
+  id         Int      @id @default(autoincrement())
+  fromNoteId Int
+  toNoteId   Int
+  createdAt  DateTime @default(now())
+
+  fromNote notes @relation("ReferencingNote", fields: [fromNoteId], references: [id])
+  toNote   notes @relation("ReferencedNote", fields: [toNoteId], references: [id])
+
+  @@unique([fromNoteId, toNoteId])
+}
+
+model follows {
+  id          Int     @id @default(autoincrement())
+  siteName    String?
+  siteUrl     String
+  siteAvatar  String?
+  description String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  followType String   @default("following") //  "following" or "follower"
+
+  accountId Int
+  account   accounts @relation(fields: [accountId], references: [id])
+}
+
+model notifications {
+  id        Int      @id @default(autoincrement())
+  type      String // follow, comment, mention 等
+  title     String
+  content   String
+  metadata  Json?
+  isRead    Boolean  @default(false)
+  accountId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  account accounts @relation(fields: [accountId], references: [id])
+}
+
+model cache {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model plugin {
+  id        Int      @id @default(autoincrement())
+  metadata  Json
+  path      String
+  isUse     Boolean  @default(true)
+  isDev     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model conversation {
+  id        Int       @id @default(autoincrement())
+  title     String    @default("")
+  isShare   Boolean   @default(false)
+  accountId Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  message[]
+
+  account accounts @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+}
+
+model message {
+  id             Int      @id @default(autoincrement())
+  content        String
+  role           String // user or assistant
+  conversationId Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  metadata       Json?
+
+  conversation conversation @relation(fields: [conversationId], references: [id])
+
+  @@index([conversationId])
+}
+
+model noteHistory {
+  id        Int      @id @default(autoincrement())
+  noteId    Int
+  content   String
+  metadata  Json?
+  version   Int
+  accountId Int?
+  createdAt DateTime @default(now())
+
+  note notes @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([noteId])
+  @@index([accountId])
+}
+
+model noteInternalShare {
+  id        Int      @id @default(autoincrement())
+  noteId    Int
+  accountId Int
+  canEdit   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  note    notes    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  account accounts @relation(fields: [accountId], references: [id])
+
+  @@unique([noteId, accountId])
+  @@index([noteId])
+  @@index([accountId])
+}
+
+model session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expiresAt])
+}
+
+model aiProviders {
+  id        Int      @id @default(autoincrement())
+  title     String
+  provider  String
+  baseURL   String?
+  apiKey    String?
+  config    Json?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  models aiModels[]
+}
+
+model aiModels {
+  id           Int      @id @default(autoincrement())
+  providerId   Int
+  title        String
+  modelKey     String
+  capabilities Json
+  config       Json?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  provider aiProviders @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+}

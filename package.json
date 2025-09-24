@@ -18,11 +18,17 @@
     "postinstall": "turbo run prisma:generate --filter=@blinko/backend",
     "setup": "bun install",
     "prisma:generate": "cd prisma && prisma generate",
+    "prisma:generate:sqlite": "cd prisma_sqlite && prisma generate",
     "prisma:migrate:dev": "cd prisma && prisma migrate dev",
+    "prisma:migrate:dev:sqlite": "mkdir -p server/.blinko && cd prisma_sqlite && prisma migrate dev",
     "prisma:migrate:deploy": "cd prisma && prisma migrate deploy",
+    "prisma:migrate:deploy:sqlite": "cd prisma_sqlite && prisma migrate deploy",
     "prisma:studio": "cd prisma && prisma studio",
+    "prisma:studio:sqlite": "cd prisma_sqlite && prisma studio",
     "build:seed": "tsup prisma/seed.ts --outDir dist",
+    "build:seed:sqlite": "tsup prisma_sqlite/seed.ts --outDir dist_sqlite",
     "seed": "bun dist/seed.js",
+    "seed:sqlite": "bun dist_sqlite/seed.js",
     "build:blinko:types": "tsc -p tsconfig.blinko.json"
   },
   "devDependencies": {
