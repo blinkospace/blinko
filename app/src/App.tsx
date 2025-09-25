@@ -43,6 +43,7 @@ const DetailPage = lazy(() => import('./pages/detail'));
 const ShareIndexPage = lazy(() => import('./pages/share'));
 const ShareDetailPage = lazy(() => import('./pages/share/[id]'));
 const AiSharePage = lazy(() => import('./pages/ai-share'));
+const RealTimeVoicePage = lazy(() => import('./pages/real-time-voice'));
 
 const HomeRedirect = () => {
   const navigate = useNavigate();
@@ -223,6 +224,7 @@ function AppRoutes() {
             <Route path="/share" element={<ShareIndexPage />} />
             <Route path="/share/:id" element={<ShareDetailPage />} />
             <Route path="/ai-share/:id" element={<AiSharePage />} />
+            <Route path="/real-time-voice" element={<ProtectedRoute><RealTimeVoicePage /></ProtectedRoute>} />
             <Route path="/quicknote" element={<QuickNotePage />} />
             <Route path="/quickai" element={<QuickAIPage />} />
             <Route path="/quicktool" element={<QuickToolPage />} />

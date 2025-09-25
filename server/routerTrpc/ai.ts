@@ -259,7 +259,8 @@ export const aiRouter = router({
         video: z.boolean().optional(),
         audio: z.boolean().optional(),
         embedding: z.boolean().optional(),
-        rerank: z.boolean().optional()
+        rerank: z.boolean().optional(),
+        realTimeVoice: z.boolean().optional()
       })
     }))
     .mutation(async ({ input }) => {
@@ -447,7 +448,8 @@ export const aiRouter = router({
         video: z.boolean().default(false),
         audio: z.boolean().default(false),
         embedding: z.boolean().default(false),
-        rerank: z.boolean().default(false)
+        rerank: z.boolean().default(false),
+        realTimeVoice: z.boolean().default(false)
       }),
       config: z.any().optional(),
       sortOrder: z.number().default(0)
@@ -472,7 +474,8 @@ export const aiRouter = router({
         video: z.boolean().optional(),
         audio: z.boolean().optional(),
         embedding: z.boolean().optional(),
-        rerank: z.boolean().optional()
+        rerank: z.boolean().optional(),
+        realTimeVoice: z.boolean().optional()
       }).optional(),
       config: z.any().optional(),
       sortOrder: z.number().optional()
@@ -573,7 +576,8 @@ export const aiRouter = router({
               video: false,
               audio: false,
               embedding: false,
-              rerank: false
+              rerank: false,
+              realTimeVoice: false
             },
             sortOrder: 0
           },
@@ -584,4 +588,7 @@ export const aiRouter = router({
 
       return createdModels;
     }),
+
+  // Note: Real-time voice functionality has been moved to WebSocket implementation
+  // See /api/realtime-voice WebSocket endpoint for real-time voice features
 })

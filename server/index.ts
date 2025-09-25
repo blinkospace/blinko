@@ -25,6 +25,7 @@ import pluginRouter from './routerExpress/file/plugin';
 import rssRouter from './routerExpress/rss';
 import openaiRouter from './routerExpress/openai';
 import mcpRouter from './routerExpress/mcp';
+import { createRealTimeVoiceWebSocket, realTimeVoiceRouter } from './routerExpress/realtime-voice';
 
 // Vite integration
 import ViteExpress from 'vite-express';
@@ -187,6 +188,7 @@ async function setupApiRoutes(app: express.Application) {
 
 
   app.use('/', mcpRouter);
+  app.use('/api/realtime-voice', realTimeVoiceRouter);
 }
 
 /**
@@ -234,9 +236,14 @@ async function bootstrap() {
 
     // Start or update server
     if (!server) {
-      const server = app.listen(PORT, "0.0.0.0", () => {
+      server = app.listen(PORT, "0.0.0.0", () => {
         console.log(`🎉server start on port http://0.0.0.0:${PORT} - env: ${process.env.NODE_ENV || 'development'}`);
       });
+
+      // Initialize WebSocket server for real-time voice BEFORE ViteExpress.bind
+      createRealTimeVoiceWebSocket(server);
+      console.log('🎤 Real-time voice WebSocket server initialized');
+
       ViteExpress.bind(app, server); // the server binds to all network interfaces
     } else {
       console.log(`API routes updated - env: ${process.env.NODE_ENV || 'development'}`);
@@ -246,10 +253,14 @@ async function bootstrap() {
     try {
       // Attempt to start server even if route setup fails
       if (!server) {
-        const server = app.listen(PORT, "0.0.0.0", () => {
+        server = app.listen(PORT, "0.0.0.0", () => {
           console.log(`🎉server start on port http://0.0.0.0:${PORT} - env: ${process.env.NODE_ENV || 'development'}`);
         });
         ViteExpress.bind(app, server); // the server binds to all network interfaces
+
+        // Initialize WebSocket server for real-time voice
+        createRealTimeVoiceWebSocket(server);
+        console.log('🎤 Real-time voice WebSocket server initialized');
       }
     } catch (startupError) {
       console.error('start server error:', startupError);

@@ -33,7 +33,8 @@
       "mcp__ide__getDiagnostics",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Read(//e/code/mastra/packages/mcp/src/server/**)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "WebFetch(domain:platform.openai.com)"
     ],
     "deny": [],
     "ask": []

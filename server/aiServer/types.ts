@@ -7,6 +7,7 @@ export interface ModelCapabilities {
   audio: boolean;
   embedding: boolean;
   rerank: boolean;
+  realTimeVoice: boolean;
 }
 
 export interface AiProviderWithModels {

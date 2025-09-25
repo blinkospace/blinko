@@ -4,12 +4,13 @@ import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { RootStore } from '@/store';
-import { AiSettingStore, AiModel, ModelCapabilities, ProviderModel } from '@/store/aiSettingStore';
+import { AiSettingStore, AiModel, ProviderModel } from '@/store/aiSettingStore';
 import { DialogStore } from '@/store/module/Dialog';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { CAPABILITY_ICONS, CAPABILITY_LABELS, CAPABILITY_COLORS, DEFAULT_MODEL_TEMPLATES } from './constants';
 import { ProviderIcon, ModelIcon } from '@/components/BlinkoSettings/AiSetting/AIIcon';
 import { api } from '@/lib/trpc';
+import { ModelCapabilities } from '@server/aiServer/types';
 
 // Utility function to format test connection results
 const formatTestResults = (result: any, t: (key: string) => string): string => {
@@ -59,7 +60,8 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
         video: false,
         audio: false,
         embedding: false,
-        rerank: false
+        rerank: false,
+        realTimeVoice: false
       },
       config: {
         embeddingDimensions: 0
@@ -372,6 +374,17 @@ export default observer(function ModelDialogContent({ model }: ModelDialogConten
             <p className="text-sm text-warning-700">
               <Icon icon="hugeicons:alert-circle" width="14" height="14" className="inline mr-2" />
               Currently only OpenAI-compatible audio models are supported.
+            </p>
+          </div>
+        )}
+
+        {/* Real-time voice capability info */}
+        {editingModel.capabilities?.realTimeVoice && (
+          <div className="mt-2 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+            <p className="text-sm text-primary-700">
+              <Icon icon="hugeicons:mic-01" width="14" height="14" className="inline mr-2" />
+              Real-time voice transcription requires OpenAI Realtime API with WebRTC support.
+              Only OpenAI GPT-4o Realtime models are currently supported.
             </p>
           </div>
         )}

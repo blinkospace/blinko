@@ -8,17 +8,8 @@ import { RootStore } from './root';
 import { ToastPlugin } from './module/Toast/Toast';
 import i18n from '@/lib/i18n';
 import { defaultUrlTransform } from 'react-markdown';
+import { ModelCapabilities } from '@server/aiServer/types';
 
-export interface ModelCapabilities {
-    inference: boolean;
-    tools: boolean;
-    image: boolean;
-    imageGeneration: boolean;
-    video: boolean;
-    audio: boolean;
-    embedding: boolean;
-    rerank: boolean;
-}
 
 export interface ProviderModel {
     id: string;
@@ -265,7 +256,8 @@ export class AiSettingStore implements Store {
                 video: template.capabilities.video || false,
                 audio: template.capabilities.audio || false,
                 embedding: template.capabilities.embedding || false,
-                rerank: template.capabilities.rerank || false
+                rerank: template.capabilities.rerank || false,
+                realTimeVoice: template.capabilities.realTimeVoice || false
             };
         }
 
@@ -278,7 +270,8 @@ export class AiSettingStore implements Store {
             video: false,
             audio: false,
             embedding: false,
-            rerank: false
+            rerank: false,
+            realTimeVoice: false
         };
     };
 
@@ -309,5 +302,9 @@ export class AiSettingStore implements Store {
 
     get rerankModels(): AiModel[] {
         return this.allModels.value?.filter(model => model.capabilities.rerank) || [];
+    }
+
+    get realTimeVoiceModels(): AiModel[] {
+        return this.allModels.value?.filter(model => model.capabilities.realTimeVoice) || [];
     }
 }

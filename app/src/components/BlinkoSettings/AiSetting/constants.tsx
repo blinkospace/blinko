@@ -9,7 +9,8 @@ export const CAPABILITY_ICONS = {
   video: <Icon icon="hugeicons:video-01" width="16" height="16" />,
   audio: <Icon icon="mingcute:voice-line" width="16" height="16" />,
   embedding: <Icon icon="hugeicons:search-list-02" width="16" height="16" />,
-  rerank: <Icon icon="hugeicons:arrow-up-down" width="16" height="16" />
+  rerank: <Icon icon="hugeicons:arrow-up-down" width="16" height="16" />,
+  realTimeVoice: <Icon icon="hugeicons:mic-01" width="16" height="16" />
 };
 
 export const CAPABILITY_LABELS = {
@@ -20,7 +21,8 @@ export const CAPABILITY_LABELS = {
   video: 'Video',
   audio: 'Audio',
   embedding: 'Embedding',
-  rerank: 'Rerank'
+  rerank: 'Rerank',
+  realTimeVoice: 'Real-Time Voice'
 };
 
 export const CAPABILITY_COLORS = {
@@ -31,7 +33,8 @@ export const CAPABILITY_COLORS = {
   video: 'danger',
   audio: 'success',
   embedding: 'warning',
-  rerank: 'secondary'
+  rerank: 'secondary',
+  realTimeVoice: 'primary'
 } as const;
 
 export interface ModelTemplate {
@@ -164,6 +167,8 @@ export const DEFAULT_MODEL_TEMPLATES: ModelTemplate[] = [
   { modelKey: 'whisper-1', title: 'Whisper', capabilities: { audio: true } },
   { modelKey: 'tts-1', title: 'TTS 1', capabilities: { audio: true } },
   { modelKey: 'tts-1-hd', title: 'TTS 1 HD', capabilities: { audio: true } },
+  { modelKey: 'gpt-4o-realtime-preview-2024-10-01', title: 'GPT-4o Realtime Preview', capabilities: { inference: true, tools: true, audio: true, realTimeVoice: true } },
+  { modelKey: 'gpt-4o-realtime-preview', title: 'GPT-4o Realtime Preview (Latest)', capabilities: { inference: true, tools: true, audio: true, realTimeVoice: true } },
 
   // Anthropic Models
   { modelKey: 'claude-3-5-sonnet-20241022', title: 'Claude 3.5 Sonnet', capabilities: { inference: true, tools: true, image: true } },

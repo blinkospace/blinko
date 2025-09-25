@@ -31,6 +31,7 @@
     "@mastra/loggers": "^0.10.9",
     "@mastra/rag": "^1.0.6",
     "@mastra/voice-openai": "^0.11.5",
+    "@mastra/voice-openai-realtime": "^0.11.6",
     "@modelcontextprotocol/sdk": "^1.18.1",
     "@openrouter/ai-sdk-provider": "^0.4.5",
     "@prisma/client": "^5.22.0",
