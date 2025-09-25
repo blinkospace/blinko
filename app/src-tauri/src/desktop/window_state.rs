@@ -94,7 +94,7 @@ pub fn save_window_state(app: &AppHandle, state: &AppWindowState) {
 // Apply window state to main window
 pub fn restore_main_window_state(app: &AppHandle) {
     let window_state = load_window_state(app);
-    
+
     if let Some(window) = app.get_webview_window("main") {
         if let Some(config) = window_state.main_window {
             // Only restore if not maximized, otherwise maximize will set the size
@@ -114,7 +114,7 @@ pub fn restore_main_window_state(app: &AppHandle) {
                     println!("Window centered successfully");
                 }
             }
-            
+
             // Restore maximized state
             if config.maximized {
                 if let Err(e) = window.maximize() {
@@ -123,6 +123,13 @@ pub fn restore_main_window_state(app: &AppHandle) {
                     println!("Window maximized successfully");
                 }
             }
+        }
+
+        // Show the window after restoring its state to prevent flickering
+        if let Err(e) = window.show() {
+            eprintln!("Failed to show window: {}", e);
+        } else {
+            println!("Window shown successfully after restoring state");
         }
     }
 }

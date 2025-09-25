@@ -24,8 +24,9 @@ fn create_quick_window<R: Runtime>(
         .title(config.title)
         .inner_size(config.width, config.height)
         .resizable(config.resizable)
-        .focused(true)
-        .visible(true)
+        .focused(false)
+        .visible(false)  
+        .center()       
         .always_on_top(true)
         .skip_taskbar(config.skip_taskbar)
         .decorations(false)
@@ -45,6 +46,7 @@ fn create_quick_window<R: Runtime>(
         }
     });
 
+    println!("✅ {} window created (hidden and centered, ready for use)", config.label);
     Ok(())
 }
 

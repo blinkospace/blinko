@@ -65,6 +65,24 @@ export const HotkeySetting = observer(() => {
       if (isTauriDesktop) {
         await getRegisteredShortcuts();
 
+        // Manage windows based on configuration
+        try {
+          console.log('🏗️ Managing windows based on configuration:', {
+            quicknote: finalConfig.enabled,
+            quickai: finalConfig.aiEnabled,
+            textSelection: finalConfig.textSelectionToolbar?.enabled ?? false
+          });
+
+          const result = await invoke('manage_windows_by_config', {
+            quicknoteEnabled: finalConfig.enabled,
+            quickaiEnabled: finalConfig.aiEnabled,
+            textSelectionEnabled: finalConfig.textSelectionToolbar?.enabled ?? false
+          });
+          console.log('✅ Windows management result:', result);
+        } catch (error) {
+          console.error('❌ Failed to manage windows:', error);
+        }
+
         // Initialize text selection monitoring if enabled
         if (finalConfig.textSelectionToolbar?.enabled) {
           try {
@@ -134,8 +152,27 @@ export const HotkeySetting = observer(() => {
       setHotkeyConfig(updatedConfig);
       toast.success(t('operation-success'));
 
-      // If Tauri desktop, update hotkey registration based on enabled state
+      // If Tauri desktop, update hotkey registration and window management
       if (isTauriDesktop) {
+        // Manage windows based on updated configuration
+        try {
+          console.log('🏗️ Managing windows based on updated configuration:', {
+            quicknote: updatedConfig.enabled,
+            quickai: updatedConfig.aiEnabled,
+            textSelection: updatedConfig.textSelectionToolbar?.enabled ?? false
+          });
+
+          const result = await invoke('manage_windows_by_config', {
+            quicknoteEnabled: updatedConfig.enabled,
+            quickaiEnabled: updatedConfig.aiEnabled,
+            textSelectionEnabled: updatedConfig.textSelectionToolbar?.enabled ?? false
+          });
+          console.log('✅ Windows management result:', result);
+        } catch (error) {
+          console.error('❌ Failed to manage windows on config update:', error);
+        }
+
+        // Update hotkey registrations
         if (updatedConfig.enabled) {
           await updateHotkeyRegistration(updatedConfig.quickNote, true);
         } else {
@@ -406,17 +443,17 @@ export const HotkeySetting = observer(() => {
 
   return (
     <div>
+      {/* AutoStart CollapsibleCard */}
       <CollapsibleCard
-        icon="material-symbols:desktop-windows"
-        title="Desktop & Hotkeys"
+        icon="material-symbols:power-settings-new"
+        title="AutoStart"
         className="w-full"
       >
         <div className="flex flex-col gap-4">
-          {/* Autostart switch */}
           <Item
             leftContent={
               <ItemWithTooltip
-                content="Autostart"
+                content="Start with system"
                 toolTipContent="Start Blinko automatically on system boot"
               />
             }
@@ -427,13 +464,22 @@ export const HotkeySetting = observer(() => {
               />
             }
           />
+        </div>
+      </CollapsibleCard>
 
-          {/* Hotkey enable switch */}
+      {/* Quick Note CollapsibleCard */}
+      <CollapsibleCard
+        icon="material-symbols:edit-note"
+        title="Quick Note"
+        className="w-full mt-6"
+      >
+        <div className="flex flex-col gap-4">
+          {/* Quick Note enable switch */}
           <Item
             leftContent={
               <ItemWithTooltip
-                content={t('hotkey.enableGlobalHotkey')}
-                toolTipContent={t('enable-hotkeys-desc')}
+                content="Enable Quick Note"
+                toolTipContent="Enable hotkey to quickly open note input dialog"
               />
             }
             rightContent={
@@ -445,49 +491,50 @@ export const HotkeySetting = observer(() => {
           />
 
           {/* Hotkey configuration */}
-          <Item
-            leftContent={t('hotkey.quickNoteShortcut')}
-            rightContent={
-              <div className="flex items-center gap-2">
-                <Input
-                  ref={recordingRef}
-                  value={isRecording ? recordedKeys.join('+') || t('hotkey.pressShortcut') : hotkeyConfig.quickNote}
-                  placeholder={t('hotkey.clickRecordButton')}
-                  readOnly
-                  onKeyDown={handleKeyDown}
-                  classNames={{
-                    input: "text-center font-mono",
-                    inputWrapper: isRecording ? "ring-2 ring-primary" : ""
-                  }}
-                />
-                <Button
-                  size="sm"
-                  color={isRecording ? "danger" : "primary"}
-                  variant={isRecording ? "flat" : "solid"}
-                  onPress={toggleRecording}
-                  startContent={
-                    <Icon icon={isRecording ? "material-symbols:stop" : "material-symbols:keyboard"} />
-                  }
-                >
-                  {isRecording ? t('hotkey.stop') : t('hotkey.record')}
-                </Button>
-                {isQuickNoteNotDefault && (
+          {hotkeyConfig.enabled && (
+            <Item
+              leftContent={t('hotkey.quickNoteShortcut')}
+              rightContent={
+                <div className="flex items-center gap-2">
+                  <Input
+                    ref={recordingRef}
+                    value={isRecording ? recordedKeys.join('+') || t('hotkey.pressShortcut') : hotkeyConfig.quickNote}
+                    placeholder={t('hotkey.clickRecordButton')}
+                    readOnly
+                    onKeyDown={handleKeyDown}
+                    classNames={{
+                      input: "text-center font-mono",
+                      inputWrapper: isRecording ? "ring-2 ring-primary" : ""
+                    }}
+                  />
                   <Button
                     size="sm"
-                    color="default"
-                    variant="flat"
-                    isIconOnly
-                    onPress={resetQuickNoteToDefault}
-                    className="opacity-70 hover:opacity-100"
+                    color={isRecording ? "danger" : "primary"}
+                    variant={isRecording ? "flat" : "solid"}
+                    onPress={toggleRecording}
+                    startContent={
+                      <Icon icon={isRecording ? "material-symbols:stop" : "material-symbols:keyboard"} />
+                    }
                   >
-                    <Icon icon="material-symbols:refresh" />
+                    {isRecording ? t('hotkey.stop') : t('hotkey.record')}
                   </Button>
-                )}
-              </div>
-            }
-            type="col"
-          />
-
+                  {isQuickNoteNotDefault && (
+                    <Button
+                      size="sm"
+                      color="default"
+                      variant="flat"
+                      isIconOnly
+                      onPress={resetQuickNoteToDefault}
+                      className="opacity-70 hover:opacity-100"
+                    >
+                      <Icon icon="material-symbols:refresh" />
+                    </Button>
+                  )}
+                </div>
+              }
+              type="col"
+            />
+          )}
         </div>
       </CollapsibleCard>
 
@@ -515,48 +562,50 @@ export const HotkeySetting = observer(() => {
           />
 
           {/* AI Hotkey configuration */}
-          <Item
-            leftContent="Quick AI Shortcut"
-            rightContent={
-              <div className="flex items-center gap-2">
-                <Input
-                  ref={recordingAIRef}
-                  value={isRecordingAI ? recordedAIKeys.join('+') || t('hotkey.pressShortcut') : hotkeyConfig.quickAI}
-                  placeholder={t('hotkey.clickRecordButton')}
-                  readOnly
-                  onKeyDown={handleAIKeyDown}
-                  classNames={{
-                    input: "text-center font-mono",
-                    inputWrapper: isRecordingAI ? "ring-2 ring-primary" : ""
-                  }}
-                />
-                <Button
-                  size="sm"
-                  color={isRecordingAI ? "danger" : "primary"}
-                  variant={isRecordingAI ? "flat" : "solid"}
-                  onPress={toggleAIRecording}
-                  startContent={
-                    <Icon icon={isRecordingAI ? "material-symbols:stop" : "material-symbols:keyboard"} />
-                  }
-                >
-                  {isRecordingAI ? t('hotkey.stop') : t('hotkey.record')}
-                </Button>
-                {isQuickAINotDefault && (
+          {hotkeyConfig.aiEnabled && (
+            <Item
+              leftContent="Quick AI Shortcut"
+              rightContent={
+                <div className="flex items-center gap-2">
+                  <Input
+                    ref={recordingAIRef}
+                    value={isRecordingAI ? recordedAIKeys.join('+') || t('hotkey.pressShortcut') : hotkeyConfig.quickAI}
+                    placeholder={t('hotkey.clickRecordButton')}
+                    readOnly
+                    onKeyDown={handleAIKeyDown}
+                    classNames={{
+                      input: "text-center font-mono",
+                      inputWrapper: isRecordingAI ? "ring-2 ring-primary" : ""
+                    }}
+                  />
                   <Button
                     size="sm"
-                    color="default"
-                    variant="flat"
-                    isIconOnly
-                    onPress={resetQuickAIToDefault}
-                    className="opacity-70 hover:opacity-100"
+                    color={isRecordingAI ? "danger" : "primary"}
+                    variant={isRecordingAI ? "flat" : "solid"}
+                    onPress={toggleAIRecording}
+                    startContent={
+                      <Icon icon={isRecordingAI ? "material-symbols:stop" : "material-symbols:keyboard"} />
+                    }
                   >
-                    <Icon icon="material-symbols:refresh" />
+                    {isRecordingAI ? t('hotkey.stop') : t('hotkey.record')}
                   </Button>
-                )}
-              </div>
-            }
-            type="col"
-          />
+                  {isQuickAINotDefault && (
+                    <Button
+                      size="sm"
+                      color="default"
+                      variant="flat"
+                      isIconOnly
+                      onPress={resetQuickAIToDefault}
+                      className="opacity-70 hover:opacity-100"
+                    >
+                      <Icon icon="material-symbols:refresh" />
+                    </Button>
+                  )}
+                </div>
+              }
+              type="col"
+            />
+          )}
 
         </div>
       </CollapsibleCard>
@@ -564,7 +613,7 @@ export const HotkeySetting = observer(() => {
       {/* Text Selection Toolbar CollapsibleCard */}
       <CollapsibleCard
         icon="material-symbols:select-all"
-        title={t('text-selection-toolbar')}
+        title="Text Selection & Translation"
         className="w-full mt-6"
       >
         <div className="flex flex-col gap-4">
@@ -592,90 +641,95 @@ export const HotkeySetting = observer(() => {
             }
           />
 
-          {/* Trigger modifier selection */}
-          <Item
-            leftContent={t('trigger-modifier')}
-            rightContent={
-              <Select
-                size="sm"
-                selectedKeys={[hotkeyConfig.textSelectionToolbar?.triggerModifier ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.triggerModifier]}
-                onSelectionChange={(keys) => {
-                  const modifier = Array.from(keys)[0] as 'ctrl' | 'shift' | 'alt';
-                  saveConfig({
-                    textSelectionToolbar: {
-                      ...hotkeyConfig.textSelectionToolbar,
-                      ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
-                      triggerModifier: modifier
-                    }
-                  });
-                }}
-                className="w-32"
-              >
-                <SelectItem key="ctrl" >Ctrl + `</SelectItem>
-                <SelectItem key="shift">Shift + `</SelectItem>
-                <SelectItem key="alt">Alt + `</SelectItem>
-              </Select>
-            }
-            type="col"
-          />
+          {/* Configuration options - only show when enabled */}
+          {(hotkeyConfig.textSelectionToolbar?.enabled ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.enabled) && (
+            <>
+              {/* Trigger modifier selection */}
+              <Item
+                leftContent={t('trigger-modifier')}
+                rightContent={
+                  <Select
+                    size="sm"
+                    selectedKeys={[hotkeyConfig.textSelectionToolbar?.triggerModifier ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.triggerModifier]}
+                    onSelectionChange={(keys) => {
+                      const modifier = Array.from(keys)[0] as 'ctrl' | 'shift' | 'alt';
+                      saveConfig({
+                        textSelectionToolbar: {
+                          ...hotkeyConfig.textSelectionToolbar,
+                          ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
+                          triggerModifier: modifier
+                        }
+                      });
+                    }}
+                    className="w-32"
+                  >
+                    <SelectItem key="ctrl" >Ctrl + `</SelectItem>
+                    <SelectItem key="shift">Shift + `</SelectItem>
+                    <SelectItem key="alt">Alt + `</SelectItem>
+                  </Select>
+                }
+                type="col"
+              />
 
-          {/* Translation language settings */}
-          <Item
-            leftContent={t('translation-languages')}
-            rightContent={
-              <div className="flex gap-2">
-                <Select
-                  size="sm"
-                  selectedKeys={[hotkeyConfig.textSelectionToolbar?.translationFromLang ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.translationFromLang]}
-                  onSelectionChange={(keys) => {
-                    const fromLang = Array.from(keys)[0] as string;
-                    saveConfig({
-                      textSelectionToolbar: {
-                        ...hotkeyConfig.textSelectionToolbar,
-                        ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
-                        translationFromLang: fromLang
-                      }
-                    });
-                  }}
-                  className="w-24"
-                >
-                  <SelectItem key="auto">Auto</SelectItem>
-                  <SelectItem key="en">English</SelectItem>
-                  <SelectItem key="zh">Chinese</SelectItem>
-                  <SelectItem key="ja">Japanese</SelectItem>
-                  <SelectItem key="ko">Korean</SelectItem>
-                  <SelectItem key="fr">French</SelectItem>
-                  <SelectItem key="de">German</SelectItem>
-                  <SelectItem key="es">Spanish</SelectItem>
-                </Select>
-                <span className="text-sm text-gray-500 self-center">→</span>
-                <Select
-                  size="sm"
-                  selectedKeys={[hotkeyConfig.textSelectionToolbar?.translationToLang ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.translationToLang]}
-                  onSelectionChange={(keys) => {
-                    const toLang = Array.from(keys)[0] as string;
-                    saveConfig({
-                      textSelectionToolbar: {
-                        ...hotkeyConfig.textSelectionToolbar,
-                        ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
-                        translationToLang: toLang
-                      }
-                    });
-                  }}
-                  className="w-24"
-                >
-                  <SelectItem key="en">English</SelectItem>
-                  <SelectItem key="zh">Chinese</SelectItem>
-                  <SelectItem key="ja">Japanese</SelectItem>
-                  <SelectItem key="ko">Korean</SelectItem>
-                  <SelectItem key="fr">French</SelectItem>
-                  <SelectItem key="de">German</SelectItem>
-                  <SelectItem key="es">Spanish</SelectItem>
-                </Select>
-              </div>
-            }
-            type="col"
-          />
+              {/* Translation language settings */}
+              <Item
+                leftContent={t('translation-languages')}
+                rightContent={
+                  <div className="flex gap-2">
+                    <Select
+                      size="sm"
+                      selectedKeys={[hotkeyConfig.textSelectionToolbar?.translationFromLang ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.translationFromLang]}
+                      onSelectionChange={(keys) => {
+                        const fromLang = Array.from(keys)[0] as string;
+                        saveConfig({
+                          textSelectionToolbar: {
+                            ...hotkeyConfig.textSelectionToolbar,
+                            ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
+                            translationFromLang: fromLang
+                          }
+                        });
+                      }}
+                      className="w-24"
+                    >
+                      <SelectItem key="auto">Auto</SelectItem>
+                      <SelectItem key="en">English</SelectItem>
+                      <SelectItem key="zh">Chinese</SelectItem>
+                      <SelectItem key="ja">Japanese</SelectItem>
+                      <SelectItem key="ko">Korean</SelectItem>
+                      <SelectItem key="fr">French</SelectItem>
+                      <SelectItem key="de">German</SelectItem>
+                      <SelectItem key="es">Spanish</SelectItem>
+                    </Select>
+                    <span className="text-sm text-gray-500 self-center">→</span>
+                    <Select
+                      size="sm"
+                      selectedKeys={[hotkeyConfig.textSelectionToolbar?.translationToLang ?? DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG.translationToLang]}
+                      onSelectionChange={(keys) => {
+                        const toLang = Array.from(keys)[0] as string;
+                        saveConfig({
+                          textSelectionToolbar: {
+                            ...hotkeyConfig.textSelectionToolbar,
+                            ...DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG,
+                            translationToLang: toLang
+                          }
+                        });
+                      }}
+                      className="w-24"
+                    >
+                      <SelectItem key="en">English</SelectItem>
+                      <SelectItem key="zh">Chinese</SelectItem>
+                      <SelectItem key="ja">Japanese</SelectItem>
+                      <SelectItem key="ko">Korean</SelectItem>
+                      <SelectItem key="fr">French</SelectItem>
+                      <SelectItem key="de">German</SelectItem>
+                      <SelectItem key="es">Spanish</SelectItem>
+                    </Select>
+                  </div>
+                }
+                type="col"
+              />
+            </>
+          )}
 
         </div>
       </CollapsibleCard>
