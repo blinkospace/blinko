@@ -637,7 +637,7 @@
   "import-from-markdown": "Importer à partir d'un fichier Markdown",
   "import-from-markdown-tip": "Importer à partir d'un simple fichier .md ou d'une archive .zip contenant des fichiers .md",
   "not-a-markdown-or-zip-file": "Ce n'est pas un fichier Markdown ou zip. Veuillez sélectionner un fichier .md ou .zip.",
-  "todo": "Procuration",
+  "todo": "Tâches",
   "restore": "Rétablissement",
   "complete": "terminé",
   "today": "Aujourd'hui",
