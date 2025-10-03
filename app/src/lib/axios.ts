@@ -3,11 +3,11 @@ import { RootStore } from '@/store/root';
 import { UserStore } from '@/store/user';
 
 // Create axios instance
-const axiosInstance = axios.create({
-  baseURL: '', // Base URL can be set as needed
-  timeout: 30000,
+// 上传时单独设置超时
+await axiosInstance.post(url, formData, {
+  timeout: 600000, // 10分钟
+  onUploadProgress
 });
-
 // Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
