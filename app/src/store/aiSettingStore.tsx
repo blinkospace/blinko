@@ -9,6 +9,21 @@ import { ToastPlugin } from './module/Toast/Toast';
 import i18n from '@/lib/i18n';
 import { defaultUrlTransform } from 'react-markdown';
 
+// Enhanced authentication configuration types
+export type AuthenticationType = 'bearer' | 'api-key' | 'custom' | 'none';
+
+export interface AuthenticationConfig {
+  type: AuthenticationType;
+  apiKey?: string;
+  headerName?: string;
+  customHeaders?: { [key: string]: string };
+  options?: {
+    includeContentType?: boolean;
+    userAgent?: string;
+    queryParams?: { [key: string]: string };
+  };
+}
+
 export interface ModelCapabilities {
     inference: boolean;
     tools: boolean;
@@ -27,7 +42,7 @@ export interface ProviderModel {
     capabilities: ModelCapabilities;
 }
 
-export type AiProvider = aiProviders & { models?: AiModel[] };
+export type AiProvider = aiProviders & { models?: AiModel[]; authConfig?: AuthenticationConfig };
 export type AiModel = aiModels & { provider?: AiProvider; capabilities: ModelCapabilities };
 
 export class AiSettingStore implements Store {
@@ -110,17 +125,73 @@ export class AiSettingStore implements Store {
         },
     });
 
-    // Provider model fetching
+    // Provider model fetching with enhanced authentication support
     fetchProviderModels = new PromiseState({
         successMsg: i18n.t('model-list-updated'),
         function: async (provider: AiProvider) => {
             try {
                 let modelList: any = [];
+                const authConfig = provider.authConfig;
+
+                // Helper function to build headers from authentication config
+                const buildHeaders = (): { [key: string]: string } => {
+                    const headers: { [key: string]: string } = {};
+
+                    if (!authConfig || authConfig.type === 'none') {
+                        return headers;
+                    }
+
+                    switch (authConfig.type) {
+                        case 'bearer':
+                            if (authConfig.apiKey) {
+                                const headerName = authConfig.headerName || 'Authorization';
+                                headers[headerName] = `Bearer ${authConfig.apiKey}`;
+                            }
+                            break;
+
+                        case 'api-key':
+                            if (authConfig.apiKey && authConfig.headerName) {
+                                headers[authConfig.headerName] = authConfig.apiKey;
+                            }
+                            break;
+
+                        case 'custom':
+                            if (authConfig.customHeaders) {
+                                Object.assign(headers, authConfig.customHeaders);
+                            }
+                            break;
+                    }
+
+                    // Add content-type if specified
+                    if (authConfig.options?.includeContentType) {
+                        headers['Content-Type'] = 'application/json';
+                    }
+
+                    // Add user agent if specified
+                    if (authConfig.options?.userAgent) {
+                        headers['User-Agent'] = authConfig.options.userAgent;
+                    }
+
+                    return headers;
+                };
+
+                // Helper function to build URL with query parameters
+                const buildUrl = (baseUrl: string, path: string): string => {
+                    const url = new URL(path, baseUrl);
+
+                    if (authConfig?.options?.queryParams) {
+                        Object.entries(authConfig.options.queryParams).forEach(([key, value]) => {
+                            url.searchParams.append(key, value);
+                        });
+                    }
+
+                    return url.toString();
+                };
 
                 switch (provider.provider) {
                     case 'ollama': {
                         const endpoint = provider.baseURL || 'http://127.0.0.1:11434';
-                        const response = await fetch(`${endpoint}/api/tags`);
+                        const response = await fetch(buildUrl(endpoint, '/api/tags'));
                         const data = await response.json();
                         modelList = data.models.map((model: any) => ({
                             id: model.name,
@@ -132,11 +203,14 @@ export class AiSettingStore implements Store {
                     }
                     case 'openai': {
                         const endpoint = provider.baseURL || 'https://api.openai.com/v1';
-                        const response = await fetch(`${endpoint}/models`, {
-                            headers: {
-                                'Authorization': `Bearer ${provider.apiKey}`
-                            }
-                        });
+                        const headers = buildHeaders();
+
+                        // If no auth config, fall back to legacy auth
+                        if (!authConfig && provider.apiKey) {
+                            headers['Authorization'] = `Bearer ${provider.apiKey}`;
+                        }
+
+                        const response = await fetch(buildUrl(endpoint, '/models'), { headers });
                         const data = await response.json();
                         modelList = data.data.map((model: any) => ({
                             id: model.id,
@@ -172,7 +246,17 @@ export class AiSettingStore implements Store {
                     }
                     case 'google': {
                         const endpoint = provider.baseURL || 'https://generativelanguage.googleapis.com/v1beta';
-                        const response = await fetch(`${endpoint}/models?key=${provider.apiKey}`);
+                        const headers = buildHeaders();
+
+                        // If no auth config, fall back to legacy auth with query param
+                        let url: string;
+                        if (!authConfig && provider.apiKey) {
+                            url = `${endpoint}/models?key=${provider.apiKey}`;
+                        } else {
+                            url = buildUrl(endpoint, '/models');
+                        }
+
+                        const response = await fetch(url, { headers });
                         const data = await response.json();
                         modelList = data.models?.map((model: any) => ({
                             id: model.name.replace('models/', ''),
@@ -184,11 +268,14 @@ export class AiSettingStore implements Store {
                     }
                     case 'azure': {
                         const endpoint = provider.baseURL;
-                        const response = await fetch(`${endpoint}/openai/models?api-version=2024-02-01`, {
-                            headers: {
-                                'api-key': provider.apiKey || ''
-                            }
-                        });
+                        const headers = buildHeaders();
+
+                        // If no auth config, fall back to legacy auth
+                        if (!authConfig && provider.apiKey) {
+                            headers['api-key'] = provider.apiKey;
+                        }
+
+                        const response = await fetch(buildUrl(endpoint, '/openai/models?api-version=2024-02-01'), { headers });
                         const data = await response.json();
                         modelList = data.data.map((model: any) => ({
                             id: model.id,
@@ -198,28 +285,52 @@ export class AiSettingStore implements Store {
                         }));
                         break;
                     }
+                    case 'custom':
                     default: {
-                        const endpoint = provider.baseURL;
-                        const response = await fetch(`${endpoint}/models`, {
-                            headers: {
-                                'Authorization': `Bearer ${provider.apiKey}`
+                        // Enhanced custom provider with flexible authentication
+                        if (provider.baseURL) {
+                            const endpoint = provider.baseURL;
+                            const headers = buildHeaders();
+
+                            // If no auth config, fall back to legacy auth
+                            if (!authConfig && provider.apiKey) {
+                                headers['Authorization'] = `Bearer ${provider.apiKey}`;
                             }
-                        });
-                        const data = await response.json();
-                        modelList = data.data.map((model: any) => ({
-                            id: model.id,
-                            name: model.id,
-                            description: '',
-                            capabilities: this.inferModelCapabilities(model.id)
-                        }));
+
+                            try {
+                                const response = await fetch(buildUrl(endpoint, '/models'), { headers });
+                                const data = await response.json();
+
+                                // Handle different response formats
+                                if (data.data && Array.isArray(data.data)) {
+                                    modelList = data.data.map((model: any) => ({
+                                        id: model.id,
+                                        name: model.id,
+                                        description: model.description || '',
+                                        capabilities: this.inferModelCapabilities(model.id)
+                                    }));
+                                } else if (Array.isArray(data)) {
+                                    modelList = data.map((model: any) => ({
+                                        id: model.id || model.name,
+                                        name: model.name || model.id,
+                                        description: model.description || '',
+                                        capabilities: this.inferModelCapabilities(model.id || model.name)
+                                    }));
+                                }
+                            } catch (error) {
+                                console.warn(`Failed to fetch models from ${endpoint}:`, error);
+                                // Continue with empty model list
+                            }
+                        }
                         break;
                     }
                 }
 
-                // Save models to provider config
+                // Save models and auth config to provider config
                 const updatedConfig = {
                     ...provider.config,
-                    models: modelList
+                    models: modelList,
+                    authConfig: authConfig // Save auth config for future use
                 };
 
                 await this.updateProvider.call({

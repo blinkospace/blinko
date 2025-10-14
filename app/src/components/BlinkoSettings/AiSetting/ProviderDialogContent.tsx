@@ -6,9 +6,10 @@ import { useState, useEffect } from 'react';
 import { RootStore } from '@/store';
 import { DialogStore } from '@/store/module/Dialog';
 import { ProviderIcon } from '@/components/BlinkoSettings/AiSetting/AIIcon';
-import { AiProvider, AiSettingStore } from '@/store/aiSettingStore';
+import { AiProvider, AiSettingStore, AuthenticationConfig } from '@/store/aiSettingStore';
 import { PROVIDER_TEMPLATES } from './constants';
 import { Copy } from '@/components/Common/Copy';
+import AuthenticationConfigComponent from './AuthenticationConfig';
 
 interface ProviderDialogContentProps {
   provider?: AiProvider;
@@ -57,8 +58,15 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
       baseURL: '',
       apiKey: '',
       sortOrder: 0,
-      models: []
+      models: [],
+      authConfig: undefined
     };
+  });
+
+  const [authConfig, setAuthConfig] = useState<AuthenticationConfig | undefined>(() => {
+    // Try to get auth config from provider config first, then from authConfig property
+    const providerAuthConfig = provider?.config?.authConfig || provider?.authConfig;
+    return providerAuthConfig;
   });
 
   // Initialize editing mode if provider exists
@@ -66,6 +74,9 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
     if (provider) {
       setCurrentStep(2);
       setSelectedTemplate(provider.provider);
+      // Load auth config from provider config or authConfig property
+      const providerAuthConfig = provider.config?.authConfig || provider.authConfig;
+      setAuthConfig(providerAuthConfig);
     }
   }, [provider]);
 
@@ -96,10 +107,19 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
   const handleSaveProvider = async () => {
     if (!editingProvider) return;
 
+    // Prepare provider data with enhanced authentication config
+    const providerData = {
+      ...editingProvider,
+      config: {
+        ...editingProvider.config,
+        authConfig: authConfig // Store auth config in the config JSON field
+      }
+    };
+
     if (editingProvider.id) {
-      await aiSettingStore.updateProvider.call(editingProvider as any);
+      await aiSettingStore.updateProvider.call(providerData as any);
     } else {
-      await aiSettingStore.createProvider.call(editingProvider as any);
+      await aiSettingStore.createProvider.call(providerData as any);
     }
     RootStore.Get(DialogStore).close();
   };
@@ -166,7 +186,7 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
     const template = PROVIDER_TEMPLATES.find(t => t.value === selectedTemplate);
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-center justify-center gap-3 mb-6">
           <ProviderIcon provider={selectedTemplate} className="w-8 h-8" />
           <h3 className="text-lg font-semibold">
@@ -174,51 +194,83 @@ export default observer(function ProviderDialogContent({ provider }: ProviderDia
           </h3>
         </div>
 
-        <Input
-          label={t('provider-name')}
-          placeholder={t('enter-provider-name')}
-          value={editingProvider.title || ''}
-          onValueChange={(value) => {
-            setEditingProvider(prev => ({ ...prev, title: value }));
-          }}
-        />
-
-        <Input
-          label={t('base-url')}
-          placeholder={t('enter-api-base-url')}
-          value={editingProvider.baseURL || ''}
-          onValueChange={(value) => {
-            setEditingProvider(prev => ({ ...prev, baseURL: value }));
-          }}
-        />
-
-        <Input
-          label={t('api-key')}
-          placeholder={t('enter-api-key')}
-          type="password"
-          value={editingProvider.apiKey || ''}
-          onValueChange={(value) => {
-            setEditingProvider(prev => ({ ...prev, apiKey: value }));
-          }}
-          endContent={<Copy size={20} content={editingProvider.apiKey ?? ''} />}
-        />
-
-        {(editingProvider.provider === 'azure' || editingProvider.provider === 'azureopenai') && (
+        {/* Basic Configuration */}
+        <div className="space-y-4">
           <Input
-            label={t('api-version')}
-            placeholder="Enter API version (e.g., 2024-02-01)"
-            value={editingProvider.config?.apiVersion || ''}
+            label={t('provider-name')}
+            placeholder={t('enter-provider-name')}
+            value={editingProvider.title || ''}
             onValueChange={(value) => {
-              setEditingProvider(prev => ({
-                ...prev,
-                config: {
-                  ...prev.config,
-                  apiVersion: value
-                }
-              }));
+              setEditingProvider(prev => ({ ...prev, title: value }));
             }}
           />
-        )}
+
+          <Input
+            label={t('base-url')}
+            placeholder={t('enter-api-base-url')}
+            value={editingProvider.baseURL || ''}
+            onValueChange={(value) => {
+              setEditingProvider(prev => ({ ...prev, baseURL: value }));
+            }}
+          />
+
+          {/* Legacy API Key field for backward compatibility */}
+          <Input
+            label={t('api-key')}
+            placeholder={t('enter-api-key')}
+            type="password"
+            value={editingProvider.apiKey || ''}
+            onValueChange={(value) => {
+              setEditingProvider(prev => ({ ...prev, apiKey: value }));
+              // Also update auth config if it exists
+              if (authConfig) {
+                setAuthConfig({ ...authConfig, apiKey: value });
+              }
+            }}
+            endContent={<Copy size={20} content={editingProvider.apiKey ?? ''} />}
+            description={t('legacy-api-key-description')}
+          />
+
+          {(editingProvider.provider === 'azure' || editingProvider.provider === 'azureopenai') && (
+            <Input
+              label={t('api-version')}
+              placeholder="Enter API version (e.g., 2024-02-01)"
+              value={editingProvider.config?.apiVersion || ''}
+              onValueChange={(value) => {
+                setEditingProvider(prev => ({
+                  ...prev,
+                  config: {
+                    ...prev.config,
+                    apiVersion: value
+                  }
+                }));
+              }}
+            />
+          )}
+        </div>
+
+        {/* Enhanced Authentication Configuration */}
+        <div className="border-t pt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Icon icon="hugeicons:shield-security" width="20" height="20" className="text-primary" />
+            <h4 className="text-lg font-semibold">{t('enhanced-authentication')}</h4>
+            <Chip size="sm" variant="flat" color="primary">
+              {t('recommended')}
+            </Chip>
+          </div>
+
+          <AuthenticationConfigComponent
+            authConfig={authConfig}
+            onAuthConfigChange={(newAuthConfig) => {
+              setAuthConfig(newAuthConfig);
+              // Also update legacy apiKey field for backward compatibility
+              if (newAuthConfig.apiKey && !editingProvider.apiKey) {
+                setEditingProvider(prev => ({ ...prev, apiKey: newAuthConfig.apiKey }));
+              }
+            }}
+            provider={selectedTemplate}
+          />
+        </div>
       </div>
     );
   };

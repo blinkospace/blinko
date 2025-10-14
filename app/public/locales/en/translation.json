@@ -792,5 +792,21 @@
   "local-voice-recognition": "Local Voice Recognition",
   "cuda-acceleration": "CUDA Acceleration",
   "voice-tip": "Press and hold the shortcut key to speak for voice transcription, and release it to insert the transcribed content into the text box.",
-  "dragging": "Dragging..."
+  "dragging": "Dragging...",
+  "enhanced-authentication": "Enhanced Authentication",
+  "recommended": "Recommended",
+  "authentication-type": "Authentication Type",
+  "no-authentication-required": "No Authentication Required",
+  "no-auth-description": "This endpoint doesn't require authentication. Suitable for local or public APIs.",
+  "header-name": "Header Name",
+  "enter-your-api-key": "Enter your API key",
+  "header-name-placeholder": "e.g., Authorization, X-API-Key",
+  "bearer-token-header-description": "The header name for the Bearer token. Default: Authorization",
+  "api-key-header-description": "The header name for the API key. Examples: X-API-Key, api-key, Authorization",
+  "custom-headers": "Custom Headers",
+  "custom-headers-description": "Add custom HTTP headers for authentication. You can add multiple headers.",
+  "header-name": "Header Name",
+  "header-value": "Header Value",
+  "example-configurations": "Example Configurations",
+  "legacy-api-key-description": "For backward compatibility. It's recommended to use Enhanced Authentication above."
 }
