@@ -298,7 +298,8 @@ export const aiRouter = router({
               apiKey: provider.apiKey,
               baseURL: provider.baseURL,
               modelKey,
-              apiVersion: (provider.config as any)?.apiVersion
+              apiVersion: (provider.config as any)?.apiVersion,
+              auth: (provider.config as any)?.authConfig // Use enhanced auth config if available
             });
 
             // Test simple generation
@@ -323,7 +324,8 @@ export const aiRouter = router({
               apiKey: provider.apiKey,
               baseURL: provider.baseURL,
               modelKey,
-              apiVersion: (provider.config as any)?.apiVersion
+              apiVersion: (provider.config as any)?.apiVersion,
+              auth: (provider.config as any)?.authConfig // Use enhanced auth config if available
             });
 
             const { embed } = await import('ai');
