@@ -539,23 +539,49 @@ export class BlinkoStore implements Store {
 
   async refreshData() {
     this.tagList.call()
-    
+
     const currentPath = new URLSearchParams(window.location.search).get('path');
-    
+
+    // Clear unused lists to prevent memory accumulation
     if (currentPath === 'notes') {
+      this.todoList.clear();
+      this.archivedList.clear();
+      this.trashList.clear();
+      this.blinkoList.clear();
       this.noteOnlyList.resetAndCall({});
     } else if (currentPath === 'todo') {
+      this.noteOnlyList.clear();
+      this.archivedList.clear();
+      this.trashList.clear();
+      this.blinkoList.clear();
       this.todoList.resetAndCall({});
     } else if (currentPath === 'archived') {
+      this.noteOnlyList.clear();
+      this.todoList.clear();
+      this.trashList.clear();
+      this.blinkoList.clear();
       this.archivedList.resetAndCall({});
     } else if (currentPath === 'trash') {
+      this.noteOnlyList.clear();
+      this.todoList.clear();
+      this.archivedList.clear();
+      this.blinkoList.clear();
       this.trashList.resetAndCall({});
     } else if (currentPath === 'all') {
+      this.noteOnlyList.clear();
+      this.todoList.clear();
+      this.archivedList.clear();
+      this.trashList.clear();
+      this.blinkoList.clear();
       this.noteList.resetAndCall({});
     } else {
+      this.noteOnlyList.clear();
+      this.todoList.clear();
+      this.archivedList.clear();
+      this.trashList.clear();
       this.blinkoList.resetAndCall({});
     }
-    
+
     this.config.call()
     this.dailyReviewNoteList.call()
   }
@@ -563,6 +589,20 @@ export class BlinkoStore implements Store {
   private clear() {
     this.createContentStorage.clear()
     this.editContentStorage.clear()
+    // Clear all list states to prevent memory accumulation
+    this.blinkoList.clear()
+    this.noteOnlyList.clear()
+    this.todoList.clear()
+    this.archivedList.clear()
+    this.trashList.clear()
+    this.noteList.clear()
+    this.offlineNoteStorage.clear()
+    this.curMultiSelectIds = []
+    this.isMultiSelectMode = false
+    this.curSelectedNote = null
+    this.noteContent = ''
+    this.searchText = ''
+    this.updateTicker = 0
   }
 
   use() {
@@ -577,18 +617,21 @@ export class BlinkoStore implements Store {
       if (this.updateTicker == 0) return
       console.log('updateTicker', this.updateTicker)
       this.refreshData()
+      // Reset updateTicker to prevent infinite loop
+      this.updateTicker = 0
     }, [this.updateTicker])
   }
 
   useQuery() {
     const [searchParams] = useSearchParams();
     const location = useLocation();
+
     useEffect(() => {
       const tagId = searchParams.get('tagId');
       if (tagId && Number(tagId) === this.noteListFilterConfig.tagId) {
         return;
       }
-      
+
       const withoutTag = searchParams.get('withoutTag');
       const withFile = searchParams.get('withFile');
       const withLink = searchParams.get('withLink');
@@ -596,6 +639,7 @@ export class BlinkoStore implements Store {
       const hasTodo = searchParams.get('hasTodo');
       const path = searchParams.get('path');
 
+      // Reset filter config
       this.noteListFilterConfig.type = NoteType.BLINKO
       this.noteTypeDefault = NoteType.BLINKO
       this.noteListFilterConfig.tagId = null
@@ -609,24 +653,49 @@ export class BlinkoStore implements Store {
       this.noteListFilterConfig.isShare = null
       this.noteListFilterConfig.hasTodo = false
 
+      // Clear unused lists before loading new ones to prevent memory accumulation
       if (path == 'notes') {
+        this.todoList.clear();
+        this.archivedList.clear();
+        this.trashList.clear();
+        this.blinkoList.clear();
         this.noteListFilterConfig.type = NoteType.NOTE
         this.noteOnlyList.resetAndCall({});
       } else if (path == 'todo') {
+        this.noteOnlyList.clear();
+        this.archivedList.clear();
+        this.trashList.clear();
+        this.blinkoList.clear();
         this.noteListFilterConfig.type = NoteType.TODO
         this.todoList.resetAndCall({});
       } else if (path == 'all') {
+        this.noteOnlyList.clear();
+        this.todoList.clear();
+        this.archivedList.clear();
+        this.trashList.clear();
         this.noteListFilterConfig.type = -1
         this.noteList.resetAndCall({});
       } else if (path == 'archived') {
+        this.noteOnlyList.clear();
+        this.todoList.clear();
+        this.trashList.clear();
+        this.blinkoList.clear();
         this.noteListFilterConfig.type = -1
         this.noteListFilterConfig.isArchived = true
         this.archivedList.resetAndCall({});
       } else if (path == 'trash') {
+        this.noteOnlyList.clear();
+        this.todoList.clear();
+        this.archivedList.clear();
+        this.blinkoList.clear();
         this.noteListFilterConfig.type = -1
         this.noteListFilterConfig.isRecycle = true
         this.trashList.resetAndCall({});
       } else {
+        this.noteOnlyList.clear();
+        this.todoList.clear();
+        this.archivedList.clear();
+        this.trashList.clear();
         this.blinkoList.resetAndCall({});
       }
 
