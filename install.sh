@@ -28,7 +28,6 @@ else
     docker run -d \
       --name blinko-postgres \
       --network blinko-network \
-      -p 5435:5432 \
       -e POSTGRES_DB=postgres \
       -e POSTGRES_USER=postgres \
       -e POSTGRES_PASSWORD=mysecretpassword \
