@@ -4,6 +4,7 @@ import { createAzure } from '@ai-sdk/azure';
 import { createVoyage } from 'voyage-ai-provider';
 import { createOllama } from 'ollama-ai-provider';
 import { BaseProvider } from './BaseProvider';
+import { AuthenticationConfig, buildAuthHeaders } from '../authTypes';
 
 interface EmbeddingConfig {
   provider: string;
@@ -11,6 +12,7 @@ interface EmbeddingConfig {
   baseURL?: any;
   modelKey: string;
   apiVersion?: any;
+  auth?: AuthenticationConfig;
 }
 
 export class EmbeddingProvider extends BaseProvider {
@@ -18,11 +20,15 @@ export class EmbeddingProvider extends BaseProvider {
   async getEmbeddingModel(config: EmbeddingConfig): Promise<EmbeddingModelV1<string>| null> {
     await this.initializeFetch();
 
+    // Use enhanced authentication if provided
+    const apiKey = config.auth?.apiKey || config.apiKey;
+    const baseURL = config.baseURL;
+
     switch (config.provider.toLowerCase()) {
       case 'openai':
         return createOpenAI({
-          apiKey: config.apiKey,
-          baseURL: config.baseURL || undefined,
+          apiKey: apiKey,
+          baseURL: baseURL || undefined,
           fetch: this.proxiedFetch
         }).textEmbeddingModel(config.modelKey);
 
@@ -30,30 +36,58 @@ export class EmbeddingProvider extends BaseProvider {
         return null;
       case 'azure':
         return createAzure({
-          apiKey: config.apiKey,
-          baseURL: config.baseURL || undefined,
+          apiKey: apiKey,
+          baseURL: baseURL || undefined,
           apiVersion: config.apiVersion || undefined,
           fetch: this.proxiedFetch
         }).textEmbeddingModel(config.modelKey);
 
       case 'voyageai':
         return createVoyage({
-          apiKey: config.apiKey,
+          apiKey: apiKey,
           fetch: this.proxiedFetch
         }).textEmbeddingModel(config.modelKey);
 
       case 'ollama':
         return createOllama({
-          baseURL: config.baseURL?.trim() || undefined,
+          baseURL: baseURL?.trim() || undefined,
           fetch: this.proxiedFetch
         }).textEmbeddingModel(config.modelKey);
 
       case 'custom':
       default:
-        // Default to OpenAI-compatible API
+        // Enhanced custom provider with flexible authentication
+        if (config.auth && config.auth.type !== 'none') {
+          // Create custom fetch with enhanced authentication
+          const customFetch = async (url: string, options: RequestInit = {}) => {
+            const authHeaders = buildAuthHeaders(config.auth!);
+            const headers = {
+              ...options.headers,
+              ...authHeaders
+            };
+
+            const fetchOptions = {
+              ...options,
+              headers
+            };
+
+            return this.proxiedFetch ?
+              this.proxiedFetch(url, fetchOptions) :
+              fetch(url, fetchOptions);
+          };
+
+          // Create OpenAI-compatible provider with custom authentication
+          return createOpenAI({
+            apiKey: apiKey || 'dummy-key', // Required by AI SDK but won't be used in headers
+            baseURL: baseURL || undefined,
+            fetch: customFetch
+          }).textEmbeddingModel(config.modelKey);
+        }
+
+        // Fallback to OpenAI-compatible API with basic auth
         return createOpenAI({
-          apiKey: config.apiKey,
-          baseURL: config.baseURL || undefined,
+          apiKey: apiKey,
+          baseURL: baseURL || undefined,
           fetch: this.proxiedFetch
         }).textEmbeddingModel(config.modelKey);
     }
