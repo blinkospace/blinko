@@ -14,7 +14,6 @@ import { isDesktop, isInTauri, isWindows } from '@/lib/tauriHelper';
 import { CollapsibleCard } from '../Common/CollapsibleCard';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { HotkeyConfig, DEFAULT_HOTKEY_CONFIG, TextSelectionToolbarConfig, DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG } from '@/../../shared/lib/types';
-import { VoiceSetting } from './VoiceSetting';
 
 const HOTKEY_EXAMPLES = {
   'Shift+Space': 'Shift+Space (Recommended)',
@@ -686,8 +685,6 @@ export const HotkeySetting = observer(() => {
 
         </div>
       </CollapsibleCard>
-
-      {isWindows() && <VoiceSetting />}
     </div>
   );
 });
