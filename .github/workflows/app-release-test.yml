@@ -1,0 +1,133 @@
+name: App Release Test
+
+run-name: >-
+  ${{
+    github.event_name == 'workflow_dispatch' && format('Test Build - v{0}', github.event.inputs.tag) ||
+    format('Test Build - {0}', github.ref_name)
+  }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Test Version (e.g. 1.0.0-test)'
+        required: true
+        type: string
+      disable-rust-cache:
+        description: 'Disable Rust cache (useful for troubleshooting build issues)'
+        required: false
+        type: boolean
+        default: false
+      disable-all-cache:
+        description: 'Disable all caches (force clean build, no cache at all)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  # Desktop Platform Build Task (Test Only)
+  test-build-desktop:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest' # Apple Silicon (M-series chip)
+            args: '--target aarch64-apple-darwin'
+          - platform: 'ubuntu-22.04' # Linux Platform
+            args: ''
+          - platform: 'windows-latest' # Windows Platform
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Increase Node.js memory limit
+        run: |
+          echo "NODE_OPTIONS=--max-old-space-size=4096" >> $GITHUB_ENV
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Rust Cache
+        if: github.event.inputs.disable-rust-cache != 'true' && github.event.inputs.disable-all-cache != 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri
+          cache-on-failure: true
+
+      - name: Install Ubuntu Dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
+
+      - name: Install Dependencies
+        run: |
+          bun install --frozen-lockfile
+
+      - name: Verify build tools
+        shell: bash
+        run: |
+          echo "=== Verifying build environment ==="
+          echo "Node version: $(node --version)"
+          echo "Bun version: $(bun --version)"
+          which bun || echo "bun not found in PATH"
+          echo "Current directory: $(pwd)"
+          echo "=== Directory structure ==="
+          ls -la
+          echo "=== App directory ==="
+          ls -la app/ || echo "app directory not found"
+
+      - name: Build frontend with bun
+        shell: bash
+        run: |
+          echo "=== Building frontend with bun ==="
+          cd app
+          bun run build:no-pwa
+          echo "=== Build completed, checking dist folder ==="
+          ls -la dist/ || echo "dist folder not found"
+          cd ..
+
+      # Using official Tauri Action to build (without publishing)
+      - name: Build Desktop App (Test)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: 'app'
+          beforeBuildCommand: ''
+          tauriScript: 'bun run tauri'
+          args: ${{ matrix.args }}
+          # Don't create release for test builds
+          tagName: ''
+          releaseName: ''
+          releaseBody: ''
+          releaseDraft: true
+          prerelease: true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: blinko-test-${{ matrix.platform }}-${{ github.event.inputs.tag }}
+          path: |
+            app/src-tauri/target/release/bundle/**/*
+            !app/src-tauri/target/release/bundle/**/*.dSYM/**
+          retention-days: 7
+
