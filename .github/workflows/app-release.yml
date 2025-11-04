@@ -111,10 +111,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest' # Apple M-series chip (ARM)
+          - platform: 'macos-latest' # Apple Silicon (M-series chip)
             args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest' # Intel chip Mac
-            args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-22.04' # Linux Platform
             args: ''
           - platform: 'windows-latest' # Windows Platform
