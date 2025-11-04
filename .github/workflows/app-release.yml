@@ -194,8 +194,6 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Clean install without cache to avoid npm/bun conflicts
-          rm -rf node_modules app/node_modules || true
           bun install --frozen-lockfile
 
       # Using official Tauri Action to build and publish
@@ -274,8 +272,6 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # Clean install without cache to avoid npm/bun conflicts
-          rm -rf node_modules app/node_modules || true
           bun install --frozen-lockfile
 
       - name: Run Prisma Generate
