@@ -194,8 +194,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          bun install
-          cd app && bun install
+          bun install --frozen-lockfile
 
       # Using official Tauri Action to build and publish
       - name: Build and Publish Desktop App
@@ -206,7 +205,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: 'app'
-          tauriScript: '../node_modules/.bin/tauri'
           args: ${{ matrix.args }}
           tagName: ${{ needs.set-version.outputs.version }}
           releaseName: Blinko ${{ needs.set-version.outputs.version }}
