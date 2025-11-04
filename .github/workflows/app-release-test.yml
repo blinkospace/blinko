@@ -13,6 +13,11 @@ on:
         description: 'Test Version (e.g. 1.0.0-test)'
         required: true
         type: string
+      test-branch:
+        description: 'Branch to test (leave empty to use current branch)'
+        required: false
+        type: string
+        default: ''
       disable-rust-cache:
         description: 'Disable Rust cache (useful for troubleshooting build issues)'
         required: false
@@ -44,7 +49,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.test-branch || github.ref }}
           fetch-depth: 0
+
+      - name: Show build info
+        shell: bash
+        run: |
+          echo "=== Build Information ==="
+          echo "Branch: $(git branch --show-current)"
+          echo "Commit: $(git rev-parse --short HEAD)"
+          echo "Commit message: $(git log -1 --pretty=%B)"
+          echo "Test version: ${{ github.event.inputs.tag }}"
+          echo "========================"
 
       - name: Setup Node Environment
         uses: actions/setup-node@v4
