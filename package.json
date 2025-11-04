@@ -12,7 +12,7 @@
     "dev": "cd app && bun run tauri dev",
     "build:web": "turbo run build:web",
     "test": "turbo run test",
-    "start": "cd server && bun run start",
+    "start:server:production": "ncp dist/public server/public && cd server && bun run start",
     "clean": "turbo run clean && rm -rf node_modules",
     "dev:backend": "dotenv turbo run dev --filter=@blinko/backend",
     "dev:frontend": "dotenv turbo run dev --filter=@blinko/frontend",

@@ -12,6 +12,7 @@
     "build:web": "NODE_OPTIONS=\"--max-old-space-size=4096\" vite build",
     "tauri": "tauri",
     "tauri:dev": "RUST_BACKTRACE=1 tauri dev",
+    "tauri:build:desktop:local": "tauri build --no-bundle",
     "tauri:android:dev": "tauri android dev --host",
     "tauri:android:build": "tauri android build",
     "tauri:desktop:build": "tauri build",

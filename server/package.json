@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun --env-file ../.env --watch index.ts",
     "build:web": "bun esbuild.config.ts",
-    "start": "NODE_ENV=production dotenv -e ../.env -- bun --env ../dist/index.js"
+    "start": "cross-env NODE_ENV=production bun --env-file ../.env ../dist/index.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.10",
