@@ -203,6 +203,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: 'app'
+          beforeBuildCommand: 'bun run build:no-pwa'
+          tauriScript: 'bun run tauri'
           args: ${{ matrix.args }}
           tagName: ${{ needs.set-version.outputs.version }}
           releaseName: Blinko ${{ needs.set-version.outputs.version }}
