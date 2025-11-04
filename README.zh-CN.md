@@ -48,17 +48,6 @@ Blinko 是一个AI驱动的卡片笔记项目，专为那些想要快速捕捉�
 
 - 🔓**开放协作**：作为开源项目，Blinko 欢迎社区贡献。所有代码都在 GitHub 上公开透明，培养协作和持续改进的精神。
 
-## 🎤 离线语音识别 (Windows)
-
-Windows 桌面版支持基于 Whisper 的离线语音识别功能，让您无需网络连接即可将语音转换为文字。
-
-### 可用版本
-- **Blinko.exe** - CPU版本，适用于所有系统
-- **Blinko(CUDA).exe** - GPU加速版本，专为NVIDIA显卡优化
-  - **必须先安装 [CUDA工具包](https://developer.nvidia.com/cuda-downloads)，否则会因缺少运行环境导致安装报错**
-  - 提供显著更快的转录性能
-  - 需要手动从 [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp/tree/main) 下载 Whisper 模型
-
 ## 🤖 AI 模型支持
 ### OpenAI
 - 支持 OpenAI API

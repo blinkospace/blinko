@@ -161,7 +161,6 @@ export const DEFAULT_MODEL_TEMPLATES: ModelTemplate[] = [
   { modelKey: 'text-embedding-ada-002', title: 'Text Embedding Ada 002', capabilities: { embedding: true }, config: { embeddingDimensions: 1536 } },
   { modelKey: 'dall-e-3', title: 'DALL-E 3', capabilities: { imageGeneration: true } },
   { modelKey: 'dall-e-2', title: 'DALL-E 2', capabilities: { imageGeneration: true } },
-  { modelKey: 'whisper-1', title: 'Whisper', capabilities: { audio: true } },
   { modelKey: 'tts-1', title: 'TTS 1', capabilities: { audio: true } },
   { modelKey: 'tts-1-hd', title: 'TTS 1 HD', capabilities: { audio: true } },
 

@@ -42,17 +42,11 @@ enigo = "0.3"
 rdev = "0.3"
 sys-locale = "0.3"
 
-[features]
-default = ["whisper-cpu"]
-whisper-cuda = ["dep:whisper-rs", "whisper-rs/cuda"]
-whisper-cpu = ["dep:whisper-rs"]
+ 
 
 [target.'cfg(target_os = "windows")'.dependencies]
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync"] }
-cpal = "0.16.0"
-crossbeam-channel = "0.5"
-parking_lot = "0.12"
-whisper-rs = { version = "0.15.1", optional = true }
+
 
 
 [target.'cfg(target_os = "macos")'.dependencies]

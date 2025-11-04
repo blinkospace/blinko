@@ -24,7 +24,6 @@ import { ImportAIDialog } from '@/components/BlinkoSettings/ImportAIDialog';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { HotkeySetting } from '@/components/BlinkoSettings/HotkeySetting';
-import { VoiceSetting } from '@/components/BlinkoSettings/VoiceSetting';
 import { isDesktop } from '@/lib/tauriHelper';
 
 type SettingItem = {
@@ -159,10 +158,9 @@ const Page = observer(() => {
   const getVisibleSettings = () => {
     let settings = allSettings.filter((setting) => !setting.requireAdmin || user.isSuperAdmin);
 
-    // Hide hotkey and voice settings on mobile platforms
+    // Hide hotkey settings on mobile platforms
     settings = settings.filter((setting) =>
-      (setting.key !== 'hotkey' || isDesktop()) &&
-      (setting.key !== 'voice' || isDesktop())
+      (setting.key !== 'hotkey' || isDesktop())
     );
 
     if (blinkoStore.searchText) {

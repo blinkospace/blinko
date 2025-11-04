@@ -19,11 +19,6 @@ on:
         description: 'Tag Version (e.g. 1.0.0)'
         required: true
         type: string
-      disable-rust-cache:
-        description: 'Disable Rust cache (useful for troubleshooting build issues)'
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   # Set version first
@@ -122,14 +117,8 @@ jobs:
             args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-22.04' # Linux Platform
             args: ''
-          - platform: 'windows-latest' # Windows Platform (CPU)
+          - platform: 'windows-latest' # Windows Platform
             args: ''
-            features: '--features whisper-cpu'
-            variant: 'cpu'
-          - platform: 'windows-latest' # Windows Platform (CUDA)
-            args: ''
-            features: '--features whisper-cuda'
-            variant: 'cuda'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -143,77 +132,21 @@ jobs:
           name: tauri-config
           path: app/src-tauri/
 
-      - name: Install CUDA Toolkit (Windows CUDA)
-        if: matrix.platform == 'windows-latest' && matrix.variant == 'cuda'
-        uses: Jimver/cuda-toolkit@v0.2.24
-        id: cuda-toolkit
-        with:
-          cuda: '12.5.0'
-          method: 'network'
-          sub-packages: '[ "nvcc", "cudart", "cublas", "cublas_dev", "curand", "curand_dev", "visual_studio_integration", "thrust" ]'
-
-      - name: Set CUDA environment variables (Windows CUDA)
-        if: matrix.platform == 'windows-latest' && matrix.variant == 'cuda'
-        run: |
-          echo "Installed cuda version is: ${{steps.cuda-toolkit.outputs.cuda}}"
-          echo "Cuda install location: ${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
-          echo "CUDA_PATH=${{steps.cuda-toolkit.outputs.CUDA_PATH}}" >> $GITHUB_ENV
-          echo "${{steps.cuda-toolkit.outputs.CUDA_PATH}}\bin" >> $GITHUB_PATH
-          nvcc -V
-
-
-      - name: Fix CUDA Visual Studio Integration (Windows CUDA)
-        if: matrix.platform == 'windows-latest' && matrix.variant == 'cuda'
-        run: |
-          $cudaPath = "${{steps.cuda-toolkit.outputs.CUDA_PATH}}"
-          echo "CUDA Path: $cudaPath"
-
-          # Source: CUDA Visual Studio integration files
-          $sourceDir = "$cudaPath\extras\visual_studio_integration\MSBuildExtensions"
-          echo "Source: $sourceDir"
-
-          # Find Visual Studio installation
-          $vsPaths = @(
-            "C:\Program Files\Microsoft Visual Studio\2022\Enterprise",
-            "C:\Program Files\Microsoft Visual Studio\2022\Community",
-            "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools"
-          )
-
-          foreach ($vsPath in $vsPaths) {
-            $destDir = "$vsPath\MSBuild\Microsoft\VC\v170\BuildCustomizations"
-            if (Test-Path $destDir) {
-              echo "Found VS at: $vsPath"
-              echo "Destination: $destDir"
-
-              if (Test-Path $sourceDir) {
-                echo "Copying CUDA integration files..."
-                Copy-Item "$sourceDir\*" $destDir -Force -Verbose
-                echo "Successfully copied CUDA integration files to $destDir"
-              } else {
-                echo "ERROR: Source directory not found: $sourceDir"
-              }
-              break
-            }
-          }
-
-          # Set environment variable for CMake to use CUDA toolset
-          echo "CMAKE_GENERATOR_TOOLSET=cuda=$cudaPath" >> $GITHUB_ENV
-
       - name: Fix version format for Windows MSI
         if: matrix.platform == 'windows-latest'
         run: |
           $versionJson = Get-Content -Path app/src-tauri/tauri.conf.json | ConvertFrom-Json
           $currentVersion = $versionJson.version
-
+          
           if ($currentVersion -match '-(.+)$') {
             $newVersion = $currentVersion -replace '-(.+)$', ''
-
+            
             $versionJson.version = $newVersion
-
+            
             $jsonContent = Get-Content -Path app/src-tauri/tauri.conf.json -Raw
             $jsonContent = $jsonContent -replace '"version": "([^"]+)"', "`"version`": `"$newVersion`""
             $jsonContent | Set-Content -Path app/src-tauri/tauri.conf.json -NoNewline
-
+            
             echo "Windows version $currentVersion changed to $newVersion"
           } else {
             echo "Version $currentVersion does not need to be modified"
@@ -243,10 +176,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-          components: ${{ matrix.platform == 'windows-latest' && 'rustfmt' || '' }}
 
       - name: Rust Cache
-        if: github.event.inputs.disable-rust-cache != 'true'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: app/src-tauri
@@ -263,15 +194,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          bun install --frozen-lockfile
-
-
-      # Copy CUDA config for CUDA builds (with installer checks)
-      - name: Use CUDA config (Windows CUDA)
-        if: matrix.platform == 'windows-latest' && matrix.variant == 'cuda'
-        run: |
-          Copy-Item "app\src-tauri\tauri.cuda.conf.json" "app\src-tauri\tauri.conf.json" -Force
-          echo "Using CUDA configuration with installer CUDA detection"
+          bun install
+          cd app && bun install
 
       # Using official Tauri Action to build and publish
       - name: Build and Publish Desktop App
@@ -282,9 +206,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: 'app'
-          args: ${{ matrix.args }} ${{ matrix.features || '' }}
+          tauriScript: '../node_modules/.bin/tauri'
+          args: ${{ matrix.args }}
           tagName: ${{ needs.set-version.outputs.version }}
-          releaseName: Blinko ${{ needs.set-version.outputs.version }}${{ matrix.variant && format(' ({0})', matrix.variant) || '' }}
+          releaseName: Blinko ${{ needs.set-version.outputs.version }}
           releaseBody: "Under construction, full changelog will be updated after build completion..."
           releaseDraft: false
           prerelease: false
@@ -334,7 +259,6 @@ jobs:
           targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
 
       - name: Rust Cache
-        if: github.event.inputs.disable-rust-cache != 'true'
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: app/src-tauri
@@ -356,7 +280,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          bun install --frozen-lockfile
+          bun install
+          cd app && bun install
 
       - name: Run Prisma Generate
         run: bun run prisma:generate
@@ -371,7 +296,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-    
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2.0.0-alpha"
+
       - name: Upload Keystore File
         run: |
           # Create keystore directory
@@ -498,6 +425,7 @@ jobs:
               console.log('Generated Chinese message');
             } catch (error) {
               console.error('Error calling OpenRouter API:', error.message);
+              // 如果API调用失败，使用默认消息
               const defaultMessage = `🚀 Blinko ${{ needs.set-version.outputs.version }} 已发布！\n\n📝 更新日志：\n${{ needs.generate-changelog.outputs.changelog }}\n\n📥 下载链接：\nhttps://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }}`;
               core.setOutput('message', defaultMessage);
             }
@@ -541,6 +469,7 @@ jobs:
               console.log('Generated English message');
             } catch (error) {
               console.error('Error calling OpenRouter API:', error.message);
+              // 如果API调用失败，使用默认消息
               const defaultMessage = `🚀 Blinko ${{ needs.set-version.outputs.version }} has been released!\n\n📝 Changelog:\n${{ needs.generate-changelog.outputs.changelog }}\n\n📥 Download:\nhttps://github.com/${{ github.repository }}/releases/tag/${{ needs.set-version.outputs.version }}`;
               core.setOutput('message', defaultMessage);
             }

@@ -51,17 +51,6 @@ Blinko is an AI-powered card note-taking project. Designed for individuals who w
 
 - 🔓**Open for Collaboration** :As an open-source project, Blinko invites contributions from the community. All code is transparent and available on GitHub, fostering a spirit of collaboration and constant improvement.
 
-## 🎤 Offline Voice Recognition (Windows)
-
-The Windows desktop version supports offline voice recognition powered by Whisper, allowing you to convert speech to text without internet connectivity.
-
-### Available Versions
-- **Blinko.exe** - CPU-only version for all systems
-- **Blinko(CUDA).exe** - GPU-accelerated version for NVIDIA graphics cards
-  - **Requires [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) to be installed, otherwise installation will fail due to missing runtime environment**
-  - Provides significantly faster transcription performance
-  - Requires manual download of Whisper models from [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp/tree/main)
-
 ## 📦Start with Docker in seconds
 
 ```bash

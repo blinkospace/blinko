@@ -1,11 +1,7 @@
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod desktop;
-#[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-mod voice;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 use desktop::*;
-#[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-use voice::*;
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -76,22 +72,7 @@ pub fn run() {
                 check_accessibility_permissions,
                 show_quicktool,
                 set_desktop_theme,
-                set_desktop_colors,
-                // Voice recognition commands (Windows only with whisper features)
-                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-                get_voice_config,
-                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-                save_voice_config_cmd,
-                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-                initialize_voice_recognition,
-                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-                start_voice_recognition,
-                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-                stop_voice_recognition,
-                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-                get_voice_status,
-                #[cfg(all(target_os = "windows", any(feature = "whisper-cuda", feature = "whisper-cpu")))]
-                is_cuda_available
+                set_desktop_colors
             ])
             .setup(|app| {
                 #[cfg(not(any(target_os = "android", target_os = "ios")))]
