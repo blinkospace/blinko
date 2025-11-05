@@ -29,6 +29,13 @@ import mcpRouter from './routerExpress/mcp';
 // Vite integration
 import ViteExpress from 'vite-express';
 
+// pg-boss job queue
+import { PgBossManager } from './jobs/pgBossManager';
+import { ArchiveJobPgBoss } from './jobs/archiveJobPgBoss';
+import { RecommandJobPgBoss } from './jobs/recommandJobPgBoss';
+import { DBJobPgBoss } from './jobs/dbJobPgBoss';
+import { RebuildEmbeddingJobPgBoss } from './jobs/rebuildEmbeddingJobPgBoss';
+
 // Process error handling
 process.on('uncaughtException', (error) => {
   console.error('uncaughtException:', error);
@@ -38,12 +45,16 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('unhandledRejection:', reason);
 });
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM');
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM - shutting down...');
+  await PgBossManager.stop();
+  process.exit(0);
 });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT');
+process.on('SIGINT', async () => {
+  console.log('SIGINT - shutting down...');
+  await PgBossManager.stop();
+  process.exit(0);
 });
 
 process.on('exit', (code) => {
@@ -195,6 +206,54 @@ async function setupApiRoutes(app: express.Application) {
  */
 async function bootstrap() {
   try {
+    // Initialize pg-boss following official best practices
+    try {
+      console.log('📋 Initializing pg-boss job system...');
+      
+      // Step 1: Initialize and start pg-boss
+      await PgBossManager.initialize();
+      console.log('✅ pg-boss started (schema: "pgboss")');
+      
+      if (!PgBossManager.isAvailable()) {
+        throw new Error('PgBoss not available after initialization');
+      }
+
+      // Step 2: Create all queues explicitly before registering workers
+      const queueNames = [
+        ArchiveJobPgBoss['taskName'],
+        DBJobPgBoss['taskName'],
+        RecommandJobPgBoss['taskName'],
+        RebuildEmbeddingJobPgBoss['taskName'],
+      ];
+
+      console.log('📋 Creating queues...');
+      for (const queueName of queueNames) {
+        await PgBossManager.createQueue(queueName);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      console.log('✅ All queues created');
+
+      // Step 3: Register workers for each queue
+      console.log('📋 Registering workers...');
+      
+      await ArchiveJobPgBoss['initialize']();
+      await DBJobPgBoss['initialize']();
+      await RebuildEmbeddingJobPgBoss['initialize']();
+      
+      // RecommandJob has special initialization
+      const RecommandJobClass = RecommandJobPgBoss as any;
+      if (RecommandJobClass.initializeTask) {
+        await RecommandJobClass.initializeTask();
+      } else {
+        await RecommandJobPgBoss['initialize']();
+      }
+      
+      console.log('✅ All workers registered');
+    } catch (error) {
+      console.error('⚠️  pg-boss initialization failed:', error);
+      console.log('⚠️  Server will continue without job queue');
+    }
+
     app.use(cors({
       origin: true,
       credentials: true

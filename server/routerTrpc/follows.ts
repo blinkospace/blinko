@@ -5,7 +5,7 @@ import { prisma } from '../prisma';
 import axios from "axios";
 import { followsSchema, NotificationType } from "@shared/lib/prismaZodType";
 import { CreateNotification } from "./notification";
-import { RecommandJob, recommandListSchema, RecommandListType } from "../jobs/recommandJob";
+import { RecommandJobPgBoss, recommandListSchema, RecommandListType } from "../jobs/recommandJobPgBoss";
 
 
 export const followsRouter = router({
@@ -100,7 +100,7 @@ export const followsRouter = router({
           siteAvatar: input.mySiteUrl + mySiteInfo?.image,
         });
 
-        RecommandJob.RunTask()
+        RecommandJobPgBoss.sendJob()
 
         return {
           success: true,
@@ -217,7 +217,7 @@ export const followsRouter = router({
           console.error(`Failed to get info from site ${input.siteUrl}:`, error.message);
         }
 
-        RecommandJob.RunTask().catch(err => {
+        RecommandJobPgBoss.sendJob().catch(err => {
           console.error('Failed to run recommand job:', err);
         });
         

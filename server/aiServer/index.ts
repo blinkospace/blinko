@@ -15,7 +15,7 @@ import { NotificationType } from '@shared/lib/prismaZodType';
 import { CoreMessage } from '@mastra/core';
 import { MDocument } from '@mastra/rag';
 import { embedMany } from 'ai';
-import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
+import { RebuildEmbeddingJobPgBoss } from '../jobs/rebuildEmbeddingJobPgBoss';
 import { userCaller } from '../routerTrpc/_app';
 
 import { getAllPathTags } from '@server/lib/helper';
@@ -212,7 +212,7 @@ export class AiService {
     };
 
     // Start the job
-    await RebuildEmbeddingJob.ForceRebuild(force);
+    await RebuildEmbeddingJobPgBoss.ForceRebuild(force);
   }
 
   static getChatHistory({ conversations }: { conversations: { role: string; content: string }[] }) {

@@ -1,18 +1,17 @@
 import { router, authProcedure, demoAuthMiddleware, superAdminAuthMiddleware } from '@server/middleware';
 import { z } from 'zod';
 import { prisma } from '@server/prisma';
-import { DBJob } from '@server/jobs/dbjob';
-import '@server/jobs/recommandJob';
-import { ArchiveJob } from '@server/jobs/archivejob';
+import { ArchiveJobPgBoss } from '@server/jobs/archiveJobPgBoss';
+import { DBJobPgBoss } from '@server/jobs/dbJobPgBoss';
+import { getAllTasksInfo } from '@server/jobs/pgBossAdapter';
 import { UPLOAD_FILE_PATH } from '@shared/lib/pathConstant';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@shared/lib/sharedConstant';
 import { scheduledTaskSchema } from '@shared/lib/prismaZodType';
-import { Memos } from '../jobs/memosJob';
 import { unlink } from 'fs/promises';
 import { FileService } from '../lib/files';
 import path from 'path';
 import fs from 'fs';
-import { MarkdownImporter } from '../jobs/markdownJob';
+import { DBUtils } from '../lib/dbUtils';
 
 
 export const taskRouter = router({
@@ -21,7 +20,7 @@ export const taskRouter = router({
     .input(z.void())
     .output(z.array(scheduledTaskSchema))
     .query(async () => {
-      return await prisma.scheduledTask.findMany()
+      return await getAllTasksInfo()
     }),
   upsertTask: authProcedure.use(superAdminAuthMiddleware)
     .meta({ openapi: { method: 'GET', path: '/v1/tasks/upsert', summary: 'Upsert Task', protect: true, tags: ['Task'] } })
@@ -35,13 +34,13 @@ export const taskRouter = router({
       const { time, type, task } = input
       if (type == 'start') {
         const cronTime = time ?? '0 0 * * *'
-        return task == DBBAK_TASK_NAME ? await DBJob.Start(cronTime, true) : await ArchiveJob.Start(cronTime, true)
+        return task == DBBAK_TASK_NAME ? await DBJobPgBoss.Start(cronTime, true) : await ArchiveJobPgBoss.Start(cronTime, true)
       }
       if (type == 'stop') {
-        return task == DBBAK_TASK_NAME ? await DBJob.Stop() : await ArchiveJob.Stop()
+        return task == DBBAK_TASK_NAME ? await DBJobPgBoss.Stop() : await ArchiveJobPgBoss.Stop()
       }
       if (type == 'update' && time) {
-        return task == DBBAK_TASK_NAME ? await DBJob.SetCronTime(time) : await ArchiveJob.SetCronTime(time)
+        return task == DBBAK_TASK_NAME ? await DBJobPgBoss.SetCronTime(time) : await ArchiveJobPgBoss.SetCronTime(time)
       }
     }),
   importFromBlinko: authProcedure.use(demoAuthMiddleware).use(superAdminAuthMiddleware)
@@ -52,7 +51,7 @@ export const taskRouter = router({
       const { filePath } = input
       try {
         const fileResult = await FileService.getFile(filePath)
-        const res = DBJob.RestoreDB(fileResult.path, ctx)
+        const res = DBUtils.RestoreDB(fileResult.path, ctx)
         for await (const result of res) {
           yield result;
         }
@@ -137,7 +136,7 @@ export const taskRouter = router({
       error: z.string().optional()
     }))
     .mutation(async ({ input, ctx }) => {
-      const result = await DBJob.ExporMDFiles({ ...input, ctx });
+      const result = await DBUtils.ExporMDFiles({ ...input, ctx });
       setTimeout(async () => {
         try {
           const zipPath = path.join(UPLOAD_FILE_PATH, result.path);

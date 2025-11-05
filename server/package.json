@@ -76,6 +76,7 @@
     "passport-twitch-new": "^0.0.3",
     "passport-twitter": "^1.0.4",
     "pdf-parse": "^1.1.1",
+    "pg-boss": "^11.1.2",
     "pgvector": "^0.2.0",
     "pino-pretty": "^10.3.1",
     "proxy-agent": "^6.5.0",

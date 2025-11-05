@@ -5,7 +5,7 @@ import { prisma } from '../prisma';
 import { TRPCError } from '@trpc/server';
 import { CoreMessage } from '@mastra/core';
 import { AiModelFactory } from '@server/aiServer/aiModelFactory';
-import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
+import { RebuildEmbeddingJobPgBoss } from '../jobs/rebuildEmbeddingJobPgBoss';
 import { getAllPathTags } from '@server/lib/helper';
 import { ModelCapabilities } from '@server/aiServer/types';
 import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
@@ -212,31 +212,31 @@ export const aiRouter = router({
       incremental: z.boolean().optional(),
     }))
     .mutation(async ({ input }) => {
-      await RebuildEmbeddingJob.ForceRebuild(input.force ?? true, input.incremental ?? false);
+      await RebuildEmbeddingJobPgBoss.ForceRebuild(input.force ?? true, input.incremental ?? false);
       return { success: true };
     }),
 
   rebuildEmbeddingResume: authProcedure
     .mutation(async () => {
-      await RebuildEmbeddingJob.ResumeRebuild();
+      await RebuildEmbeddingJobPgBoss.ResumeRebuild();
       return { success: true };
     }),
 
   rebuildEmbeddingRetryFailed: authProcedure
     .mutation(async () => {
-      await RebuildEmbeddingJob.RetryFailedNotes();
+      await RebuildEmbeddingJobPgBoss.RetryFailedNotes();
       return { success: true };
     }),
 
   rebuildEmbeddingStop: authProcedure
     .mutation(async () => {
-      await RebuildEmbeddingJob.StopRebuild();
+      await RebuildEmbeddingJobPgBoss.StopRebuild();
       return { success: true };
     }),
 
   rebuildEmbeddingProgress: authProcedure
     .query(async () => {
-      const progress = await RebuildEmbeddingJob.GetProgress();
+      const progress = await RebuildEmbeddingJobPgBoss.GetProgress();
       return progress || {
         current: 0,
         total: 0,
