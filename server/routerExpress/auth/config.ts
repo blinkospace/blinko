@@ -25,7 +25,7 @@ export const configureSession = async (app: any) => {
 
 async function handleOAuthCallback(accessToken: string, refreshToken: string, profile: any, done: any) {
   try {
-    let userName = profile.username || profile.displayName || profile.id.toString();
+    let userName = profile.username || profile.displayName || profile.preferred_username || profile.id.toString();
 
     let existingUser = await prisma.accounts.findFirst({
       where: {
