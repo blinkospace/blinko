@@ -27,6 +27,9 @@ export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, inser
       setLocalNotes(sortedNotes);
       onNotesUpdate?.(sortedNotes);
     }
+    else if (!notes) {
+      setLocalNotes([]);
+    }
   }, [notes]);
 
   const sensors = useSensors(
