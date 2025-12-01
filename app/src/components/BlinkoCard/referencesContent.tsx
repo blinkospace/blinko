@@ -27,7 +27,7 @@ export const ReferencesContent = ({ blinkoItem, className }: { blinkoItem: Blink
       }}>
         <div className='text-desc text-xs ml-1 select-none flex'>
           {getDisplayTime(item.toNote?.createdAt, item.toNote?.updatedAt)}
-          <Tooltip content={t('reference')}>
+          <Tooltip content={t('reference')} delay={1000}>
             <Icon icon="iconamoon:arrow-top-right-1" className='text-primary ml-auto' width="16" height="16" />
           </Tooltip>
         </div>
@@ -49,7 +49,7 @@ export const ReferencesContent = ({ blinkoItem, className }: { blinkoItem: Blink
       }}>
         <div className='text-desc text-xs ml-1 select-none flex'>
           {getDisplayTime(item.fromNote?.createdAt, item.fromNote?.updatedAt)}
-          <Tooltip content={t('reference-by')}>
+          <Tooltip content={t('reference-by')} delay={1000}>
             <Icon icon="iconamoon:arrow-top-right-1" className='text-primary ml-auto rotate-180' width="16" height="16" />
           </Tooltip>
 

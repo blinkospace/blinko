@@ -49,10 +49,12 @@ export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, inser
 
   const handleDragStart = (event: any) => {
     setActiveId(event.active.id as number);
+    isDraggingRef.current = true;
   };
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
+    isDraggingRef.current = false;
 
     if (over) {
       const dropTargetId = over.id.toString();
@@ -120,10 +122,11 @@ interface DraggableBlinkoCardProps {
 }
 
 export const DraggableBlinkoCard = ({ blinkoItem, showInsertLine, insertPosition }: DraggableBlinkoCardProps) => {
+  const { t } = useTranslation()
+  
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `drop-${blinkoItem.id}`,
   });
-  const { t } = useTranslation()
 
   const {
     attributes,
@@ -160,12 +163,25 @@ export const DraggableBlinkoCard = ({ blinkoItem, showInsertLine, insertPosition
           </div>
         ) : (
           // Draggable area - long press to drag using dnd-kit's activationConstraint
+          // The drag will be prevented by checking blinkoItem.isExpand in the card's event handlers
           <div
             ref={setDraggableRef}
             style={dragStyle}
             {...attributes}
             {...listeners}
             className="cursor-default!"
+            onPointerDown={(e) => {
+              // Check if expanded and prevent drag
+              if (blinkoItem.isExpand === true) {
+                e.stopPropagation();
+              }
+            }}
+            onTouchStart={(e) => {
+              // Check if expanded and prevent drag
+              if (blinkoItem.isExpand === true) {
+                e.stopPropagation();
+              }
+            }}
           >
             <BlinkoCard blinkoItem={blinkoItem} />
           </div>

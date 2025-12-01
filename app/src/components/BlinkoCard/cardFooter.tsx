@@ -157,7 +157,7 @@ export const ConvertTypeButton = ({
   }
 
   return (
-    <Tooltip content={t('convert-to') + ' Blinko'} delay={1000}>
+    <Tooltip content={t('convert-to') + ' Blinko'} delay={1500}>
       <div className="flex items-center justify-start cursor-pointer" onClick={handleClick}>
         <Icon className="text-blue-500" icon="solar:notes-minimalistic-bold-duotone" width="12" height="12" />
         <div className="text-desc text-xs font-bold ml-1 select-none">
@@ -176,7 +176,7 @@ const RightContent = ({ blinkoItem, t }: { blinkoItem: Note; t: any }) => {
     <div className="ml-auto flex items-center gap-2">
       {<CommentCount blinkoItem={blinkoItem} />}
       {blinkoItem?.metadata?.isIndexed && (
-        <Tooltip content={'Indexed'} delay={1000}>
+        <Tooltip content={'Indexed'} delay={1500}>
           <Icon className="!text-ignore opacity-50" icon="hugeicons:ai-beautify" width="16" height="16" />
         </Tooltip>
       )}

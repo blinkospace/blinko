@@ -88,7 +88,76 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
             }]
           ]}
           components={{
-            p: ({ node, children }) => <p><HighlightTags text={children} /></p>,
+            p: ({ node, children }) => {
+              // Check if paragraph contains only a single link
+              if (
+                node &&
+                node.children &&
+                node.children.length === 1 && 
+                node.children[0].type === 'element' && 
+                node.children[0].tagName === 'a'
+              ) {
+                // This is a standalone link block
+                const linkNode = node.children[0] as any;
+                const href = linkNode.properties?.href;
+                
+                // Extract text content from link children
+                // children passed to p is already React elements, so we can't easily reuse it for LinkPreview text prop
+                // But LinkPreview expects ReactNode as text, so we can pass the children of the link
+                // However, since we are replacing the p, we need to get the children of the a tag.
+                // In ReactMarkdown, the children prop of p will contain the rendered a tag.
+                
+                // Let's verify if we can access the link properties directly
+                if (typeof href === 'string') {
+                  // We need to reconstruct the link content. 
+                  // Since we are in the 'p' renderer, 'children' is the rendered 'a' element.
+                  // We can't easily pass 'children' (which is <a>...</a>) as 'text' to LinkPreview.
+                  // Instead, we'll let the 'a' renderer handle it, but we need a way to tell the 'a' renderer it's a block.
+                  
+                  // Actually, simpler approach:
+                  // If we detect this pattern, we render a div instead of p, but we can't easily pass "isBlock" down 
+                  // unless we render LinkPreview directly here.
+                  
+                  // To render LinkPreview here, we need the text content.
+                  // linkNode.children contains the AST nodes for the link text.
+                  
+                  // Let's try to extract text from AST for simple cases
+                  // This might lose formatting inside the link (e.g. bold), but that's rare for standalone links.
+                  let linkText = href; // Default fallback
+                  if (linkNode.children && linkNode.children.length > 0) {
+                    // If it's just text
+                    if (linkNode.children[0].type === 'text') {
+                      linkText = linkNode.children[0].value;
+                    } 
+                    // If it's complex, we might just render the children variable which is the <a> tag
+                    // But we want to replace the <a> tag with LinkPreview(isBlock=true)
+                  }
+                  
+                  // Since we can't easily reconstruct the exact React children structure of the link here without recursion,
+                  // and we want to use LinkPreview which accepts 'text' as ReactNode.
+                  
+                  // Better strategy: The 'a' component logic below handles inline vs block? 
+                  // No, 'a' component doesn't know parent.
+                  
+                  // Strategy: Render the children (which is the <a> tag), but we can't modify props of already rendered children easily.
+                  // Actually 'children' in p renderer IS the result of 'a' renderer if we don't override it?
+                  // No, components are called during rendering.
+                  
+                  // Let's use the fact that we identified it's a block link.
+                  // We can render LinkPreview directly.
+                  
+                  // To get the content of the link (the text):
+                  // We can use a utility or just simplistic text extraction since standalone links usually just text.
+                  
+                  return (
+                    <div className="my-2">
+                      <LinkPreview href={href} text={linkText} isBlock={true} />
+                    </div>
+                  );
+                }
+              }
+              return <p><HighlightTags text={children} /></p>;
+            },
             code: ({ node, className, children, ...props }) => {
               const match = /language-(\w+)/.exec(className || '');
               const language = match ? match[1] : '';
@@ -110,7 +179,8 @@ export const MarkdownRender = observer(({ content = '', onChange, isShareMode, l
             a: ({ node, children }) => {
               const href = node?.properties?.href;
               if (typeof href === 'string') {
-                return <LinkPreview href={href} text={children} />
+                // By default render as inline (isBlock=false)
+                return <LinkPreview href={href} text={children} isBlock={false} />
               }
               return <>{children}</>;
             },

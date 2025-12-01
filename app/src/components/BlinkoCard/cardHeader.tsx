@@ -70,7 +70,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         )}
 
         {blinkoItem.isShare && !isShareMode && (
-          <Tooltip content={t('shared')}>
+          <Tooltip content={t('shared')} delay={1000}>
             <div className="flex items-center gap-2">
               <Icon
                 className="cursor-pointer "
@@ -83,7 +83,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         )}
 
         {blinkoItem.isInternalShared && (
-          <Tooltip content={t('internal-shared')}>
+          <Tooltip content={t('internal-shared')} delay={1000}>
             <div className="flex items-center gap-2">
               <Icon
                 className="cursor-pointer "
@@ -100,7 +100,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         )}
 
         {blinkoItem.type === NoteType.TODO && (
-          <Tooltip content={blinkoItem.isArchived ? t('restore') : t('complete')}>
+          <Tooltip content={blinkoItem.isArchived ? t('restore') : t('complete')} delay={1000}>
             <div
               className="flex items-center cursor-pointer"
               onClick={handleTodoToggle}
@@ -143,7 +143,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         <CommentButton blinkoItem={blinkoItem} />
 
         {isShareMode && (
-          <Tooltip content="RSS">
+          <Tooltip content="RSS" delay={1000}>
             <div className="flex items-center gap-2">
               <Icon onClick={e => {
                 window.open(window.location.origin + `/api/rss/${blinkoItem.accountId}/atom?row=20`)
@@ -188,7 +188,7 @@ const ShareButton = observer(({ blinkoItem, isIOSDevice }: { blinkoItem: Note, i
   const { t } = useTranslation()
   const blinko = RootStore.Get(BlinkoStore);
   return (
-    <Tooltip content={t('share')}>
+    <Tooltip content={t('share')} delay={1000}>
       <div className="flex items-center gap-2">
         <Icon
           icon="tabler:share-2"

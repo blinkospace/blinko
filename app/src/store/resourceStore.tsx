@@ -189,24 +189,21 @@ export class ResourceStore implements Store {
             return;
           }
 
-          const newFolder = {
-            "id": null,
-            "path": `/api/file/${newName}`,
-            "name": newName,
-            "size": null,
-            "type": null,
-            "isShare": false,
-            "sharePassword": "",
-            "noteId": null,
-            "sortOrder": 0,
-            "createdAt": null,
-            "updatedAt": null,
-            "isFolder": true,
-            "folderName": newName
-          };
-
-          blinko.resourceList.value = [newFolder, ...currentResources];
-          RootStore.Get(DialogStore).close();
+          try {
+            // Call backend API to create folder
+            await PromiseCall(
+              api.attachments.createFolder.mutate({
+                folderName: newName.trim(),
+                parentFolder: this.currentFolder || undefined
+              })
+            );
+            
+            // Refresh the resource list
+            this.refreshTicker++;
+            RootStore.Get(DialogStore).close();
+          } catch (error) {
+            setError(error.message || t('failed-to-create-folder'));
+          }
         };
 
         return (
