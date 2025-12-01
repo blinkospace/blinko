@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Blinko",
-  "version": "1.6.6",
+  "version": "1.7.0",
   "identifier": "com.blinko.app",
   "build": {
     "beforeDevCommand": "bun run dev",
