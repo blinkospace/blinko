@@ -15,6 +15,8 @@ import { DraggableFileGrid } from './DraggableFileGrid';
 import { AudioRender } from './audioRender';
 import { downloadFromLink } from '@/lib/tauriHelper';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { RootStore } from '@/store';
+import { UserStore } from '@/store/user';
 
 //https://www.npmjs.com/package/browser-thumbnail-generator
 
@@ -39,25 +41,34 @@ const AttachmentsRender = observer((props: IProps) => {
 
       {/* video render  */}
       <div className="columns-1 md:columns-1">
-        {files?.filter(i => i.previewType == 'video').map((file, index) => (
-          <div
-            key={`${file.name}-${index}`}
-            className='group relative flex p-2 items-center gap-2 cursor-pointer !transition-all rounded-2xl'
-          >
-            <video
-              onDoubleClick={(e) => e.stopPropagation()}
-              src={getBlinkoEndpoint(file.preview)}
-              id="player"
-              playsInline
-              controls
-              className='rounded-2xl w-full z-0 max-h-[150px]'
-            />
-            {!file.uploadPromise?.loading?.value && !preview &&
-              <DeleteIcon className='absolute z-10 right-[5px] top-[5px]' files={files} file={file} />
-            }
-            {preview && <DownloadIcon className='top-[8px] right-[8px]' file={file} />}
-          </div>
-        ))}
+        {files?.filter(i => i.previewType == 'video').map((file, index) => {
+          // Add token to video URL for authentication
+          let videoUrl = getBlinkoEndpoint(file.preview);
+          const token = RootStore.Get(UserStore).tokenData?.value?.token;
+          if (token) {
+            videoUrl = `${videoUrl}?token=${token}`;
+          }
+          
+          return (
+            <div
+              key={`${file.name}-${index}`}
+              className='group relative flex p-2 items-center gap-2 cursor-pointer !transition-all rounded-2xl'
+            >
+              <video
+                onDoubleClick={(e) => e.stopPropagation()}
+                src={videoUrl}
+                id="player"
+                playsInline
+                controls
+                className='rounded-2xl w-full z-0 max-h-[150px]'
+              />
+              {!file.uploadPromise?.loading?.value && !preview &&
+                <DeleteIcon className='absolute z-10 right-[5px] top-[5px]' files={files} file={file} />
+              }
+              {preview && <DownloadIcon className='top-[8px] right-[8px]' file={file} />}
+            </div>
+          );
+        })}
       </div>
 
       {/* audio render */}

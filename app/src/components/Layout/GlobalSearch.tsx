@@ -156,7 +156,6 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
         store.isSearching = false;
         return;
       }
-
       // 1. Store the search query in the store
       blinkoStore.searchText = query;
       blinkoStore.globalSearchTerm = query;
@@ -170,8 +169,9 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
         // 2. Search for notes using the API
         // Set search text in the store and call the API through the store
         blinkoStore.searchText = query;
-        const notes = await blinkoStore.noteList.resetAndCall({ page: 1, size: 20 });
-
+        // type: -1 means search all types (Memo, Note, Todo)
+        // isArchived: null means search both archived and non-archived
+        const notes = await blinkoStore.noteList.resetAndCall({ page: 1, size: 20, type: -1, isArchived: null });
         // await blinkoStore.blinkoList.resetAndCall({ page: 1, size: 20 });
         // 3. Search for resources using the API
         const resources = await blinkoStore.resourceList.resetAndCall({
@@ -189,10 +189,10 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
           .filter((setting) => setting.key !== 'all')
           .slice(0, 5);
 
-        // 5. Update search results
+        // 5. Update search results (filter out .folder placeholder files)
         store.searchResults = {
           notes: notes || [],
-          resources: resources || [],
+          resources: (resources || []).filter(r => r.name !== '.folder'),
           settings: matchingSettings,
           tags: [],
         };

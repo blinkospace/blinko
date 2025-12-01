@@ -69,6 +69,9 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
     if (helper.regex.isContainHashTag.test(line)) return false;
     return true;
   }) || '';
+  
+  // Set expand state on the item for drag/drop to access
+  blinkoItem.isExpand = isExpanded;
 
   const handleExpand = () => {
     if (blinkoItem.isBlog) {

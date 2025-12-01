@@ -151,13 +151,15 @@ export class BlinkoStore implements Store {
     let notes: Note[] = [];
 
     if (this.isOnline) {
-      notes = await api.notes.list.mutate({ 
+      const queryParams = { 
         ...this.noteListFilterConfig, 
         ...filterConfig,
         searchText: this.searchText, 
         page, 
         size 
-      });
+      };
+      notes = await api.notes.list.mutate(queryParams);
+
       
       if (this.offlineNotes.length > 0) {
         await this.syncOfflineNotes();
@@ -373,15 +375,17 @@ export class BlinkoStore implements Store {
   })
 
   noteList = new PromisePageState({
-    function: async ({ page, size }) => {
+    function: async ({ page, size, ...filterConfig }) => {
       return this.getFilteredNotes({
         page,
         size,
         filterConfig: {
           isArchived: false,
+          ...filterConfig
         },
-        offlineFilter: () => {
-          return true;
+        offlineFilter: (note) => {
+          // Exclude notes in recycle bin
+          return !note.isRecycle;
         }
       });
     }

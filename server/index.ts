@@ -237,6 +237,12 @@ async function bootstrap() {
       const server = app.listen(PORT, "0.0.0.0", () => {
         console.log(`🎉server start on port http://0.0.0.0:${PORT} - env: ${process.env.NODE_ENV || 'development'}`);
       });
+      
+      // Increase timeout for large file uploads (5 minutes)
+      server.timeout = 5 * 60 * 1000;
+      server.keepAliveTimeout = 5 * 60 * 1000;
+      server.headersTimeout = 5 * 60 * 1000;
+      
       ViteExpress.bind(app, server); // the server binds to all network interfaces
     } else {
       console.log(`API routes updated - env: ${process.env.NODE_ENV || 'development'}`);

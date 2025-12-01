@@ -6,19 +6,21 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 const host = process.env.TAURI_DEV_HOST || '0.0.0.0';
 const EXPRESS_PORT = 1111;
+const isDev = process.env.NODE_ENV === 'development';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(), 
     tailwindcss(),
-    ...(!process.env.DISABLE_PWA ? [
+    // PWA: Only enabled in production, disabled in development to avoid caching issues
+    ...(!isDev && !process.env.DISABLE_PWA ? [
       VitePWA({
+        // Disable in development mode
         devOptions: {
-          enabled: true
+          enabled: false
         },
-        injectRegister: 'auto',
-        // disable: process.env.NODE_ENV === 'development',
+        // Auto update service worker when new version is available
         registerType: 'autoUpdate',
         includeAssets: ['icons/Square*.png'],
         manifest: {
@@ -79,9 +81,41 @@ export default defineConfig({
           orientation: 'portrait'
         },
         workbox: {
+          // Maximum file size to cache (10MB)
           maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+          // Don't cache API requests
           navigateFallbackDenylist: [/^\/api\/.*/],
-        }
+          // Clean old caches automatically
+          cleanupOutdatedCaches: true,
+          // Runtime caching strategy for better update control
+          runtimeCaching: [
+            {
+              // Cache API responses with network-first strategy
+              urlPattern: /^https:\/\/api\..*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 5 * 60, // 5 minutes
+                },
+                networkTimeoutSeconds: 10,
+              },
+            },
+            {
+              // Cache images with cache-first strategy
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'image-cache',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+                },
+              },
+            },
+          ],
+        },
       })
     ] : [])
   ],

@@ -18,10 +18,11 @@ const Page = observer(() => {
   const navigate = useNavigate();
   const resourceStore = RootStore.Get(ResourceStore);
   const { t } = useTranslation();
-  const resources = useMemo(() =>
-    toJS(resourceStore.blinko.resourceList.value) || [],
-    [resourceStore.blinko.resourceList.value]
-  );
+  const resources = useMemo(() => {
+    const allResources = toJS(resourceStore.blinko.resourceList.value) || [];
+    // Filter out .folder placeholder files
+    return allResources.filter(resource => resource.name !== '.folder');
+  }, [resourceStore.blinko.resourceList.value]);
 
   const selectedItems = resourceStore.selectedItems;
 

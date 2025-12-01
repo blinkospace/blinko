@@ -375,7 +375,7 @@ export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { bli
   };
 
   return (
-    <Tooltip content={t('comment')}>
+    <Tooltip content={t('comment')} delay={1500}>
       <div className="flex items-center gap-2">
         <Icon
           icon="akar-icons:comment"

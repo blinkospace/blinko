@@ -23,7 +23,14 @@ const getLinks = (useStream = false) => {
       return httpBatchStreamLink({
         url: getBlinkoEndpoint('/api/trpc'),
         transformer: superjson,
-        headers
+        headers,
+        // Increase timeout for large file uploads (5 minutes)
+        fetch(url, options) {
+          return fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(5 * 60 * 1000) // 5 minutes
+          });
+        }
       });
     }
 
@@ -34,13 +41,27 @@ const getLinks = (useStream = false) => {
       true: httpLink({
         url: getBlinkoEndpoint('/api/trpc'),
         transformer: superjson,
-        headers
+        headers,
+        // Increase timeout for large file uploads (5 minutes)
+        fetch(url, options) {
+          return fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(5 * 60 * 1000) // 5 minutes
+          });
+        }
       }),
       // when condition is false, use batching
       false: httpBatchLink({
         url: getBlinkoEndpoint('/api/trpc'),
         transformer: superjson,
-        headers
+        headers,
+        // Increase timeout for large file uploads (5 minutes)
+        fetch(url, options) {
+          return fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(5 * 60 * 1000) // 5 minutes
+          });
+        }
       }),
     });
   } catch (error) {
@@ -52,13 +73,27 @@ const getLinks = (useStream = false) => {
       true: httpLink({
         url: ('/api/trpc'),
         transformer: superjson,
-        headers
+        headers,
+        // Increase timeout for large file uploads (5 minutes)
+        fetch(url, options) {
+          return fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(5 * 60 * 1000) // 5 minutes
+          });
+        }
       }),
       // when condition is false, use batching
       false: httpBatchLink({
         url: ('/api/trpc'),
         transformer: superjson,
-        headers
+        headers,
+        // Increase timeout for large file uploads (5 minutes)
+        fetch(url, options) {
+          return fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(5 * 60 * 1000) // 5 minutes
+          });
+        }
       }),
     });;
   }

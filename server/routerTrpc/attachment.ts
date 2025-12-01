@@ -38,6 +38,41 @@ const mapAttachmentResult = (item: any): AttachmentResult => ({
 });
 
 export const attachmentsRouter = router({
+  createFolder: authProcedure
+    .input(z.object({
+      folderName: z.string(),
+      parentFolder: z.string().optional()
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { folderName, parentFolder } = input;
+      
+      // Build the folder path
+      const folderPath = parentFolder 
+        ? `${parentFolder.split('/').join(',')},${folderName}`
+        : folderName;
+      
+      // Create a placeholder attachment record for the folder
+      const placeholder = await prisma.attachments.create({
+        data: {
+          path: `/api/file/${parentFolder ? `${parentFolder}/` : ''}${folderName}/.folder`,
+          name: '.folder',
+          size: 0,
+          type: 'folder',
+          perfixPath: folderPath,
+          accountId: Number(ctx.id),
+          isShare: false,
+          sharePassword: '',
+          sortOrder: 0
+        }
+      });
+      
+      return {
+        success: true,
+        folderName,
+        folderPath
+      };
+    }),
+  
   list: authProcedure
     .input(z.object({
       page: z.number().default(1),
