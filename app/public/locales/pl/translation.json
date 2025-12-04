@@ -627,7 +627,7 @@
   "import-from-markdown": "Importuj z pliku Markdown",
   "import-from-markdown-tip": "Importuj pojedynczy plik .md lub archiwum .zip zawierające pliki .md.",
   "not-a-markdown-or-zip-file": "To nie jest plik Markdown ani zip. Proszę wybrać plik .md lub .zip.",
-  "todo": "Pełnomocnictwo / Załatwienie w czyimś imieniu",
+  "todo": "Zadania",
   "restore": "Przywrócić",
   "complete": "Zakończone",
   "today": "Dziś",
