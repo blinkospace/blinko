@@ -142,7 +142,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
         searchInputRef.current.focus();
       }
     }
-  }, [isOpen, blinkoStore.searchText]);
+  }, [isOpen]);
 
   useEffect(() => {
     blinkoStore.noteListFilterConfig.isUseAiQuery = store.isAiQuestion;
