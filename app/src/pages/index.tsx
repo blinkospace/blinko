@@ -36,6 +36,7 @@ const Home = observer(() => {
   const isAllView = searchParams.get('path') === 'all';
   const [activeId, setActiveId] = useState<number | null>(null);
   const [insertPosition, setInsertPosition] = useState<number | null>(null);
+  const [isDragForbidden, setIsDragForbidden] = useState<boolean>(false);
 
   const currentListState = useMemo(() => {
     if (isNotesView) {
@@ -59,7 +60,9 @@ const Home = observer(() => {
     activeId,
     setActiveId,
     insertPosition,
-    setInsertPosition
+    setInsertPosition,
+    isDragForbidden,
+    setIsDragForbidden
   });
 
   const store = RootStore.Local(() => ({
@@ -187,6 +190,7 @@ const Home = observer(() => {
                           blinkoItem={i}
                           showInsertLine={showInsertLine}
                           insertPosition="top"
+                          isDragForbidden={isDragForbidden && showInsertLine}
                         />
                       );
                     })
