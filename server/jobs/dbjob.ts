@@ -21,15 +21,23 @@ import { getGlobalConfig } from "../routerTrpc/config";
 import { resetSequences } from '@server/lib/helper';
 import { RestoreResult } from '@shared/lib/types';
 
-
 export type ExportTimeRange = 'day' | 'week' | 'month' | 'quarter';
+
+const BACKUP_PROGRESS_CACHE_KEY = "backup-database-progress";
 
 export class DBJob extends BaseScheduleJob {
   protected static taskName = DBBAK_TASK_NAME;
-  protected static job = this.createJob();
+  protected static cronSchedule = '0 0 * * *'; // Daily at midnight
 
-  static {
-    this.initializeJob();
+  /**
+   * Save backup progress to cache
+   */
+  private static async saveProgressToCache(progress: any): Promise<void> {
+    await prisma.cache.upsert({
+      where: { key: BACKUP_PROGRESS_CACHE_KEY },
+      update: { value: progress },
+      create: { key: BACKUP_PROGRESS_CACHE_KEY, value: progress }
+    });
   }
 
   protected static async RunTask() {
@@ -64,9 +72,22 @@ export class DBJob extends BaseScheduleJob {
       );
 
       const targetFile = UPLOAD_FILE_PATH + `/blinko_export.bko`;
-      try {
-        await unlink(targetFile);
-      } catch (error) { }
+      
+      // Try to remove existing file with retry for Windows file locking issues
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          await unlink(targetFile);
+          break;
+        } catch (error: any) {
+          if (error.code === 'ENOENT') {
+            break; // File doesn't exist, that's fine
+          }
+          if (attempt < 2) {
+            console.log(`[${this.taskName}] File locked, retrying in 1s... (attempt ${attempt + 1})`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
 
       const output = createWriteStream(targetFile);
       const archive = archiver('zip', {
@@ -108,21 +129,6 @@ export class DBJob extends BaseScheduleJob {
       const updateInterval = 1000;
       let finalProgress: any = null;
 
-      const task = await prisma.scheduledTask.findFirst({
-        where: { name: this.taskName }
-      })
-      if (!task) {
-        await prisma.scheduledTask.create({
-          data: {
-            name: this.taskName,
-            isRunning: true,
-            isSuccess: false,
-            lastRun: new Date(),
-            schedule: '0 0 * * *'
-          }
-        });
-      }
-
       archive.on('progress', async (progress) => {
         finalProgress = {
           processed: progress.entries.processed,
@@ -134,14 +140,7 @@ export class DBJob extends BaseScheduleJob {
         const now = Date.now();
         if (now - lastUpdateTime >= updateInterval) {
           lastUpdateTime = now;
-          await prisma.scheduledTask.update({
-            where: { name: this.taskName },
-            data: {
-              output: {
-                progress: finalProgress
-              }
-            }
-          });
+          await this.saveProgressToCache({ progress: finalProgress });
         }
       });
 
@@ -155,6 +154,7 @@ export class DBJob extends BaseScheduleJob {
         useAdmin: true,
       });
 
+      let result;
       if (config.objectStorage === 's3') {
         const { s3ClientInstance } = await FileService.getS3Client();
         const fileStream = fs.createReadStream(targetFile);
@@ -163,16 +163,20 @@ export class DBJob extends BaseScheduleJob {
           Key: `/BLINKO_BACKUP/blinko_export.bko`,
           Body: fileStream
         }));
-        return {
+        result = {
           filePath: `/api/s3file/BLINKO_BACKUP/blinko_export.bko`,
+          progress: finalProgress
+        };
+      } else {
+        result = {
+          filePath: `/api/file/blinko_export.bko`,
           progress: finalProgress
         };
       }
 
-      return {
-        filePath: `/api/file/blinko_export.bko`,
-        progress: finalProgress
-      };
+      // Save final result to cache for frontend display
+      await this.saveProgressToCache(result);
+      return result;
     } catch (error) {
       throw error;
     }
@@ -205,7 +209,6 @@ export class DBJob extends BaseScheduleJob {
           const readStream = await entry.openReadStream();
           const writeStream = fs.createWriteStream(targetPath);
           
-          // Add error handlers to both streams
           readStream.on('error', (err) => {
             writeStream.destroy(err);
           });
@@ -218,12 +221,10 @@ export class DBJob extends BaseScheduleJob {
             readStream
               .pipe(writeStream)
               .on('finish', () => {
-                // Ensure writeStream is properly closed
                 writeStream.end();
                 resolve(null);
               })
               .on('error', (err) => {
-                // Clean up both streams on error
                 writeStream.destroy();
                 readStream.destroy();
                 reject(err);
@@ -254,7 +255,7 @@ export class DBJob extends BaseScheduleJob {
         fs.readFileSync(`${DBBAKUP_PATH}/bak.json`, 'utf-8')
       );
 
-      const attachmentsCount = backupData.notes.reduce((acc, note) =>
+      const attachmentsCount = backupData.notes.reduce((acc: number, note: any) =>
         acc + (note.attachments?.length || 0), 0);
       const total = backupData.notes.length + attachmentsCount;
       let current = 0;
@@ -344,7 +345,7 @@ export class DBJob extends BaseScheduleJob {
                 }
               });
               if (note.attachments?.length) {
-                const attachmentData = note.attachments.map(attachment => ({
+                const attachmentData = note.attachments.map((attachment: any) => ({
                   ...attachment,
                   noteId: createdNote.id
                 }));
@@ -373,7 +374,7 @@ export class DBJob extends BaseScheduleJob {
           continue;
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       yield {
         type: 'error',
         error,
@@ -390,7 +391,7 @@ export class DBJob extends BaseScheduleJob {
         content: 'Sequences reset successfully',
         progress: { current: 0, total: 0 }
       };
-    } catch (error) {
+    } catch (error: any) {
       yield {
         type: 'error',
         error,

@@ -20,6 +20,7 @@ import { publicRouter } from './public';
 import { analyticsRouter } from './analytics';
 import { messageRouter } from './message';
 import { taskRouter } from './task';
+import { aiScheduledTaskRouter } from './aiScheduledTask';
 export const appRouter = router({
   ai: aiRouter,
   notes: noteRouter,
@@ -29,6 +30,7 @@ export const appRouter = router({
   config: configRouter,
   public: publicRouter,
   task: taskRouter,
+  aiTask: aiScheduledTaskRouter,
   analytics: analyticsRouter,
   comments: commentRouter,
   follows: followsRouter,

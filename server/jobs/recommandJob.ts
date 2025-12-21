@@ -31,16 +31,13 @@ export type RecommandListType = z.infer<typeof recommandListSchema>
 
 export class RecommandJob extends BaseScheduleJob {
   protected static taskName = RECOMMAND_TASK_NAME;
-  protected static job = this.createJob();
+  protected static cronSchedule = '0 */6 * * *'; // Every 6 hours
   private static maxConcurrency = 5;
 
-  static {
-    this.initializeTask().catch(error => {
-      console.error('Error initializing RecommandJob:', error);
-    });
-  }
-
-  private static async initializeTask() {
+  /**
+   * Initialize the job - only starts if there are followings
+   */
+  static async initialize(): Promise<void> {
     try {
       const followCount = await prisma.follows.count({
         where: {
@@ -49,15 +46,28 @@ export class RecommandJob extends BaseScheduleJob {
       });
 
       if (followCount > 0) {
-        console.log(`Found ${followCount} followings, scheduling RecommandJob`);
-        this.autoStart("0 */6 * * *");
+        console.log(`[${this.taskName}] Found ${followCount} followings, scheduling job`);
+        
+        // Register worker
+        await this.registerWorker();
+        
+        // Check if task is already scheduled via pg-boss
+        const isAlreadyScheduled = await this.isScheduled();
 
+        if (!isAlreadyScheduled) {
+          // Start with default schedule
+          await this.Start(this.cronSchedule, false);
+        }
+
+        // Run task immediately on startup
         this.RunTask().catch(err => {
-          console.error('Initial RecommandJob execution failed:', err);
+          console.error(`[${this.taskName}] Initial execution failed:`, err);
         });
+      } else {
+        console.log(`[${this.taskName}] No followings found, skipping initialization`);
       }
     } catch (error) {
-      console.error('Failed to initialize RecommandJob:', error);
+      console.error(`[${this.taskName}] Failed to initialize:`, error);
     }
   }
 
@@ -81,11 +91,11 @@ export class RecommandJob extends BaseScheduleJob {
     return results;
   }
 
-  static async RunTask() {
+  protected static async RunTask() {
     let cachedList: { [key: string]: RecommandListType } = {};
 
     try {
-      console.log('Running Cache Recommand List at', new Date().toISOString());
+      console.log(`[${this.taskName}] Running at`, new Date().toISOString());
       const follows = await prisma.follows.findMany({
         where: {
           followType: 'following'
@@ -97,11 +107,11 @@ export class RecommandJob extends BaseScheduleJob {
       });
 
       if (follows.length === 0) {
-        console.log('No follows found, skipping task');
+        console.log(`[${this.taskName}] No follows found, skipping task`);
         await prisma.cache.delete({
           where: { key: 'recommand_list' },
-        });
-        return;
+        }).catch(() => {}); // Ignore if doesn't exist
+        return { message: 'No follows found' };
       }
 
       await this.batchProcess(follows, async (follow: any) => {
@@ -137,8 +147,8 @@ export class RecommandJob extends BaseScheduleJob {
             cachedList[accountId] = processedData;
           }
 
-        } catch (error) {
-          console.error(`Error fetching data for ${follow.siteUrl}:`, error.message);
+        } catch (error: any) {
+          console.error(`[${this.taskName}] Error fetching data for ${follow.siteUrl}:`, error.message);
           return [];
         }
       }, this.maxConcurrency);
@@ -147,8 +157,6 @@ export class RecommandJob extends BaseScheduleJob {
         where: { key: 'recommand_list' },
         select: { id: true }
       });
-
-      // console.log('hasCache', cachedList);
 
       if (hasCache) {
         await prisma.cache.update({
@@ -167,10 +175,11 @@ export class RecommandJob extends BaseScheduleJob {
         });
       }
 
-      // console.log('Successfully updated recommand_list cache');
+      console.log(`[${this.taskName}] Successfully updated recommand_list cache`);
+      return { success: true, followsProcessed: follows.length };
 
     } catch (error) {
-      console.error('RecommandJob failed:', error);
+      console.error(`[${this.taskName}] Failed:`, error);
       throw error;
     } finally {
       cachedList = {};
@@ -178,9 +187,9 @@ export class RecommandJob extends BaseScheduleJob {
       if (global.gc) {
         try {
           global.gc();
-          console.log('Garbage collection triggered');
+          console.log(`[${this.taskName}] Garbage collection triggered`);
         } catch (e) {
-          console.error('Failed to trigger garbage collection:', e);
+          console.error(`[${this.taskName}] Failed to trigger garbage collection:`, e);
         }
       }
     }

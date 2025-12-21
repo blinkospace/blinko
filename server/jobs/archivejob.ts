@@ -6,7 +6,7 @@ import { BaseScheduleJob } from "./baseScheduleJob";
 
 export class ArchiveJob extends BaseScheduleJob {
   protected static taskName = ARCHIVE_BLINKO_TASK_NAME;
-  protected static job = this.createJob();
+  protected static cronSchedule = '0 0 * * *'; // Daily at midnight
 
   protected static async RunTask() {
     try {
@@ -21,12 +21,8 @@ export class ArchiveJob extends BaseScheduleJob {
         },
       })
       return await prisma.notes.updateMany({ where: { id: { in: notes.map(e => e.id) } }, data: { isArchived: true } })
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(error)
     }
-  }
-
-  static {
-    this.initializeJob();
   }
 }

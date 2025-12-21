@@ -11,6 +11,9 @@ import {
   TableHeader,
   TableRow,
   Progress,
+  Button,
+  Chip,
+  Tooltip,
 } from "@heroui/react";
 import { RootStore } from "@/store";
 import { BlinkoStore } from "@/store/blinkoStore";
@@ -24,6 +27,9 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { _ } from "@/lib/lodash";
 import { CollapsibleCard } from "../Common/CollapsibleCard";
+import { downloadFromLink } from '@/lib/tauriHelper';
+import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { PromiseState } from "@/store/standard/PromiseState";
 
 const UpdateDebounceCall = _.debounce((v) => {
   return PromiseCall(api.config.update.mutate({ key: 'autoArchivedDays', value: Number(v) }))
@@ -60,6 +66,7 @@ export const TaskSetting = observer(() => {
       icon="tabler:clock"
       title={t('schedule-task')}
     >
+      {/* TODO: Temporarily disabled backup database feature
       <Item
         leftContent={<>{t('schedule-back-up')}</>}
         rightContent={
@@ -73,6 +80,7 @@ export const TaskSetting = observer(() => {
               setPolling(false);
             }}
           />} />
+      */}
       <Item
         leftContent={<>{t('schedule-archive-blinko')}</>}
         rightContent={
@@ -98,9 +106,143 @@ export const TaskSetting = observer(() => {
               }}
             />
           </div>} />
-      <TasksPanel />
+      <AITasksPanel />
     </CollapsibleCard>
   );
+})
+
+const AITasksPanel = observer(() => {
+  const { t } = useTranslation()
+  const [aiTasks, setAiTasks] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const loadTasks = async () => {
+    setLoading(true)
+    try {
+      const tasks = await api.aiTask.list.query()
+      setAiTasks(tasks)
+    } catch (e) {
+      console.error('Failed to load AI tasks:', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadTasks()
+  }, [])
+
+  const handleToggle = async (taskId: number, enabled: boolean) => {
+    await PromiseCall(api.aiTask.toggle.mutate({ id: taskId, enabled }))
+    loadTasks()
+  }
+
+  const handleDelete = async (taskId: number) => {
+    await PromiseCall(api.aiTask.delete.mutate({ id: taskId }))
+    loadTasks()
+  }
+
+  const handleRunNow = async (taskId: number) => {
+    await PromiseCall(api.aiTask.runNow.mutate({ id: taskId }))
+    loadTasks()
+  }
+
+  if (loading && aiTasks.length === 0) {
+    return <div className="flex justify-center py-4">
+      <Icon icon="eos-icons:loading" width="24" height="24" />
+    </div>
+  }
+
+  if (aiTasks.length === 0) {
+    return <div className="text-center py-4 text-desc text-sm">
+      <Icon icon="mdi:robot-outline" width="32" height="32" className="mx-auto mb-2 opacity-50" />
+      <p>{t('no-ai-tasks')}</p>
+      <p className="text-xs mt-1">{t('ai-task-hint')}</p>
+    </div>
+  }
+
+  return (
+    <div className="mt-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon icon="mdi:robot" width="20" height="20" />
+        <span className="font-medium">{t('ai-scheduled-tasks')}</span>
+        <Chip size="sm" variant="flat">{aiTasks.length}</Chip>
+      </div>
+      <Table shadow="none" className="mb-2" aria-label="AI Scheduled Tasks">
+        <TableHeader>
+          <TableColumn>{t('name-db')}</TableColumn>
+          <TableColumn>{t('schedule')}</TableColumn>
+          <TableColumn>{t('last-run')}</TableColumn>
+          <TableColumn>{t('status')}</TableColumn>
+          <TableColumn>{t('actions')}</TableColumn>
+        </TableHeader>
+        <TableBody>
+          {aiTasks.map(task => (
+            <TableRow key={task.id}>
+              <TableCell>
+                <Tooltip content={task.prompt} placement="top">
+                  <span className="cursor-help">{task.name}</span>
+                </Tooltip>
+              </TableCell>
+              <TableCell>
+                <code className="text-xs bg-default-100 px-2 py-1 rounded">
+                  {task.schedule}
+                </code>
+              </TableCell>
+              <TableCell>
+                {task.lastRun ? dayjs(task.lastRun).fromNow() : '-'}
+              </TableCell>
+              <TableCell>
+                <div className={`${task.isEnabled ? 'text-green-500' : 'text-gray-400'} flex items-center`}>
+                  <Icon icon="bi:dot" width="24" height="24" />
+                  <span>{task.isEnabled ? t('enabled') : t('disabled')}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1">
+                  <Tooltip content={task.isEnabled ? t('disable') : t('enable')}>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onPress={() => handleToggle(task.id, !task.isEnabled)}
+                    >
+                      <Icon 
+                        icon={task.isEnabled ? "mdi:pause" : "mdi:play"} 
+                        width="18" 
+                        height="18" 
+                      />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content={t('run-now')}>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onPress={() => handleRunNow(task.id)}
+                    >
+                      <Icon icon="mdi:lightning-bolt" width="18" height="18" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content={t('delete')}>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      color="danger"
+                      onPress={() => handleDelete(task.id)}
+                    >
+                      <Icon icon="mdi:delete-outline" width="18" height="18" />
+                    </Button>
+                  </Tooltip>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
 })
 
 const TasksPanel = observer(() => {
@@ -119,7 +261,7 @@ const TasksPanel = observer(() => {
         blinko.task.value!.filter(i => i.name != 'rebuildEmbedding').map(i => {
           const progress = i.output?.progress;
           return <TableRow>
-            <TableCell>{i.name}</TableCell>
+            <TableCell>{t(`task-name-${i.name}`)}</TableCell>
             <TableCell>
               <Select
                 selectedKeys={[i.schedule]}

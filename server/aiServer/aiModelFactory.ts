@@ -13,6 +13,7 @@ import { webExtra } from './tools/webExtra';
 import { searchBlinkoTool } from './tools/searchBlinko';
 import { updateBlinkoTool } from './tools/updateBlinko';
 import { deleteBlinkoTool } from './tools/deleteBlinko';
+import { createScheduledTaskTool, deleteScheduledTaskTool, listScheduledTasksTool } from './tools/scheduledTask';
 import { rerank } from '@mastra/rag';
 import { prisma } from '@server/prisma';
 import { getGlobalConfig } from '@server/routerTrpc/config';
@@ -340,6 +341,9 @@ export class AiModelFactory {
           webExtra,
           webSearchTool,
           createCommentTool,
+          createScheduledTaskTool,
+          deleteScheduledTaskTool,
+          listScheduledTasksTool,
         },
       };
     }
