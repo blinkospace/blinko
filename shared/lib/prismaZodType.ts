@@ -410,3 +410,24 @@ export const aiScheduledTaskSchema = z.object({
 
 export type aiScheduledTask = z.infer<typeof aiScheduledTaskSchema>
 
+/////////////////////////////////////////
+// MCP SERVERS SCHEMA
+/////////////////////////////////////////
+
+export const mcpServersSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  type: z.string(), // "stdio" | "sse" | "streamable-http"
+  command: z.string().nullable().optional(),
+  args: z.any().nullable().optional(), // JSON array of strings
+  url: z.string().nullable().optional(),
+  env: z.any().nullable().optional(), // JSON object
+  headers: z.any().nullable().optional(), // JSON object
+  isEnabled: z.boolean(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type mcpServers = z.infer<typeof mcpServersSchema>
+

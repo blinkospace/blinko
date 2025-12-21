@@ -101,7 +101,8 @@ export class AIScheduledTaskJob {
     
     const agent = await AiModelFactory.BaseChatAgent({ 
       withTools: true, 
-      withOnlineSearch: true 
+      withOnlineSearch: true,
+      withMcpTools: true // Enable MCP tools for scheduled tasks
     });
     
     const conversations = [

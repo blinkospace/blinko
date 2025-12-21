@@ -313,3 +313,18 @@ model aiScheduledTask {
 
   @@index([accountId])
 }
+
+model mcpServers {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  type        String   @db.VarChar(50)  // "stdio" | "sse" | "streamable-http"
+  command     String?  @db.Text         // for stdio: "npx" or full command
+  args        Json?    @db.Json         // for stdio: command arguments array
+  url         String?  @db.VarChar(500) // for sse/streamable-http
+  env         Json?    @db.Json         // environment variables
+  headers     Json?    @db.Json         // HTTP headers for sse/http
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+}

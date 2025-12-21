@@ -21,6 +21,7 @@ import { analyticsRouter } from './analytics';
 import { messageRouter } from './message';
 import { taskRouter } from './task';
 import { aiScheduledTaskRouter } from './aiScheduledTask';
+import { mcpServersRouter } from './mcpServers';
 export const appRouter = router({
   ai: aiRouter,
   notes: noteRouter,
@@ -38,6 +39,7 @@ export const appRouter = router({
   plugin: pluginRouter,
   conversation: conversationRouter,
   message: messageRouter,
+  mcpServers: mcpServersRouter,
 });
 
 export const createCaller = t.createCallerFactory(appRouter);

@@ -1,289 +1,342 @@
 {
-  "spotify-consumer-key-tip": "كان يُستخدم للحصول على غلاف موسيقى mp3",
-  "spotify-consumer-key-tip-2": "احصل على مفتاح API من https://developer.spotify.com/",
-  "hello": "مرحبًا",
-  "blinko": "بلينكو",
-  "notes": "ملاحظات",
-  "resources": "الموارد",
-  "archived": "المؤرشفة",
-  "settings": "الإعدادات",
-  "total-tags": "إجمالي العلامات",
-  "search": "بحث...",
-  "i-have-a-new-idea": "لدي فكرة جديدة...",
-  "note": "ملاحظة",
-  "edit": "تعديل",
-  "multiple-select": "اختيار متعدد",
-  "convert-to": "تحويل إلى",
-  "delete": "حذف",
-  "recovery": "استعادة",
-  "archive": "أرشفة",
-  "items": "عناصر",
-  "your-changes-have-been-saved": "تم حفظ التغييرات!",
-  "operation-failed": "فشلت العملية.",
-  "in-progress": "قيد التنفيذ...",
-  "confirm-to-delete": "تأكيد الحذف!",
-  "this-operation-removes-the-associated-label-and-cannot-be-restored-please-confirm": "هذه العملية ستزيل التصنيف المرتبط ولن يمكن استعادته. يرجى التأكيد",
-  "add-tag": "إضافة علامة",
-  "cancel": "إلغاء",
-  "confirm": "تأكيد",
-  "no-data-here-well-then-time-to-write-a-note": "لا توجد بيانات هنا؟ إذن حان الوقت لكتابة ملاحظة!",
-  "basic-information": "معلومات أساسية",
-  "name": "الاسم",
-  "preference": "التفضيل",
-  "theme": "السمة",
-  "language": "اللغة",
-  "change-type": "تغيير النوع",
-  "insert-hashtag": "إدراج وسم",
-  "bulleted-list": "قائمة نقطية",
-  "numbered-list": "قائمة مرقمة",
-  "check-list": "قائمة التحقق",
-  "insert-table": "إدراج جدول",
-  "insert-codeblock": "إدراج كتلة كود",
-  "insert-sandpack": "إدراج حزمة الرمل",
-  "upload-file": "رفع ملف",
-  "delete-confirm": "تأكيد الحذف",
-  "this-operation-will-be-delete-resource-are-you-sure": "سيتم حذف المورد. هل أنت متأكد؟",
-  "delete-success": "تم الحذف بنجاح",
-  "update-successfully": "تم التحديث بنجاح",
-  "create-successfully": "تم الإنشاء بنجاح",
-  "total": "الإجمالي",
-  "all-notes-have-been-loaded": "تم تحميل جميع {{items}} الملاحظات",
-  "hi-user-name-i-can-search-for-the-notes-for-you-how-can-i-help-you-today": "مرحبًا {{name}}! يمكنني البحث عن الملاحظات لك، كيف يمكنني مساعدتك اليوم؟",
-  "ask-about-your-notes": "اسأل عن ملاحظاتك",
-  "use-ai": "استخدام الذكاء الاصطناعي",
-  "model-provider": "مزود الخدمة",
-  "api-endpoint": "نقطة نهاية API",
-  "must-start-with-http-s-or-use-api-openai-as-default": "يجب أن يبدأ بـ ://http(s) أو استخدام /api/openai كإعداد افتراضي",
-  "user-custom-openai-api-key": "مفتاح واجهة برمجة التطبيقات المخصص للمستخدم  من OpenAI",
-  "user-custom-azureopenai-api-instance": "اسم مثيل Azure OpenAI",
-  "user-custom-azureopenai-api-deployment": "اسم نشر Azure OpenAI",
-  "user-custom-azureopenai-api-version": "نسخة API",
-  "ai-model": "نموذج الذكاء الاصطناعي",
-  "logout": "تسجيل الخروج",
-  "user-or-password-error": "خطأ في اسم المستخدم أو كلمة المرور",
-  "username": "اسم المستخدم",
-  "enter-your-name": "أدخل اسمك",
-  "password": "كلمة المرور",
-  "enter-your-password": "أدخل كلمة المرور",
-  "need-to-create-an-account": "هل تحتاج إلى إنشاء حساب؟",
-  "sign-up": "التسجيل",
-  "sign-in": "تسجيل الدخول",
-  "nickname": "اللقب",
-  "change-user-info": "تغيير معلومات المستخدم",
-  "rest-user-password": "إعادة تعيين كلمة مرور المستخدم",
-  "confirm-password": "تأكيد كلمة المرور",
-  "confirm-your-password": "أكد كلمة المرور",
-  "enter-your-username": "أدخل اسم المستخدم",
-  "save": "حفظ",
-  "keep-sign-in": "البقاء مسجلًا",
-  "recording": "تسجيل",
-  "required-items-cannot-be-empty": "العناصر المطلوبة لا يمكن أن تكون فارغة",
-  "the-two-passwords-are-inconsistent": "كلمتا المرور غير متطابقتين",
-  "create-successfully-is-about-to-jump-to-the-login": "تم الإنشاء بنجاح، سيتم التحويل إلى صفحة تسجيل الدخول",
-  "already-have-an-account-direct-login": "هل لديك حساب بالفعل؟ تسجيل الدخول مباشرة",
-  "no-tag-found": "لم يتم العثور على علامة",
-  "new-version-detected-click-to-get-the-latest-version": "🎉 تم اكتشاف إصدار جديد، اضغط للحصول على أحدث إصدار",
-  "schedule-task": "جدولة المهام",
-  "schedule-back-up": "جدولة النسخ الاحتياطي",
-  "task-name-backup-database": "نسخ احتياطي للقاعدة",
-  "task-name-follow-recommand-index": "توصية المتابعة",
-  "task-name-auto-archive-blinko": "أرشفة تلقائية",
-  "every-day": "كل يوم",
-  "every-week": "كل أسبوع",
-  "every-month": "كل شهر",
-  "every-three-month": "كل ثلاثة أشهر",
-  "every-half-year": "كل نصف عام",
-  "import": "استيراد",
-  "impoort-from-bko": "استيراد من ملف.bko",
-  "not-a-bko-file": "ليس ملف .bko",
-  "convert-to-note": "تحويل إلى ملاحظة",
-  "convert-to-blinko": "تحويل إلى بلينكو",
-  "reviewed": "تمت المراجعة",
-  "congratulations-youve-reviewed-everything-today": "تهانينا، لقد راجعت كل شيء اليوم.",
-  "name-db": "الاسم",
-  "schedule": "الجدولة",
-  "last-run": "آخر تشغيل",
-  "backup-file": "ملف النسخ الاحتياطي",
-  "status": "الحالة",
-  "running": "قيد التشغيل",
-  "stopped": "متوقف",
-  "show-navigation-bar-on-mobile": "إخفاء شريط التنقل على الجوال",
-  "schedule-archive-blinko": "جدولة أرشفة بلينكو",
-  "there-are-no-resources-yet-go-upload-them-now": "لا توجد موارد حتى الآن، قم برفعها الآن",
-  "confrim": "تأكيد",
-  "daily-review": "مراجعة يومية",
-  "detail": "التفاصيل",
-  "enter-send-shift-enter-for-new-line": "إدخال للإرسال، Shift+Enter لسطر جديد",
-  "show-less": "عرض أقل",
-  "show-more": "عرض المزيد",
-  "top": "أعلى",
-  "cancel-top": "إلغاء التثبيت",
-  "created-in": "تم الإنشاء في",
-  "set-as-public": "تعيين كعام",
-  "unset-as-public": "إلغاء التعيين كعام",
-  "with-link": "برابط",
-  "no-tag": "بدون علامة",
-  "has-file": "يتضمن ملفًا",
-  "created-at": "تم الإنشاء في",
-  "updated-at": "تم التحديث في",
-  "role": "الدور",
-  "user-list": "قائمة المستخدمين",
-  "create-user": "إنشاء مستخدم",
-  "action": "الإجراء",
-  "original-password": "كلمة المرور الأصلية",
-  "edit-user": "تعديل المستخدم",
-  "import-from-memos-memos_prod-db": "استيراد من قاعدة البيانات(memos_prod.db)",
-  "when-exporting-memos_prod-db-please-close-the-memos-container-to-avoid-partial-loss-of-data": "عند تصدير memos_prod.db، يرجى إغلاق الحاوية لتجنب فقدان البيانات جزئيًا.",
-  "allow-register": "السماح بالتسجيل",
-  "access-token": "رمز الوصول",
-  "superadmin": "مدير النظام",
-  "user": "مستخدم",
-  "select-model-provider": "اختيار مزود النموذج",
-  "select-model": "اختيار النموذج",
-  "api-key": "مفتاح API",
-  "enter-your-api-key": "أدخل مفتاح API الخاص بك",
-  "delete-only-tag": "حذف العلامة فقط",
-  "update-name": "تحديث الاسم",
-  "delete-tag-with-note": "حذف العلامة مع الملاحظة",
-  "minutes-ago": "منذ {{count}} دقيقة",
-  "hours-ago": "منذ {{count}} ساعة",
-  "days-ago": "منذ {{count}} يوم",
-  "weeks-ago": "منذ {{count}} أسبوع",
-  "months-ago": "منذ {{count}} شهر",
-  "years-ago": "منذ {{count}} سنة",
-  "in-addition-to-the-gpt-model-there-is-a-need-to-ensure-that-it-is-possible-to-invoke-the": "بالإضافة إلى نموذج GPT، هناك حاجة إلى التأكد من إمكانية استدعاء",
-  "speech-recognition-requires-the-use-of": "يتطلب التعرف على الكلام استخدام",
-  "ai-expand": "توسيع نطاق الذكاء الاصطناعي",
-  "ai-polish": "الذكاء الاصطناعي البولندي",
-  "accept": "قبول",
-  "reject": "رفض",
-  "stop": "توقف",
-  "card-columns": "أعمدة البطاقة",
-  "select-a-columns": "حدد أعمدة",
-  "width-less-than-1024px": "العرض أقل من 1024 بكسل",
-  "width-less-than": "عرض أقل من",
-  "small-device-card-columns": "أعمدة بطاقة الجهاز الصغيرة",
-  "medium-device-card-columns": "أعمدة بطاقة الجهاز المتوسطة",
-  "large-device-card-columns": "أعمدة بطاقة الجهاز الكبيرة",
-  "device-card-columns": "أعمدة بطاقة الجهاز",
-  "columns-for-different-devices": "أعمدة للأجهزة المختلفة",
-  "mobile": "الهاتف المحمول",
-  "tablet": "جهاز لوحي",
-  "desktop": "سطح المكتب",
-  "chars": "الأحرف",
-  "text-fold-length": "طول طية النص",
-  "title-first-line-of-the-text": "العنوان (السطر الأول من النص)",
-  "content-rest-of-the-text-if-the-text-is-longer-than-the-length": "المحتوى(بقية النص، إذا كان النص أطول من الطول)",
-  "ai-tag": "علامة الذكاء الاصطناعي",
-  "article": "المادة",
-  "embedding-model": "نموذج التضمين",
-  "if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens": "إذا كان لديك الكثير من الملاحظات فقد تستهلك عددًا معينًا من الرموز المميزة",
-  "force-rebuild": "إعادة بناء القوة",
-  "force-rebuild-embedding-index": "ستؤدي إعادة البناء القسري إلى إعادة بناء جميع البيانات التي تمت فهرستها بالكامل",
-  "embedding-model-description": "يجب إعادة بناء الفهرس بعد تبديل النماذج المدمجة",
-  "top-k-description": "الحد الأقصى لعدد المستندات التي تم إرجاعها في النهاية",
-  "embedding-score-description": "عادة ما تكون عتبة التشابه للاستعلامات هي مجموع المسافة الإقليدية",
-  "embedding-lambda-description": "معلمة ترجيح تنوع نتائج الاستعلامات",
-  "update-tag-icon": "أيقونة تحديث العلامة",
-  "update-tag-name": "تحديث اسم العلامة",
-  "thinking": "التفكير...",
-  "select-all": "اختر الكل",
-  "insert-before": "إدراج قبل",
-  "insert-after": "إدراج بعد",
-  "ai-emoji": "الرموز التعبيرية Ai",
-  "custom-icon": "أيقونة مخصصة",
-  "ai-enhanced-search": "البحث المحسّن بالذكاء الاصطناعي",
-  "preview-mode": "وضع المعاينة",
-  "source-code": "كود المصدر",
-  "camera": "كاميرا",
-  "reference": "المرجع",
-  "reference-note": "مذكرة مرجعية",
-  "source-code-mode": "وضع شفرة المصدر",
-  "heading": "العنوان",
-  "paragraph": "الفقرة",
-  "quote": "اقتباس",
-  "bold": "جريئة",
-  "remove-italic": "إزالة الخط المائل",
-  "underline": "تسطير",
-  "italic": "مائل",
-  "remove-bold": "إزالة الخط العريض",
-  "remove-underline": "إزالة التسطير",
-  "select-block-type": "حدد نوع الكتلة",
-  "block-type-select-placeholder": "نوع المربع",
-  "trash": "قمامة",
-  "custom-path": "المسار المخصص",
-  "page-size": "حجم الصفحة",
-  "toolbar-visibility": "رؤية شريط الأدوات",
-  "always-hide-toolbar": "اختبئ دائماً",
-  "always-show-toolbar": "اعرض دائماً",
-  "hide-toolbar-on-mobile": "إخفاء على الجوال",
-  "select-toolbar-visibility": "تحديد رؤية شريط الأدوات",
-  "select-a-time-format": "حدد تنسيق الوقت",
-  "enter-code-shown-on-authenticator-app": "أدخل الرمز الظاهر في تطبيق المصادقة",
-  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "افتح تطبيق المصادقة التابع لجهة خارجية، وأدخل الرموزالتي تظهر على الشاشة",
-  "two-factor-authentication": "المصادقة الثنائية",
-  "scan-this-qr-code-with-your-authenticator-app": "امسح رمز الاستجابة السريعة هذا باستخدام تطبيق المصادقة الخاص بك",
-  "or-enter-this-code-manually": "أو أدخل هذا الرمز يدوياً:",
-  "verify": "تحقق",
+  "1-day": "يوم واحد",
+  "1-month": "شهر واحد",
+  "1-week": "أسبوع واحد",
+  "2fa-setup-successful": "تم إعداد المصادقة الثنائية بنجاح",
+  "30days-expiry": "انتهاء صلاحية خلال 30 يومًا",
+  "7days-expiry": "انتهاء صلاحية بعد 7 أيام",
+  "Note History": "لاحظ التاريخ",
+  "View History Versions": "عرض إصدارات التاريخ",
   "about": "نبذة عن",
-  "upload": "التحميل",
-  "days": "الأيام",
-  "bucket": "دلو",
-  "region": "المنطقة",
-  "access-key-secret": "مفتاح الوصول السري",
+  "about-to-expire": "على وشك الانتهاء",
+  "accept": "قبول",
   "access-key-id": "معرّف مفتاح الوصول",
-  "share-and-copy-link": "مشاركة ونسخ الرابط",
-  "copy-share-link": "نسخ رابط المشاركة",
-  "endpoint": "نقطة النهاية",
-  "export-format": "تنسيق التصدير",
-  "export": "التصدير",
-  "time-range": "النطاق الزمني",
-  "all": "الكل",
-  "exporting": "التصدير...",
-  "has-image": "لديه صورة",
-  "has-link": "لديه رابط",
-  "filter-settings": "إعدادات التصفية",
-  "tag-status": "حالة العلامة",
-  "all-notes": "جميع الملاحظات",
-  "with-tags": "مع العلامات",
-  "without-tags": "بدون علامات",
-  "select-tags": "حدد العلامات",
+  "access-key-secret": "مفتاح الوصول السري",
+  "access-password": "كلمة مرور الوصول",
+  "access-token": "رمز الوصول",
+  "action": "الإجراء",
+  "actions": "Actions",
+  "active-days": "أيام نشطة",
+  "add": "Add",
+  "add-as-comment": "أضف كتعليق",
+  "add-local-plugin": "أضف الإضافة المحلية",
+  "add-mcp-server": "Add MCP Server",
+  "add-mcp-server-hint": "Add an MCP server to extend AI capabilities with external tools",
+  "add-oauth2-provider": "إضافة موفّر Oauth2",
+  "add-provider": "إضافة مزود",
+  "add-tag": "إضافة علامة",
+  "add-to-blinko": "أضف إلى بلينكو",
+  "add-to-note": "أضف إلى الملاحظة",
+  "add-tools-to-model": "ابحث عبر الإنترنت أو اسمح للذكاء الاصطناعي بالاتصال بـ API لـ blinko",
   "additional-conditions": "الشروط الإضافية",
-  "apply-filter": "تطبيق الفلتر",
-  "to": "إلى",
-  "start-date": "تاريخ البدء",
-  "end-date": "تاريخ الانتهاء",
-  "reset": "إعادة تعيين",
-  "no-condition": "لا توجد حالة",
-  "public": "عام",
-  "ai-model-tooltip": "أدخل اسم الطراز المراد استخدامه، مثل gpt-3.5-turbo، gpt-4، gpt-4o، gpt-4o، gpt-4o-mini",
-  "user-custom-azureopenai-api-deployment-tooltip": " أدخل اسم النشر المراد استخدامه، مثل gpt-4o",
-  "ollama-ai-model-tooltip": "أدخل اسم الطراز المراد استخدامه، مثل llama3.2",
-  "ollama-default-endpoint-is-http-localhost-11434": "نقطة نهاية أولاما الافتراضية هي http://localhost:11434",
-  "your-azure-openai-instance-name": "اسم مثيل Azure OpenAI الخاص بك",
+  "admin": "مدير الموقع",
+  "advanced": "متقدم",
+  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "بعد الحذف، سيتم مسح جميع بيانات المستخدم ولن يمكن استرجاعها.",
+  "ai": "الذكاء الاصطناعي",
+  "ai-chat-box-notes": "أدناه تم استرداد الملاحظات ذات الصلة بالنسبة لك",
+  "ai-conversation-share": "Blinko AI Conversation Share",
+  "ai-emoji": "الرموز التعبيرية Ai",
+  "ai-enhanced-search": "البحث المحسّن بالذكاء الاصطناعي",
+  "ai-expand": "توسيع نطاق الذكاء الاصطناعي",
   "ai-generate-emoji": "",
   "ai-generating-emoji": "",
-  "date-range": "",
-  "2fa-setup-successful": "تم إعداد المصادقة الثنائية بنجاح",
+  "ai-is-thinking": "AI is thinking...",
+  "ai-model": "نموذج الذكاء الاصطناعي",
+  "ai-model-desc": "إذا كان النموذج المختار يدعم الرؤية (متعدد الوسائط)، فسيقوم Blinko بفهرسة الصور تلقائيًا.",
+  "ai-model-tooltip": "أدخل اسم الطراز المراد استخدامه، مثل gpt-3.5-turbo، gpt-4، gpt-4o، gpt-4o، gpt-4o-mini",
+  "ai-polish": "الذكاء الاصطناعي البولندي",
+  "ai-post-processing": "معالجة ما بعد الذكاء الاصطناعي",
+  "ai-post-processing-mode": "وضع معالجة ما بعد الذكاء الاصطناعي",
+  "ai-post-processing-prompt": "تعليق تحرير لاحق بواسطة الذكاء الاصطناعي",
+  "ai-prompt-coding": "أنت مبرمج محترف، رجاءً اكتب برنامج بايثون بسيط يُعتمد على الموضوع الذي يقدمه المستخدم.",
+  "ai-prompt-coding-content": "استخراج محتوى الويب من https://github.com/blinko-space/blinko",
+  "ai-prompt-delete-content": "ابحث عن ملاحظات مؤرشفة ، وتلخيصها وحفظها كملاحظات جديدة ، وحذف هاتين الملاحظات المؤرشفة",
+  "ai-prompt-translation": "أنت مترجم محترف، يرجى ترجمة النص المقدّم من قِبل المستخدم إلى {{lang}}",
+  "ai-prompt-translation-content": "تحقق من NO TAGS NOTES في اليومين الماضيين ووضع علامة عليها.",
+  "ai-prompt-writing": "أنت كاتب محترف، يرجى كتابة مقال احترافي حول الموضوع الذي قدمه المستخدم.",
+  "ai-prompt-writing-content": "اكتب مقالًا مكونًا من 200 كلمة واحفظه في ملاحظاتك",
+  "ai-scheduled-tasks": "AI Scheduled Tasks",
+  "ai-tag": "علامة الذكاء الاصطناعي",
+  "ai-tag-prompt-default": "",
+  "ai-task-hint": "Ask AI to create scheduled tasks for you",
+  "ai-tools": "أدوات الذكاء الاصطناعي",
+  "ai-write": "الذكاء الاصطناعي",
+  "align-center": "مركز",
+  "align-left": "غادر",
+  "align-right": "يمين",
+  "all": "الكل",
+  "all-notes": "جميع الملاحظات",
+  "all-notes-have-been-loaded": "تم تحميل جميع {{items}} الملاحظات",
+  "allow-register": "السماح بالتسجيل",
+  "already-have-an-account-direct-login": "هل لديك حساب بالفعل؟ تسجيل الدخول مباشرة",
+  "alternate-text": "نص بديل",
+  "always-hide-toolbar": "اختبئ دائماً",
+  "always-show-toolbar": "اعرض دائماً",
+  "analytics": "تحليلات",
+  "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "تحليل محتوى الملاحظة التالية واقترح العلامات المناسبة وتقديم ملخص موجز",
+  "and": "و",
+  "api-endpoint": "نقطة نهاية API",
+  "api-key": "مفتاح API",
+  "api-version": "نسخة API",
+  "app-update": "تحديث التطبيق",
+  "app-upgrade-required": "مطلوب ترقية التطبيق",
+  "apply-filter": "تطبيق الفلتر",
+  "archive": "أرشفة",
+  "archived": "المؤرشفة",
+  "arguments": "Arguments",
+  "article": "المادة",
+  "ask-about-your-notes": "اسأل عن ملاحظاتك",
+  "ask-ai": "اسأل الذكاء الاصطناعي",
+  "ask-blinko-ai-about-this-query": "اسأل Blinko AI عن هذا الاستعلام",
+  "attachment": "المرفق",
+  "audio-tips": "اضغط مع الاستمرار على مفتاح الاختصار للإدخال، ثم اتركه لإدراجه في مربع النص.",
+  "author": "الكاتب",
+  "authorization-url": "رابط التفويض",
+  "auto-add-tags": "تلقائي إضافة العلامات",
+  "automatically-process-notes-after-creation-or-update": "معالجة الملاحظات تلقائيًا بعد الإنشاء",
+  "autostart": "Autostart",
+  "available-variables": "المتغيرات المتاحة",
+  "back": "العودة",
+  "back-to-home": "العودة إلى الصفحة الرئيسية",
+  "backup-file": "ملف النسخ الاحتياطي",
+  "backup-success": "نجاح النسخ الاحتياطي 🎉",
+  "base-url": "عنوان الويب الأساسي",
+  "basic-information": "معلومات أساسية",
+  "blinko": "بلينكو",
+  "blinko-endpoint": "نقطة النهاية بلينكو",
+  "block-type-select-placeholder": "نوع المربع",
+  "bold": "جريئة",
   "both": "كلاهما",
+  "bucket": "دلو",
+  "bulleted-list": "قائمة نقطية",
+  "cache-cleared-successfully": "تم مسح ذاكرة التخزين المؤقت بنجاح! ستتم إعادة تحميل الصفحة تلقائيًا.",
+  "calling-tool": "Calling tool: {{tool}}",
+  "camera": "كاميرا",
+  "can-generate-summaries-tags-or-perform-analysis": "يمكن توليد علامات ملخصات على أداء التحليل",
+  "cancel": "إلغاء",
+  "cancel-share": "إلغاء المشاركة",
+  "cancel-top": "إلغاء التثبيت",
+  "card-columns": "أعمدة البطاقة",
+  "change-type": "تغيير النوع",
+  "change-user-info": "تغيير معلومات المستخدم",
+  "chars": "الأحرف",
+  "check": "قائمة المهام",
+  "check-connect": "فحص",
+  "check-connect-error": "قد يُضاف فشل الاتصال إلى نهاية /v1",
+  "check-connect-success": "تحقق من نجاح الاتصال",
+  "check-list": "قائمة التحقق",
+  "check-proxy-settings-and-ensure-server-is-accessible": "Check your proxy settings and ensure the server is accessible",
+  "checking-for-updates": "تحقق من التحديثات",
+  "choose-what-to-do-with-ai-results": "اختر ما يجب فعله بنتائج الذكاء الاصطناعي",
+  "clear-browser-cache": "Clear Browser Cache",
+  "clear-cache": "Clear Cache",
+  "clear-current-content": "امسح المحتوى الحالي",
+  "client": "Client",
+  "client-id": "معرّف العميل",
+  "client-secret": "السر الخاص بالعميل",
+  "close": "يغلق",
+  "close-background-animation": "إغلاق الخلفية المتحركة",
+  "close-daily-review": "مراجعة يومية وثيقة",
+  "cloud-file": "ملف سحابي",
   "code": "كود بلوك",
+  "code-theme": "معاينة موضوع كتلة الكود",
+  "coding": "برمجة",
+  "collapse": "انهيار",
+  "column": "عمود",
+  "columns-for-different-devices": "أعمدة للأجهزة المختلفة",
+  "command": "Command",
+  "comment": "تعليق",
+  "comment-notification": "تنبيه التعليقات",
+  "common.pullToRefresh": "السحب لأسفل للتحديث",
+  "common.refreshing": "جارٍ التحديث",
+  "common.releaseToRefresh": "أطلق للتحديث",
+  "community": "المجتمع",
+  "complete": "إكمال",
+  "configure-your-own-api-endpoint": "الموردون المخصصون يجب أن يتوافقوا مع معايير OpenAPI",
+  "confirm": "تأكيد",
+  "confirm-and-regenerate": "Confirm and Regenerate",
+  "confirm-delete": "تأكيد الحذف",
+  "confirm-delete-content": "هل أنت متأكد أنك تريد حذف {{name}}؟ لا يمكن التراجع عن هذا الإجراء.",
+  "confirm-delete-mcp-server": "Are you sure you want to delete this MCP server?",
+  "confirm-delete-provider": "تأكيد حذف مزود الخدمة",
+  "confirm-password": "تأكيد كلمة المرور",
+  "confirm-to-delete": "تأكيد الحذف!",
+  "confirm-your-password": "أكد كلمة المرور",
+  "confrim": "تأكيد",
+  "congratulations-youve-reviewed-everything-today": "تهانينا، لقد راجعت كل شيء اليوم.",
+  "content-generated-by-ai": "المحتوى الناتج عن الذكاء الاصطناعي",
+  "content-rest-of-the-text-if-the-text-is-longer-than-the-length": "المحتوى(بقية النص، إذا كان النص أطول من الطول)",
+  "content-theme": "معاينة موضوع المحتوى",
+  "context": "السياق",
+  "conversation-history": "سجل المحادثة",
+  "conversation-id-missing": "Conversation ID missing",
+  "conversation-not-exist": "Shared conversation does not exist",
+  "conversation-not-found": "Shared conversation not found or not public",
+  "convert-to": "تحويل إلى",
+  "convert-to-blinko": "تحويل إلى بلينكو",
+  "convert-to-note": "تحويل إلى ملاحظة",
   "copied": "تم النسخ",
+  "copy": "نسخة",
+  "copy-share-link": "نسخ رابط المشاركة",
+  "create": "إنشاء",
+  "create-model": "إضافة نموذج",
+  "create-share": "إنشاء مشاركة",
+  "create-successfully": "تم الإنشاء بنجاح",
+  "create-successfully-is-about-to-jump-to-the-login": "تم الإنشاء بنجاح، سيتم التحويل إلى صفحة تسجيل الدخول",
+  "create-user": "إنشاء مستخدم",
+  "created-at": "تم الإنشاء في",
+  "created-in": "تم الإنشاء في",
+  "cuda-acceleration": "تسريع CUDA",
+  "current-app-version": "النسخة الحالية من التطبيق",
+  "custom": "تخصيص",
+  "custom-ai-prompt": "تلميحات الذكاء الاصطناعي المخصصة",
+  "custom-background-url": "الخلفية المخصصة",
+  "custom-bg-tip": "انتقل إلى https://www.shadergradient.co/ لإنشاء خلفية التدرج الخاصة بك",
+  "custom-configuration": "مورد مخصص",
+  "custom-expiry": "انتهاء مخصص",
+  "custom-icon": "أيقونة مخصصة",
+  "custom-path": "المسار المخصص",
+  "cut": "قطع",
+  "daily-review": "مراجعة يومية",
   "dark-mode": "الوضع الداكن",
+  "date-range": "",
+  "days": "الأيام",
+  "days-ago": "منذ {{count}} يوم",
+  "days-left": "{{count}} بعد يوم.",
+  "default-home-page": "الصفحة الرئيسية الافتراضية",
+  "define-custom-prompt-for-ai-to-process-notes": "قم بتشغيل الذكاء الصناعي للتعليق على الملاحظة الحالية. على سبيل المثال: يرجى تلخيص محتوى الملاحظة. إذا كان محتوى الملاحظة أقل من 10 كلمات، فيرجى صقلها لي.",
+  "define-instructions-for-ai-to-edit-your-notes": "يمكنك استخدام التوجيهات للتلاعب بالملاحظات، على سبيل المثال: إذا احتوت ملاحظة على رابط، قم بتلخيص محتوى الرابط أدناه من الملاحظة الأصلية وولِّد تسمية.",
+  "delete": "حذف",
   "delete-column": "حذف الصف",
+  "delete-confirm": "تأكيد الحذف",
+  "delete-only-tag": "حذف العلامة فقط",
   "delete-row": "حذف العمود",
+  "delete-success": "تم الحذف بنجاح",
+  "delete-tag-with-note": "حذف العلامة مع الملاحظة",
+  "deployment-name": "اسم النشر",
+  "deselect-all": "Deselect All",
+  "desktop": "سطح المكتب",
+  "detail": "التفاصيل",
+  "detected-ai-configuration-to-import": "تم اكتشاف إعدادات AI في انتظار الاستيراد",
+  "device-card-columns": "أعمدة بطاقة الجهاز",
   "devtools": "أدوات المطورين",
+  "disable": "Disable",
+  "disabled": "Disabled",
+  "disconnect": "افصل",
+  "do-not-include-http-or-https-prefix": "Do not include http:// or https:// prefix",
+  "documentation": "وثيقة",
   "down": "أسفل",
+  "download": "تحميل",
+  "download-failed": "تحميل فاشل",
+  "download-success": "تم التنزيل بنجاح",
   "download-tip": "لا يدعم المتصفح وظيفة التنزيل",
+  "downloading": "جاري التحميل",
+  "downloading-update": "جاري تحميل التحديثات",
+  "downloads": "تنزيلات",
+  "dragging": "جاري السحب...",
+  "edit": "تعديل",
+  "edit-mcp-server": "Edit MCP Server",
+  "edit-message": "Edit Message",
+  "edit-message-warning": "تحرير هذه الرسالة سيقوم بمسح جميع سجلات المحادثات اللاحقة، وإعادة توليد الردود من الذكاء الاصطناعي.",
   "edit-mode": "تبديل وضع التحرير",
+  "edit-oauth2-provider": "تحرير مزود Oauth2",
+  "edit-time": "وقت التحرير",
+  "edit-user": "تعديل المستخدم",
+  "edited": "تم التحرير",
+  "editor-preview": "محرر",
+  "embedding-api-endpoint": "تضمين نقطة نهاية واجهة برمجة التطبيقات",
+  "embedding-api-key": "تضمين مفتاح واجهة برمجة التطبيقات",
+  "embedding-dimensions": "أبعاد التضمين",
+  "embedding-dimensions-description": "عليك التأكد من أن أبعاد النموذج صحيحة، وتحتاج إلى فرض إعادة بناء سجلات الفهرس بعد إجراء التغييرات.",
+  "embedding-lambda-description": "معلمة ترجيح تنوع نتائج الاستعلامات",
+  "embedding-model": "نموذج التضمين",
+  "embedding-model-description": "يجب إعادة بناء الفهرس بعد تبديل النماذج المدمجة",
+  "embedding-score-description": "عادة ما تكون عتبة التشابه للاستعلامات هي مجموع المسافة الإقليدية",
   "emoji": "إيموجي",
+  "enable": "Enable",
+  "enable-ai-post-processing": "تمكين معالجة ما بعد الذكاء الاصطناعي",
+  "enable-hotkey-to-quickly-open-ai-input-dialog": "Enable hotkey to quickly open AI input dialog",
+  "enable-hotkeys-desc": "السماح باستخدام اختصارات لفتح نافذة الملاحظات بسرعة",
+  "enable-http-proxy-for-accessing-github-or-ai-api-endpoints": "Enable HTTP proxy for accessing GitHub or AI API endpoints",
+  "enable-quick-ai": "Enable Quick AI",
+  "enable-text-selection-toolbar": "Enable Text Selection Toolbar",
+  "enable-voice-recognition": "Enable Voice Transcription",
+  "enabled": "Enabled",
+  "end-date": "تاريخ الانتهاء",
+  "endpoint": "نقطة النهاية",
+  "enter-api-base-url": "أدخل عنوان URL الأساسي، مثل https://api.openapi.com/v1",
+  "enter-blinko-endpoint": "رابط تثبيت Blinko الخاص بك",
+  "enter-code-shown-on-authenticator-app": "أدخل الرمز الظاهر في تطبيق المصادقة",
+  "enter-custom-prompt": "مثال: تحليل محتوى الملاحظة التالية {note}، واستنادًا إلى العلامات الحالية {tags}، قُم بإنشاء علامات مناسبة، وقُم بتلخيص الملاحظات لإضافتها إلى التعليق.",
+  "enter-custom-prompt-for-post-processing": "أدخل مطالبة مخصصة للمعالجة بعد",
+  "enter-provider-name": "أدخل اسم المزود، على سبيل المثال: OpenAI",
+  "enter-send-shift-enter-for-new-line": "إدخال للإرسال، Shift+Enter لسطر جديد",
+  "enter-spotify-consumer-key": "أدخل مفتاح Spotify API",
+  "enter-spotify-consumer-secret": "أدخل Spotify Consumer Secret",
+  "enter-your-api-key": "أدخل مفتاح API الخاص بك",
+  "enter-your-message": "أدخل رسالتك",
+  "enter-your-name": "أدخل اسمك",
+  "enter-your-password": "أدخل كلمة المرور",
+  "enter-your-username": "أدخل اسم المستخدم",
+  "environment-variables": "Environment Variables",
+  "error": "Error",
+  "error-code": "Error Code",
+  "error-details": "Error Details",
+  "every-day": "كل يوم",
+  "every-half-year": "كل نصف عام",
+  "every-month": "كل شهر",
+  "every-three-month": "كل ثلاثة أشهر",
+  "every-week": "كل أسبوع",
+  "example-mcp-servers": "Example MCP Servers:",
+  "exclude-tag-from-embedding": "استبعاد المحتوى الموسومة",
   "exclude-tag-from-embedding-desc": "حدد علامة لاستبعاد ملاحظاتها المرتبطة من إنشاء النواة التضمينية باستخدام الذكاء الصناعي",
   "exclude-tag-from-embedding-tip": "سيتم استبعاد الملاحظات التي تحتوي على هذه العلامة من معالجة تضمين الذكاء الاصطناعي",
+  "exit-fullscreen": "الخروج من وضع ملء الشاشة",
+  "expired": "منتهي الصلاحية",
+  "expired-days": "منتهية الصلاحية منذ {{count}} يومًا",
+  "expired-hours": "انتهت الصلاحية منذ {{count}} ساعة",
+  "expired-minutes": "انتهت صلاحيته منذ {{count}} دقيقة",
+  "expiry-time": "وقت انتهاء الصلاحية",
+  "export": "التصدير",
+  "export-format": "تنسيق التصدير",
+  "exporting": "التصدير...",
+  "failed-to-clear-cache": "إزالة ذاكرة التخزين المؤقت للمتصفح فشل. حاول التحديث يدويًا (Ctrl+Shift+R).",
+  "file-name": "اسم الملف",
   "file-type-error": "نوع الملف خاطىء",
+  "filter-settings": "إعدادات التصفية",
+  "first-char-delay": "تأخير الحرف الأول",
+  "folder-name": "اسم المجلد",
+  "folder-name-exists": "الاسم المجلد موجود",
+  "folder-name-required": "اسم المجلد مطلوب",
+  "follow": "اتبع",
+  "follow-notification": "متابعة الإشعارات",
   "follow-system": "متابعة النظام",
+  "followed-you": "تابعتك",
+  "follower": "تابع",
+  "following": "متابعة",
   "footnote-ref": "المرجع السفلي",
+  "for-more-info": "للحصول على مزيد من المعلومات",
+  "force-rebuild": "إعادة بناء القوة",
+  "force-rebuild-embedding-index": "ستؤدي إعادة البناء القسري إلى إعادة بناء جميع البيانات التي تمت فهرستها بالكامل",
+  "fri": "الجمعة",
+  "from": "من",
+  "full-screen": "شاشة كاملة",
   "fullscreen": "تبديل وضع ملء الشاشة",
+  "function-call-required": "مطلوب استدعاء الوظيفة",
   "generate": "توليد",
+  "generate-low-permission-token": "توليد رمز الإذن المنخفض",
+  "generated-file": "Generated File",
+  "github-api-limit-notice": "Note: Due to GitHub API rate limits, repository info may not load. The plugin will still install with default information.",
+  "github-repository-url": "GitHub Repository URL",
+  "global-prompt": "كلمات تلميح عامة",
   "go-to-share-page": "انتقل إلى صفحة المشاركة",
+  "grant-microphone-permission": "تفويض الميكروفون",
+  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "المحفز المستخدم لتوليد العلامات تلقائيًا. إذا تُرك فارغًا، سيتم استخدام المحفز الافتراضي.",
+  "has-file": "يتضمن ملفًا",
+  "has-image": "لديه صورة",
+  "has-link": "لديه رابط",
+  "has-todo": "يجب القيام به",
+  "heading": "العنوان",
   "heading1": "العنوان ١",
   "heading2": "العنوان ٢",
   "heading3": "العنوان 3",
@@ -291,451 +344,503 @@
   "heading5": "العنوان 5",
   "heading6": "العنوان 6",
   "headings": "العناوين",
+  "heatMapDescription": "تُظهر عدد الملاحظات التي تم إنشاؤها في اليوم الواحد",
+  "heatMapTitle": "خريطة الحرارة للملاحظات من العام الماضي",
+  "hello": "مرحبًا",
   "help": "مساعدة",
+  "hi-user-name-i-can-search-for-the-notes-for-you-how-can-i-help-you-today": "مرحبًا {{name}}! يمكنني البحث عن الملاحظات لك، كيف يمكنني مساعدتك اليوم؟",
+  "hide-blog-images": "إخفاء صور المدونة",
+  "hide-comments-in-card": "إخفاء التعليقات في البطاقة",
+  "hide-notification": "إخفاء الإشعارات",
+  "hide-pc-editor": "إخفاء محرر جهاز الكمبيوتر",
+  "hide-toolbar-on-mobile": "إخفاء على الجوال",
+  "history-note-only": "الانتباه: يحتوي هذا السجل على محتوى نص فقط ، وليس سجل الملف",
+  "home-site": "موقع البيت",
+  "hotkey-settings": "إعدادات مفاتيح الاختصار",
+  "hotkey.clickRecordButton": "انقر على زر التسجيل لبدء التسجيل",
+  "hotkey.enableGlobalHotkey": "تفعيل الملاحظات السريعة",
+  "hotkey.pressShortcut": "يرجى الضغط على مفتاح الاختصار",
+  "hotkey.quickNoteShortcut": "اختصارات ملاحظات سريعة",
+  "hotkey.record": "تسجيل",
+  "hotkey.stop": "توقف",
+  "hotkey.title": "اختصارات الكيبورد",
+  "hotkeys": "اختصارات الكيبورد",
+  "hours-ago": "منذ {{count}} ساعة",
+  "hours-left": "{{count}} ساعة لاحقًا",
+  "http-headers": "HTTP Headers",
+  "http-proxy": "HTTP Proxy",
+  "hub": "محور",
+  "i-have-a-new-idea": "لدي فكرة جديدة...",
+  "if-you-have-a-lot-of-notes-you-may-consume-a-certain-number-of-tokens": "إذا كان لديك الكثير من الملاحظات فقد تستهلك عددًا معينًا من الرموز المميزة",
   "image-url": "عنوان URL",
+  "impoort-from-bko": "استيراد من ملف.bko",
+  "import": "استيراد",
+  "import-ai-configuration": "استيراد إعدادات الذكاء الصناعي",
   "import-done": "تم الاستيراد",
+  "import-error": "Failed to parse mcp.json: {{error}}",
+  "import-failed": "Failed to import MCP servers",
   "import-from-bko": "استيراد من .bko",
+  "import-from-bko-tip": "تحميل إلى s3 للإسترداد غير مدعوم في الوقت الحالي. يُرجى تعطيل الخيار s3 مؤقتًا عند رغبتك في الاسترداد.",
+  "import-from-markdown": "استيراد من ملف Markdown",
+  "import-from-markdown-tip": "استيراد من ملف .md أو أرشيف .zip يحتوي على ملفات .md",
+  "import-from-memos-memos_prod-db": "استيراد من قاعدة البيانات(memos_prod.db)",
+  "import-mcp-json": "Import mcp.json",
+  "import-mcp-json-hint": "Click \"Import mcp.json\" to paste your MCP configuration, or manually add servers",
+  "import-partial-success": "Successfully imported {{success}} server(s), {{failed}} failed",
+  "import-success": "Successfully imported {{count}} MCP server(s)",
+  "importing": "جارٍ الاستيراد",
+  "in-addition-to-the-gpt-model-there-is-a-need-to-ensure-that-it-is-possible-to-invoke-the": "بالإضافة إلى نموذج GPT، هناك حاجة إلى التأكد من إمكانية استدعاء",
+  "in-progress": "قيد التنفيذ...",
   "indent": "المسافة البادئة",
   "info": "معلومات",
   "inline-code": "كود مضمن",
+  "input-parameters": "معاملات الإدخال",
+  "insert-after": "إدراج بعد",
+  "insert-attachment-or-note": "الإرفاق بملف أو المذكرة؟",
+  "insert-before": "إدراج قبل",
+  "insert-codeblock": "إدراج كتلة كود",
   "insert-column-left": "ادخل 1 يسار",
   "insert-column-right": "أدخل 1 يمين",
+  "insert-context": "إدراج في السياق",
+  "insert-hashtag": "إدراج وسم",
   "insert-row-above": "أدخل 1 أعلى",
   "insert-row-below": "أدخل 1 أسفل",
+  "insert-sandpack": "إدراج حزمة الرمل",
+  "insert-table": "إدراج جدول",
+  "install": "تثبيت",
+  "install-from-github": "من GitHub تثبيت",
+  "install-from-github-description": "Install a plugin directly from a GitHub repository URL.",
+  "installed-plugins": "تم التثبيت",
+  "installing-update": "تثبيت التحديثات",
   "instant-rendering": "التقديم الفوري",
+  "internal-share": "المشاركة الداخلية",
+  "internal-shared": "مشترك داخلي",
+  "invalid-share-link": "Invalid share link",
+  "ip-address-or-hostname-for-proxy-server": "IP address or hostname for proxy server",
+  "italic": "مائل",
+  "items": "عناصر",
+  "join-hub": "انضم للهب",
+  "just-expired": "Just expired",
+  "keep-sign-in": "البقاء مسجلًا",
+  "knowledge-base-search": "بحث في قاعدة المعرفة",
+  "language": "اللغة",
+  "large-device-card-columns": "أعمدة بطاقة الجهاز الكبيرة",
+  "last-run": "آخر تشغيل",
   "light-mode": "وضع النور",
   "line": "خط",
   "link": "رابط",
+  "link-account": "ربط الحساب",
+  "link-account-warning": "يرجى ملاحظة أنه إذا قمت بربط حساباتك، فلن يتم مزامنة أية بيانات من الحساب الحالي إلى الحساب المرتبط.",
   "link-ref": "رابط المرجع",
   "list": "قائمة",
+  "live-preview": "التقديم الفوري",
+  "load-conversation-failed": "Failed to load shared conversation",
+  "load-failed": "Load failed",
+  "loading": "جارِ التحميل",
+  "loading-shared-conversation": "Loading shared conversation...",
+  "local-development": "التنمية المحلية",
+  "local-development-description": "أضف إضافة تطوير محلية وقم بتصحيح الأخطاء فيها.",
   "local-file-system": "نظام الملفات المحلي",
-  "more": "أكثر",
-  "name-empty": "الاسم فارغ",
-  "new-version-available": "الإصدار الجديد متاح",
-  "notes-imported-by-other-means-may-not-have-embedded-vectors": "قد لا تحتوي الملاحظات المستوردة بطرق أخرى على متجهات مضمنة",
-  "object-storage": "تخزين الكائنات",
-  "order-by-create-time": "ترتيب حسب وقت الإنشاء",
-  "ordered-list": "قائمة الطلبات",
-  "outdent": "نسبة العجز",
-  "outline": "مخطط/ تفصيلات",
-  "over": "فوق",
-  "performance-tip": "المعاينة في الوقت الحقيقي تتطلب ${x} ميلِّ ثانية، يمكنك إغلاقها",
-  "preview": "معاينة",
-  "rebuild": "إعادة البناء",
-  "rebuild-embedding-index": "إعادة بناء فهرس التضمين",
-  "rebuilding-embedding-progress": "إعادة بناء تقدم التضمين",
-  "record": "بدء التسجيل / إنهاء التسجيل",
-  "record-tip": "الجهاز لا يدعم التسجيل",
-  "redo": "إعادة",
-  "remove": "إزالة",
-  "row": "صف",
-  "spin": "الدوران",
-  "split-view": "تقسيم العرض",
-  "storage": "تخزين",
-  "strike": "ضربة",
-  "table": "الطاولة",
-  "text-is-not-empty": "النص (غير فارغ)",
-  "time-format": "تنسيق الوقت",
-  "title": "العنوان",
-  "tooltip-text": "نص التلميح",
-  "undo": "تراجع",
-  "up": "فوق",
-  "update": "تحديث",
-  "upload-error": "خطأ في التحميل",
-  "uploading": "جاري التحميل...",
-  "version": "الإصدار",
-  "wysiwyg": "ما تراه هو ما تحصل عليه",
-  "search-tags": "البحث عن العلامات",
-  "insert-attachment-or-note": "الإرفاق بملف أو المذكرة؟",
-  "context": "السياق",
-  "paste-to-note-or-attachment": "هل أنت متأكد من لصق النص في السياق أو المرفق؟",
-  "attachment": "المرفق",
-  "after-deletion-all-user-data-will-be-cleared-and-unrecoverable": "بعد الحذف، سيتم مسح جميع بيانات المستخدم ولن يمكن استرجاعها.",
-  "upload-completed": "تم الرفع بنجاح",
-  "upload-cancelled": "تم إلغاء التحميل",
-  "upload-failed": "فشل التحميل",
-  "import-from-bko-tip": "تحميل إلى s3 للإسترداد غير مدعوم في الوقت الحالي. يُرجى تعطيل الخيار s3 مؤقتًا عند رغبتك في الاسترداد.",
-  "edit-time": "وقت التحرير",
-  "ai-write": "الذكاء الاصطناعي",
-  "download": "تحميل",
-  "rename": "إعادة تسمية",
-  "move-up": "تحرك لأعلى",
-  "cut": "قطع",
-  "paste": "لصق",
-  "confirm-delete": "تأكيد الحذف",
-  "confirm-delete-content": "هل أنت متأكد أنك تريد حذف {{name}}؟ لا يمكن التراجع عن هذا الإجراء.",
-  "folder-name": "اسم المجلد",
-  "file-name": "اسم الملف",
-  "operation-success": "نجاح العملية",
-  "cloud-file": "ملف سحابي",
-  "move-to-parent": "الانتقال إلى الوالد",
-  "no-resources-found": "لم يتم العثور على موارد",
-  "operation-in-progress": "العملية قيد التقدم",
-  "new-folder": "مجلد جديد",
-  "folder-name-exists": "الاسم المجلد موجود",
-  "folder-name-required": "اسم المجلد مطلوب",
-  "collapse": "انهيار",
-  "show-all": "اظهر الكل",
-  "sun": "الشمس",
-  "mon": "الإثنين",
-  "wed": "الأربعاء",
-  "thu": "الخميس",
-  "fri": "الجمعة",
-  "sat": "جلس",
-  "heatMapTitle": "خريطة الحرارة للملاحظات من العام الماضي",
-  "heatMapDescription": "تُظهر عدد الملاحظات التي تم إنشاؤها في اليوم الواحد",
-  "select-month": "اختر الشهر",
-  "note-count": "عد البنك",
+  "local-plugin": "الإضافة المحلية",
+  "local-voice-recognition": "التفريغ الصوتي المحلي",
+  "login-failed": "فشل تسجيل الدخول",
+  "login-type": "نوع تسجيل الدخول",
+  "logout": "تسجيل الخروج",
+  "low-permission-token-desc": "يمكن للرموز ذات الأذونات المنخفضة الوصول فقط إلى نقطة نهاية upsertNote ونقطة نهاية الدردشة الذكاء الاصطناعي. لا يمكنهم ​​الوصول إلى معلومات حسابك أو الملاحظات الأخرى. هذا مثالي لحالات استخدام مثل بوتات تيليجرام أو بوتات ويتشات، حيث ترغب في التأكد من أنهم لا يستطيعون ​​الولوج إلى أية ملاحظات أخرى.",
+  "maintenance": "Maintenance",
+  "mark-all-as-read": "علم الكل كمقروء",
+  "marketplace": "السوق",
+  "marketplace-description": "تصفح وقم بتثبيت الإضافات من السوق الرسمي.",
   "max-daily-words": "أقصى عدد من الكلمات يوميًا",
-  "active-days": "أيام نشطة",
-  "total-words": "إجمالي الكلمات",
-  "analytics": "تحليلات",
-  "tag-distribution": "توزيع العلامة",
-  "other-tags": "العلامات الأخرى",
-  "tue": "الثلاثاء",
+  "max-home-page-width": "عرض الصفحة الرئيسية الأقصى",
+  "max-home-page-width-tip": "إذا تم تعيينها على 0 فهذا هو العرض الأقصى",
+  "mcp-client-servers": "MCP Client Servers",
+  "mcp-client-servers-desc": "Configure external MCP servers that the AI can connect to and use their tools. These tools will be available during AI conversations.",
+  "mcp-json-content": "mcp.json Content",
+  "mcp-server-tools": "Tools available from {{serverName}}:",
+  "medium-device-card-columns": "أعمدة بطاقة الجهاز المتوسطة",
+  "microphone-access-required": "Microphone Access Required",
+  "minutes-ago": "منذ {{count}} دقيقة",
+  "minutes-left": "{{count}} دقيقة بعد",
+  "mobile": "الهاتف المحمول",
+  "model": "نموذج",
+  "model-cap-desc": "يرجى اختيار النموذج بعناية. سيؤدي الاختيار الخاطئ إلى عدم قدرة استخدام النموذج.",
+  "model-capabilities": "قدرة النموذج",
+  "model-list-updated": "قائمة النماذج المحدثة",
+  "model-name": "اسم النموذج",
+  "model-provider": "مزود الخدمة",
+  "model-selection": "اختيار النموذج",
+  "mon": "الإثنين",
+  "months-ago": "منذ {{count}} شهر",
+  "more": "أكثر",
+  "move-down": "تحرك لأسفل",
+  "move-to-parent": "الانتقال إلى الوالد",
+  "move-up": "تحرك لأعلى",
+  "multiple-select": "اختيار متعدد",
+  "music-settings": "إعدادات الموسيقى",
+  "must-start-with-http-s-or-use-api-openai-as-default": "يجب أن يبدأ بـ ://http(s) أو استخدام /api/openai كإعداد افتراضي",
+  "name": "الاسم",
+  "name-db": "الاسم",
+  "name-empty": "الاسم فارغ",
+  "need-password-to-access": "مطلوب كلمة مرور للوصول",
+  "need-to-create-an-account": "هل تحتاج إلى إنشاء حساب؟",
+  "new-client-version-available": "New client version available",
+  "new-conversation": "محادثة جديدة",
+  "new-folder": "مجلد جديد",
+  "new-notification": "إشعار جديد",
+  "new-server-version-available": "New server version available",
+  "new-version-available": "الإصدار الجديد متاح",
+  "new-version-detected-click-to-get-the-latest-version": "🎉 تم اكتشاف إصدار جديد، اضغط للحصول على أحدث إصدار",
+  "newer": "أحدث",
+  "nickname": "اللقب",
+  "no-ai-tasks": "No AI scheduled tasks",
+  "no-comments-yet": "لا تعليقات حتى الآن",
+  "no-condition": "لا توجد حالة",
+  "no-data": "لا توجد بيانات مؤقتا",
+  "no-data-here-well-then-time-to-write-a-note": "لا توجد بيانات هنا؟ إذن حان الوقت لكتابة ملاحظة!",
+  "no-mcp-servers": "No MCP servers configured",
+  "no-note-associated": "لا يوجد مذكرة مرتبطة",
+  "no-notification": "لا إشعار",
+  "no-related-notes-found": "لم يتم العثور على ملاحظات ذات صلة",
+  "no-resources-found": "لم يتم العثور على موارد",
+  "no-tag": "بدون علامة",
+  "no-tag-found": "لم يتم العثور على علامة",
+  "no-team-members-found": "لم يتم العثور على أعضاء في الفريق",
+  "no-title": "بدون عنوان",
+  "no-update-available": "لا توجد تحديثات متاحة",
+  "not-a-bko-file": "ليس ملف .bko",
+  "not-a-markdown-or-zip-file": "ليس ملف Markdown أو zip. الرجاء اختيار ملف .md أو .zip.",
+  "note": "ملاحظة",
+  "note-count": "عد البنك",
+  "notes": "ملاحظات",
+  "notes-imported-by-other-means-may-not-have-embedded-vectors": "قد لا تحتوي الملاحظات المستوردة بطرق أخرى على متجهات مضمنة",
+  "notification": "الإشعار",
+  "numbered-list": "قائمة مرقمة",
+  "oauth2-providers": "موفِّري Oauth2",
+  "object-storage": "تخزين الكائنات",
+  "offline": "غير متصل",
+  "offline-description": "يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى",
   "offline-status": "وضع عدم الاتصال",
   "offline-title": "أنت خارج الاتصال",
-  "offline-description": "يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى",
-  "retry": "إعادة المحاولة",
-  "back-to-home": "العودة إلى الصفحة الرئيسية",
-  "offline": "غير متصل",
-  "close-background-animation": "إغلاق الخلفية المتحركة",
-  "custom-bg-tip": "انتقل إلى https://www.shadergradient.co/ لإنشاء خلفية التدرج الخاصة بك",
-  "custom-background-url": "الخلفية المخصصة",
-  "share": "مشاركة",
-  "need-password-to-access": "مطلوب كلمة مرور للوصول",
+  "older": "أقدم",
+  "ollama-ai-model-tooltip": "أدخل اسم الطراز المراد استخدامه، مثل llama3.2",
+  "ollama-default-endpoint-is-http-localhost-11434": "نقطة نهاية أولاما الافتراضية هي http://localhost:11434",
+  "online-search": "البحث على الإنترنت",
+  "open-your-third-party-authentication-app-and-enter-the-codeshown-on-screen": "افتح تطبيق المصادقة التابع لجهة خارجية، وأدخل الرموزالتي تظهر على الشاشة",
+  "operation-failed": "فشلت العملية.",
+  "operation-in-progress": "العملية قيد التقدم",
+  "operation-success": "نجاح العملية",
+  "optional": "Optional",
+  "optional-password-for-authenticated-proxy": "Optional password for authenticated proxy",
+  "optional-username-for-authenticated-proxy": "Optional username for authenticated proxy",
+  "or-enter-this-code-manually": "أو أدخل هذا الرمز يدوياً:",
+  "order-by-create-time": "ترتيب حسب وقت الإنشاء",
+  "ordered-list": "قائمة الطلبات",
+  "original-password": "كلمة المرور الأصلية",
+  "other-tags": "العلامات الأخرى",
+  "outdent": "نسبة العجز",
+  "outline": "مخطط/ تفصيلات",
+  "output-result": "معاملات الإخراج",
+  "over": "فوق",
+  "page-size": "حجم الصفحة",
+  "paragraph": "الفقرة",
+  "password": "كلمة المرور",
   "password-error": "خطأ في كلمة المرور",
-  "cancel-share": "إلغاء المشاركة",
-  "create-share": "إنشاء مشاركة",
-  "share-link": "حصة الرابط",
-  "set-access-password": "قم بتعيين كلمة مرور الوصول",
-  "protect-your-shared-content": "حافظ على محتواك المشترك",
-  "access-password": "كلمة مرور الوصول",
-  "select-date": "حدد التاريخ",
-  "expiry-time": "وقت انتهاء الصلاحية",
-  "select-expiry-time": "اختر وقت انتهاء الصلاحية",
+  "paste": "لصق",
+  "paste-mcp-json-desc": "Paste your mcp.json content here. It will automatically convert and create MCP servers.",
+  "paste-to-note-or-attachment": "هل أنت متأكد من لصق النص في السياق أو المرفق؟",
+  "performance-tip": "المعاينة في الوقت الحقيقي تتطلب ${x} ميلِّ ثانية، يمكنك إغلاقها",
   "permanent-valid": "صالح دائما",
-  "7days-expiry": "انتهاء صلاحية بعد 7 أيام",
-  "custom-expiry": "انتهاء مخصص",
-  "30days-expiry": "انتهاء صلاحية خلال 30 يومًا",
+  "please-add-this-url-to-your-oauth-provider-settings": "يرجى إضافة عنوان الرابط هذا إلى إعدادات مزود خدمة OAuth الخاص بك",
+  "please-paste-json": "Please paste mcp.json content",
+  "please-select-icon-from-iconify": "يرجى اختيار أيقونة من مجموعة الأيقونات.",
+  "please-set-the-api-endpoint": "يرجى تعيين نقطة نهاية API",
+  "please-set-the-api-key": "يرجى تعيين مفتاح API",
+  "please-set-the-embedding-model": "الرجاء تعيين نموذج الإدراج",
+  "plugin": "البرنامج المساعد",
+  "plugin-connection-failed": "فشل الاتصال بالإضافة",
+  "plugin-settings": "إعداد الإضافة",
+  "plugin-update-failed": "فشل تحديث الإضافة",
+  "plugin-updated": "تم تحديث الإضافة",
+  "port-number-for-proxy-server": "Port number for proxy server",
+  "powered-by-blinko": "Powered by Blinko",
+  "preference": "التفضيل",
+  "press-enter-to-select-first-result": "اضغط على Enter لتحديد النتيجة الأولى",
+  "preview": "معاينة",
+  "preview-mode": "وضع المعاينة",
+  "processing": "معالجة",
+  "prompt-used-for-post-processing-notes": "موجه يستخدم لملاحظات المعالجة بعد ذلك",
+  "protect-your-shared-content": "حافظ على محتواك المشترك",
+  "provider-icon": "أيقونة المزود",
+  "provider-id": "مُعرف مُزوِّد",
+  "provider-name": "اسم المزوِّد",
+  "provider-template": "قالب مزود الخدمة",
+  "proxy-host": "Proxy Host",
+  "proxy-password": "Proxy Password",
+  "proxy-port": "Proxy Port",
+  "proxy-username": "Proxy Username",
+  "public": "عام",
+  "public-share": "المشاركة العامة",
+  "pull-to-refresh": "Pull to refresh",
+  "quick-ai": "Quick AI",
+  "quick-select": "الاختيار السريع",
+  "quote": "اقتباس",
+  "random-mode": "جولة عشوائية",
+  "raw-markdown": "الماركداون الأصلي",
+  "real-time-rendering-as-you-type": "Real-time rendering as you type",
+  "reasoning": "Reasoning",
+  "reasoning-signature": "Reasoning Signature",
+  "rebuild": "إعادة البناء",
+  "rebuild-embedding-index": "إعادة بناء فهرس التضمين",
+  "rebuild-in-progress": "إعادة البناء في التقدم",
+  "rebuild-started": "بدأت عملية الإعادة البناء",
+  "rebuild-stopped-by-user": "إعادة البناء توقفت بواسطة المستخدم",
+  "rebuilding-embedding-progress": "إعادة بناء تقدم التضمين",
+  "recommand": "اقتراح",
+  "record": "بدء التسجيل / إنهاء التسجيل",
+  "record-tip": "الجهاز لا يدعم التسجيل",
+  "recording": "تسجيل",
+  "recovery": "استعادة",
+  "redirect-url": "إعادة توجيه عنوان url",
+  "redo": "إعادة",
+  "reference": "المرجع",
+  "reference-by": "بالمرجعية",
+  "reference-note": "مذكرة مرجعية",
+  "reference-notes": "محتوى الاقتباس",
+  "referenceResource": "مورد مرجعي",
+  "refresh": "تحديث",
+  "refresh-model-list": "الحصول على قائمة النماذج",
+  "region": "المنطقة",
+  "reject": "رفض",
+  "related-notes": "ملاحظات ذات صلة",
+  "remove": "إزالة",
+  "remove-bold": "إزالة الخط العريض",
+  "remove-italic": "إزالة الخط المائل",
+  "remove-underline": "إزالة التسطير",
+  "rename": "إعادة تسمية",
+  "reply-to": "الرد على",
+  "required-app-version": "النسخة المطلوبة من التطبيق",
+  "required-items-cannot-be-empty": "العناصر المطلوبة لا يمكن أن تكون فارغة",
+  "rerank": "إعادة ترتيب",
+  "rerank-model": "نموذج إعادة الترتيب",
+  "rerank-model-description": "حدد نموذجًا لإعادة ترتيب نتائج الفيكتور لتحسين دقة البحث",
+  "rerank-score-description": "حدد عتبة درجة لنموذج إعادة الترتيب، سيتم تصفية النتائج دونها.",
+  "reset": "إعادة تعيين",
+  "resources": "الموارد",
+  "response-time": "Response Time",
+  "rest-user-password": "إعادة تعيين كلمة مرور المستخدم",
+  "restore": "استعادة",
+  "restore-this-version": "استعادة هذا الإصدار",
+  "retry": "إعادة المحاولة",
+  "reviewed": "تمت المراجعة",
+  "rich-text": "ما تراه هو ما تحصل عليه",
+  "role": "الدور",
+  "row": "صف",
+  "run-now": "Run Now",
+  "running": "قيد التشغيل",
+  "sat": "جلس",
+  "save": "حفظ",
+  "scan-this-qr-code-with-your-authenticator-app": "امسح رمز الاستجابة السريعة هذا باستخدام تطبيق المصادقة الخاص بك",
+  "schedule": "الجدولة",
+  "schedule-archive-blinko": "جدولة أرشفة بلينكو",
+  "schedule-back-up": "جدولة النسخ الاحتياطي",
+  "schedule-task": "جدولة المهام",
+  "scope": "نطاق",
+  "search": "بحث...",
+  "search-blinko-content-or-help-create": "ابحث في محتوى بلينكو أو ساعد في الإبداع...",
+  "search-or-ask-ai": "بحث ، أو الإعدادات أو اسأل الذكاء الاصطناعي ...",
+  "search-settings": "إعدادات البحث...",
+  "search-tags": "البحث عن العلامات",
+  "select-a-columns": "حدد أعمدة",
+  "select-a-time-format": "حدد تنسيق الوقت",
+  "select-account": "تحديد الحساب",
+  "select-all": "اختر الكل",
+  "select-block-type": "حدد نوع الكتلة",
+  "select-date": "حدد التاريخ",
+  "select-default-home-page": "اختر الصفحة الرئيسية الافتراضية",
+  "select-deployment": "اختر النشر",
+  "select-expiry-time": "اختر وقت انتهاء الصلاحية",
+  "select-model": "اختيار النموذج",
+  "select-model-provider": "اختيار مزود النموذج",
+  "select-month": "اختر الشهر",
+  "select-provider-template": "اختيار قالب موفر",
+  "select-tags": "حدد العلامات",
+  "select-toolbar-visibility": "تحديد رؤية شريط الأدوات",
+  "selected-users": "المستخدمين المحددين",
+  "server": "Server",
+  "set-access-password": "قم بتعيين كلمة مرور الوصول",
+  "set-as-public": "تعيين كعام",
+  "set-deadline": "تحديد الموعد النهائي",
+  "setting": "",
+  "settings": "الإعدادات",
+  "share": "مشاركة",
+  "share-and-copy-link": "مشاركة ونسخ الرابط",
+  "share-conversation": "Share Conversation",
+  "share-link": "حصة الرابط",
+  "share-link-copied": "Share link copied to clipboard",
   "share-link-expired": "انتهت صلاحية الرابط المشاركة",
   "share-link-expired-desc": "لقد انتهت صلاحية هذا المشاركة، يرجى الاتصال بالمسؤول لإعادة مشاركتها!",
   "shared": "مشترك",
-  "internal-shared": "مشترك داخلي",
-  "edited": "تم التحرير",
-  "move-down": "تحرك لأسفل",
-  "provider-id": "مُعرف مُزوِّد",
-  "provider-name": "اسم المزوِّد",
-  "well-known-url": "عنوان الرابط المعروف",
-  "authorization-url": "رابط التفويض",
-  "token-url": "عنوان URL الرمزية",
-  "userinfo-url": "معلومات المستخدم URL",
-  "scope": "نطاق",
-  "client-id": "معرّف العميل",
-  "client-secret": "السر الخاص بالعميل",
-  "sso-settings": "إعدادات الوصول الواحد (SSO)",
-  "oauth2-providers": "موفِّري Oauth2",
-  "add-oauth2-provider": "إضافة موفّر Oauth2",
-  "add-provider": "إضافة مزود",
-  "edit-oauth2-provider": "تحرير مزود Oauth2",
-  "confirm-delete-provider": "تأكيد حذف مزود الخدمة",
-  "please-select-icon-from-iconify": "يرجى اختيار أيقونة من مجموعة الأيقونات.",
-  "provider-icon": "أيقونة المزود",
-  "select-provider-template": "اختيار قالب موفر",
-  "provider-template": "قالب مزود الخدمة",
-  "please-add-this-url-to-your-oauth-provider-settings": "يرجى إضافة عنوان الرابط هذا إلى إعدادات مزود خدمة OAuth الخاص بك",
-  "redirect-url": "إعادة توجيه عنوان url",
+  "shared-at": "Shared at",
+  "shared-by": "Shared by",
+  "show-all": "اظهر الكل",
+  "show-less": "عرض أقل",
+  "show-more": "عرض المزيد",
+  "show-navigation-bar-on-mobile": "إخفاء شريط التنقل على الجوال",
+  "sign-in": "تسجيل الدخول",
   "sign-in-with-provider": "قم بتسجيل الدخول باستخدام {{ مزود }}",
-  "community": "المجتمع",
-  "theme-color": "لون السمة",
-  "link-account": "ربط الحساب",
-  "select-account": "تحديد الحساب",
-  "link-account-warning": "يرجى ملاحظة أنه إذا قمت بربط حساباتك، فلن يتم مزامنة أية بيانات من الحساب الحالي إلى الحساب المرتبط.",
-  "unlink-account": "فصل الحساب",
-  "unlink-account-tips": "هل تؤكد الوصول إلى جميع الجمعيات باستخدام هذا الحساب؟",
-  "login-type": "نوع تسجيل الدخول",
-  "close-daily-review": "مراجعة يومية وثيقة",
-  "max-home-page-width": "عرض الصفحة الرئيسية الأقصى",
-  "max-home-page-width-tip": "إذا تم تعيينها على 0 فهذا هو العرض الأقصى",
-  "no-comments-yet": "لا تعليقات حتى الآن",
-  "author": "الكاتب",
-  "from": "من",
-  "reply-to": "الرد على",
-  "comment": "تعليق",
-  "hub": "محور",
-  "home-site": "موقع البيت",
-  "use-blinko-hub": "استخدم برنامج Blinko Hub",
-  "full-screen": "شاشة كاملة",
-  "exit-fullscreen": "الخروج من وضع ملء الشاشة",
-  "no-note-associated": "لا يوجد مذكرة مرتبطة",
-  "insert-context": "إدراج في السياق",
-  "follow": "اتبع",
-  "follower": "تابع",
-  "following": "متابعة",
-  "admin": "مدير الموقع",
+  "sign-up": "التسجيل",
   "site-url": "عنوان موقع بلينكو",
-  "unfollow": "إلغاء المتابعة",
-  "join-hub": "انضم للهب",
-  "refresh": "تحديث",
-  "comment-notification": "تنبيه التعليقات",
-  "follow-notification": "متابعة الإشعارات",
-  "followed-you": "تابعتك",
-  "mark-all-as-read": "علم الكل كمقروء",
-  "no-notification": "لا إشعار",
-  "new-notification": "إشعار جديد",
-  "notification": "الإشعار",
-  "backup-success": "نجاح النسخ الاحتياطي 🎉",
+  "small-device-card-columns": "أعمدة بطاقة الجهاز الصغيرة",
+  "smart-edit": "تحرير ذكي",
+  "smart-edit-prompt": "تحرير ذكي",
+  "source": "Source",
+  "source-code": "كود المصدر",
+  "source-code-mode": "وضع شفرة المصدر",
+  "speech-recognition-requires-the-use-of": "يتطلب التعرف على الكلام استخدام",
+  "spin": "الدوران",
+  "split-view": "تقسيم العرض",
+  "spotify-consumer-key": "سبوتيفي مفتاح API",
+  "spotify-consumer-key-tip": "كان يُستخدم للحصول على غلاف موسيقى mp3",
+  "spotify-consumer-key-tip-2": "احصل على مفتاح API من https://developer.spotify.com/",
+  "spotify-consumer-secret": "Spotify API Secret",
+  "sso-settings": "إعدادات الوصول الواحد (SSO)",
+  "start-date": "تاريخ البدء",
+  "status": "الحالة",
+  "status-code": "Status Code",
+  "step-completed": "Step Completed",
+  "step-started": "Step Started",
+  "stop": "توقف",
+  "stop-task": "إيقاف المهمة",
+  "stopped": "متوقف",
+  "storage": "تخزين",
+  "strike": "ضربة",
+  "sun": "الشمس",
+  "superadmin": "مدير النظام",
   "system-notification": "إشعار النظام",
-  "embedding-api-endpoint": "تضمين نقطة نهاية واجهة برمجة التطبيقات",
-  "embedding-api-key": "تضمين مفتاح واجهة برمجة التطبيقات",
-  "recommand": "اقتراح",
-  "has-todo": "يجب القيام به",
-  "reference-by": "بالمرجعية",
-  "hide-notification": "إخفاء الإشعارات",
-  "search-settings": "إعدادات البحث...",
-  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "سيقوم هذا الإجراء بحذف الملفات المحددة ولا يمكن استعادتها، يرجى تأكيد.",
-  "plugin-settings": "إعداد الإضافة",
-  "installed-plugins": "تم التثبيت",
-  "marketplace": "السوق",
-  "local-development": "التنمية المحلية",
-  "add-local-plugin": "أضف الإضافة المحلية",
-  "local-plugin": "الإضافة المحلية",
-  "uninstall": "إلغاء التثبيت",
-  "install": "تثبيت",
-  "downloads": "تنزيلات",
-  "plugin-updated": "تم تحديث الإضافة",
-  "plugin-update-failed": "فشل تحديث الإضافة",
-  "plugin-connection-failed": "فشل الاتصال بالإضافة",
-  "disconnect": "افصل",
-  "local-development-description": "أضف إضافة تطوير محلية وقم بتصحيح الأخطاء فيها.",
-  "ai": "الذكاء الاصطناعي",
-  "ai-chat-box-notes": "أدناه تم استرداد الملاحظات ذات الصلة بالنسبة لك",
-  "copy": "نسخة",
-  "add-to-note": "أضف إلى الملاحظة",
-  "add-to-blinko": "أضف إلى بلينكو",
-  "no-title": "بدون عنوان",
-  "search-blinko-content-or-help-create": "ابحث في محتوى بلينكو أو ساعد في الإبداع...",
-  "conversation-history": "سجل المحادثة",
-  "new-conversation": "محادثة جديدة",
-  "knowledge-base-search": "بحث في قاعدة المعرفة",
-  "add-tools-to-model": "ابحث عبر الإنترنت أو اسمح للذكاء الاصطناعي بالاتصال بـ API لـ blinko",
-  "clear-current-content": "امسح المحتوى الحالي",
-  "welcome-to-blinko": "مرحبًا، {{name}}",
-  "ai-prompt-writing": "أنت كاتب محترف، يرجى كتابة مقال احترافي حول الموضوع الذي قدمه المستخدم.",
-  "coding": "برمجة",
-  "writing": "الكتابة",
-  "ai-prompt-translation": "أنت مترجم محترف، يرجى ترجمة النص المقدّم من قِبل المستخدم إلى {{lang}}",
-  "ai-prompt-coding": "أنت مبرمج محترف، رجاءً اكتب برنامج بايثون بسيط يُعتمد على الموضوع الذي يقدمه المستخدم.",
-  "translation": "ترجمة",
-  "first-char-delay": "تأخير الحرف الأول",
-  "total-tokens": "إجمالي الرموز المميزة",
-  "check-connect": "فحص",
-  "check-connect-error": "قد يُضاف فشل الاتصال إلى نهاية /v1",
-  "check-connect-success": "تحقق من نجاح الاتصال",
-  "loading": "جارِ التحميل",
-  "embedding-dimensions": "أبعاد التضمين",
-  "embedding-dimensions-description": "عليك التأكد من أن أبعاد النموذج صحيحة، وتحتاج إلى فرض إعادة بناء سجلات الفهرس بعد إجراء التغييرات.",
-  "model": "نموذج",
-  "ai-tools": "أدوات الذكاء الاصطناعي",
+  "table": "الطاولة",
+  "tablet": "جهاز لوحي",
+  "tag-distribution": "توزيع العلامة",
+  "tag-status": "حالة العلامة",
+  "tags-prompt": "علامات موجه",
+  "task-name-auto-archive-blinko": "أرشفة تلقائية",
+  "task-name-backup-database": "نسخ احتياطي للقاعدة",
+  "task-name-follow-recommand-index": "توصية المتابعة",
   "tavily-api-key": "مفتاح واجهة برمجة تطبيقات البحث في \"تافيلي\"",
   "tavily-max-results": "نتائج تافيلي ماكس",
-  "ai-prompt-writing-content": "اكتب مقالًا مكونًا من 200 كلمة واحفظه في ملاحظاتك",
-  "ai-prompt-coding-content": "استخراج محتوى الويب من https://github.com/blinko-space/blinko",
-  "stop-task": "إيقاف المهمة",
-  "processing": "معالجة",
+  "test": "Test",
+  "test-connection": "اختبار الاتصال",
+  "test-if-the-proxy-is-working-correctly": "Test if the proxy is working correctly with the current settings",
+  "test-proxy-connection": "Test Proxy Connection",
+  "text-fold-length": "طول طية النص",
+  "text-is-not-empty": "النص (غير فارغ)",
+  "text-selection-toolbar": "شريط أدوات التحديد",
+  "the-two-passwords-are-inconsistent": "كلمتا المرور غير متطابقتين",
+  "theme": "السمة",
+  "theme-color": "لون السمة",
+  "there-are-no-resources-yet-go-upload-them-now": "لا توجد موارد حتى الآن، قم برفعها الآن",
   "there-is-a-rebuild-task-in-progress-do-you-want-to-restart": "هناك مهمة إعادة بناء جارية، هل تريد إعادة التشغيل؟",
-  "hide-blog-images": "إخفاء صور المدونة",
-  "ai-prompt-translation-content": "تحقق من NO TAGS NOTES في اليومين الماضيين ووضع علامة عليها.",
-  "ai-prompt-delete-content": "ابحث عن ملاحظات مؤرشفة ، وتلخيصها وحفظها كملاحظات جديدة ، وحذف هاتين الملاحظات المؤرشفة",
-  "older": "أقدم",
-  "newer": "أحدث",
-  "restore-this-version": "استعادة هذا الإصدار",
-  "Note History": "لاحظ التاريخ",
-  "View History Versions": "عرض إصدارات التاريخ",
-  "history-note-only": "الانتباه: يحتوي هذا السجل على محتوى نص فقط ، وليس سجل الملف",
-  "referenceResource": "مورد مرجعي",
+  "thinking": "التفكير...",
+  "this-operation-removes-the-associated-label-and-cannot-be-restored-please-confirm": "هذه العملية ستزيل التصنيف المرتبط ولن يمكن استعادته. يرجى التأكيد",
+  "this-operation-will-be-delete-resource-are-you-sure": "سيتم حذف المورد. هل أنت متأكد؟",
+  "this-operation-will-delete-the-selected-files-and-cannot-be-restored-please-confirm": "سيقوم هذا الإجراء بحذف الملفات المحددة ولا يمكن استعادتها، يرجى تأكيد.",
+  "this-token-is-only-displayed-once-please-save-it-properly": "هذا الرمز يُعرض مرة واحدة فقط، يُرجى حفظه بشكل صحيح",
+  "thu": "الخميس",
+  "time-format": "تنسيق الوقت",
+  "time-range": "النطاق الزمني",
+  "title": "العنوان",
+  "title-first-line-of-the-text": "العنوان (السطر الأول من النص)",
+  "to": "إلى",
   "to-ask-ai": "أن تسأل الذكاء الاصطناعي",
-  "press-enter-to-select-first-result": "اضغط على Enter لتحديد النتيجة الأولى",
-  "ask-ai": "اسأل الذكاء الاصطناعي",
-  "ask-blinko-ai-about-this-query": "اسأل Blinko AI عن هذا الاستعلام",
-  "search-or-ask-ai": "بحث ، أو الإعدادات أو اسأل الذكاء الاصطناعي ...",
-  "plugin": "البرنامج المساعد",
-  "editor-preview": "محرر",
-  "auto-add-tags": "تلقائي إضافة العلامات",
-  "add-as-comment": "أضف كتعليق",
-  "choose-what-to-do-with-ai-results": "اختر ما يجب فعله بنتائج الذكاء الاصطناعي",
-  "ai-post-processing-mode": "وضع معالجة ما بعد الذكاء الاصطناعي",
-  "ai-post-processing-prompt": "تعليق تحرير لاحق بواسطة الذكاء الاصطناعي",
-  "align-center": "مركز",
-  "align-left": "غادر",
-  "align-right": "يمين",
-  "alternate-text": "نص بديل",
-  "analyze-the-following-note-content-and-suggest-appropriate-tags-and-provide-a-brief-summary": "تحليل محتوى الملاحظة التالية واقترح العلامات المناسبة وتقديم ملخص موجز",
-  "check": "قائمة المهام",
-  "close": "يغلق",
-  "code-theme": "معاينة موضوع كتلة الكود",
-  "column": "عمود",
-  "content-generated-by-ai": "المحتوى الناتج عن الذكاء الاصطناعي",
-  "content-theme": "معاينة موضوع المحتوى",
-  "define-custom-prompt-for-ai-to-process-notes": "قم بتشغيل الذكاء الصناعي للتعليق على الملاحظة الحالية. على سبيل المثال: يرجى تلخيص محتوى الملاحظة. إذا كان محتوى الملاحظة أقل من 10 كلمات، فيرجى صقلها لي.",
-  "enter-custom-prompt-for-post-processing": "أدخل مطالبة مخصصة للمعالجة بعد",
-  "enter-spotify-consumer-key": "أدخل مفتاح Spotify API",
-  "enter-spotify-consumer-secret": "أدخل Spotify Consumer Secret",
-  "exclude-tag-from-embedding": "استبعاد المحتوى الموسومة",
-  "music-settings": "إعدادات الموسيقى",
-  "prompt-used-for-post-processing-notes": "موجه يستخدم لملاحظات المعالجة بعد ذلك",
-  "rebuild-in-progress": "إعادة البناء في التقدم",
-    "setting": "",
-  "spotify-consumer-key": "سبوتيفي مفتاح API",
-  "spotify-consumer-secret": "Spotify API Secret",
-  "enable-ai-post-processing": "تمكين معالجة ما بعد الذكاء الاصطناعي",
-  "automatically-process-notes-after-creation-or-update": "معالجة الملاحظات تلقائيًا بعد الإنشاء",
-  "can-generate-summaries-tags-or-perform-analysis": "يمكن توليد علامات ملخصات على أداء التحليل",
-  "ai-post-processing": "معالجة ما بعد الذكاء الاصطناعي",
-  "model-list-updated": "قائمة النماذج المحدثة",
+  "to-record-audio-notes-we-need-permission-to-access-your-microphone": "To record audio notes, we need permission to access your microphone.",
   "to-search-tags": "للبحث عن العلامات",
-  "app-upgrade-required": "مطلوب ترقية التطبيق",
-  "current-app-version": "النسخة الحالية من التطبيق",
-  "required-app-version": "النسخة المطلوبة من التطبيق",
+  "today": "اليوم",
+  "todo": "الوكيل",
+  "token-url": "عنوان URL الرمزية",
+  "tool-call": "Tool Call",
+  "tool-call-details": "تفاصيل استدعاء الأداة",
+  "tool-result": "Tool Result",
+  "toolbar-visibility": "رؤية شريط الأدوات",
+  "tooltip-text": "نص التلميح",
+  "top": "أعلى",
+  "top-k-description": "الحد الأقصى لعدد المستندات التي تم إرجاعها في النهاية",
+  "total": "الإجمالي",
+  "total-tags": "إجمالي العلامات",
+  "total-tokens": "إجمالي الرموز المميزة",
+  "total-words": "إجمالي الكلمات",
+  "translation": "ترجمة",
+  "translation-languages": "ترجمة اللغات",
+  "transport-type": "Transport Type",
+  "trash": "قمامة",
+  "trigger-modifier": "تغيير الاختصارات",
+  "tue": "الثلاثاء",
+  "two-factor-authentication": "المصادقة الثنائية",
+  "underline": "تسطير",
+  "undo": "تراجع",
+  "unfollow": "إلغاء المتابعة",
+  "uninstall": "إلغاء التثبيت",
+  "unlink-account": "فصل الحساب",
+  "unlink-account-tips": "هل تؤكد الوصول إلى جميع الجمعيات باستخدام هذا الحساب؟",
+  "unset-as-public": "إلغاء التعيين كعام",
+  "up": "فوق",
+  "update": "تحديث",
+  "update-completed": "تم التحديث بنجاح",
+  "update-failed": "فشل التحديث",
+  "update-name": "تحديث الاسم",
+  "update-successfully": "تم التحديث بنجاح",
+  "update-tag-icon": "أيقونة تحديث العلامة",
+  "update-tag-name": "تحديث اسم العلامة",
+  "updated-at": "تم التحديث في",
+  "updating-to-version": "تحديث إلى",
   "upgrade": "ترقية",
-  "online-search": "البحث على الإنترنت",
-  "smart-edit": "تحرير ذكي",
-  "function-call-required": "مطلوب استدعاء الوظيفة",
-  "smart-edit-prompt": "تحرير ذكي",
-  "define-instructions-for-ai-to-edit-your-notes": "يمكنك استخدام التوجيهات للتلاعب بالملاحظات، على سبيل المثال: إذا احتوت ملاحظة على رابط، قم بتلخيص محتوى الرابط أدناه من الملاحظة الأصلية وولِّد تسمية.",
-  "rebuild-started": "بدأت عملية الإعادة البناء",
-  "rebuild-stopped-by-user": "إعادة البناء توقفت بواسطة المستخدم",
-  "random-mode": "جولة عشوائية",
-  "related-notes": "ملاحظات ذات صلة",
-  "no-related-notes-found": "لم يتم العثور على ملاحظات ذات صلة",
-  "advanced": "متقدم",
-  "rerank-model-description": "حدد نموذجًا لإعادة ترتيب نتائج الفيكتور لتحسين دقة البحث",
-  "rerank-model": "نموذج إعادة الترتيب",
-  "rerank": "إعادة ترتيب",
+  "upload": "التحميل",
+  "upload-cancelled": "تم إلغاء التحميل",
+  "upload-completed": "تم الرفع بنجاح",
+  "upload-error": "خطأ في التحميل",
+  "upload-failed": "فشل التحميل",
+  "upload-file": "رفع ملف",
+  "uploading": "جاري التحميل...",
+  "use-ai": "استخدام الذكاء الاصطناعي",
+  "use-blinko-hub": "استخدم برنامج Blinko Hub",
   "use-custom-rerank-endpoint-description": "عند التمكين، سيتم إعادة ترتيب نقاط النهاية ومفاتيح API للنموذج المضمن",
   "use-embedding-endpoint": "استخدم نقطة انتهاء التضمين",
-  "rerank-score-description": "حدد عتبة درجة لنموذج إعادة الترتيب، سيتم تصفية النتائج دونها.",
-  "public-share": "المشاركة العامة",
-  "internal-share": "المشاركة الداخلية",
-  "no-team-members-found": "لم يتم العثور على أعضاء في الفريق",
-  "selected-users": "المستخدمين المحددين",
-  "tags-prompt": "علامات موجه",
-  "ai-tag-prompt-default": "",
-  "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "المحفز المستخدم لتوليد العلامات تلقائيًا. إذا تُرك فارغًا، سيتم استخدام المحفز الافتراضي.",
-  "generate-low-permission-token": "توليد رمز الإذن المنخفض",
-  "low-permission-token-desc": "يمكن للرموز ذات الأذونات المنخفضة الوصول فقط إلى نقطة نهاية upsertNote ونقطة نهاية الدردشة الذكاء الاصطناعي. لا يمكنهم ​​الوصول إلى معلومات حسابك أو الملاحظات الأخرى. هذا مثالي لحالات استخدام مثل بوتات تيليجرام أو بوتات ويتشات، حيث ترغب في التأكد من أنهم لا يستطيعون ​​الولوج إلى أية ملاحظات أخرى.",
-  "this-token-is-only-displayed-once-please-save-it-properly": "هذا الرمز يُعرض مرة واحدة فقط، يُرجى حفظه بشكل صحيح",
-  "refresh-model-list": "الحصول على قائمة النماذج",
-  "please-set-the-embedding-model": "الرجاء تعيين نموذج الإدراج",
-  "blinko-endpoint": "نقطة النهاية بلينكو",
-  "enter-blinko-endpoint": "رابط تثبيت Blinko الخاص بك",
-  "login-failed": "فشل تسجيل الدخول",
+  "use-http-proxy": "Use HTTP Proxy",
+  "user": "مستخدم",
+  "user-custom-azureopenai-api-deployment": "اسم نشر Azure OpenAI",
+  "user-custom-azureopenai-api-deployment-tooltip": " أدخل اسم النشر المراد استخدامه، مثل gpt-4o",
+  "user-custom-azureopenai-api-instance": "اسم مثيل Azure OpenAI",
+  "user-custom-azureopenai-api-version": "نسخة API",
+  "user-custom-openai-api-key": "مفتاح واجهة برمجة التطبيقات المخصص للمستخدم  من OpenAI",
+  "user-list": "قائمة المستخدمين",
+  "user-or-password-error": "خطأ في اسم المستخدم أو كلمة المرور",
+  "userinfo-url": "معلومات المستخدم URL",
+  "username": "اسم المستخدم",
   "verification-failed": "فشل التحقق",
-  "download-success": "تم التنزيل بنجاح",
-  "download-failed": "تحميل فاشل",
-  "downloading": "جاري التحميل",
-  "hide-pc-editor": "إخفاء محرر جهاز الكمبيوتر",
-  "import-from-markdown": "استيراد من ملف Markdown",
-  "import-from-markdown-tip": "استيراد من ملف .md أو أرشيف .zip يحتوي على ملفات .md",
-  "not-a-markdown-or-zip-file": "ليس ملف Markdown أو zip. الرجاء اختيار ملف .md أو .zip.",
-  "todo": "الوكيل",
-  "restore": "استعادة",
-  "complete": "إكمال",
-  "today": "اليوم",
-  "yesterday": "البارحة",
-  "common.refreshing": "جارٍ التحديث",
-  "common.releaseToRefresh": "أطلق للتحديث",
-  "common.pullToRefresh": "السحب لأسفل للتحديث",
-  "edit-message-warning": "تحرير هذه الرسالة سيقوم بمسح جميع سجلات المحادثات اللاحقة، وإعادة توليد الردود من الذكاء الاصطناعي.",
-  "enter-your-message": "أدخل رسالتك",
-  "set-deadline": "تحديد الموعد النهائي",
-  "expired": "منتهي الصلاحية",
-  "expired-days": "منتهية الصلاحية منذ {{count}} يومًا",
-  "expired-hours": "انتهت الصلاحية منذ {{count}} ساعة",
-  "expired-minutes": "انتهت صلاحيته منذ {{count}} دقيقة",
-  "days-left": "{{count}} بعد يوم.",
-  "hours-left": "{{count}} ساعة لاحقًا",
-  "minutes-left": "{{count}} دقيقة بعد",
-  "about-to-expire": "على وشك الانتهاء",
-  "1-day": "يوم واحد",
-  "1-week": "أسبوع واحد",
-  "1-month": "شهر واحد",
-  "quick-select": "الاختيار السريع",
-  "import-ai-configuration": "استيراد إعدادات الذكاء الصناعي",
-  "would-you-like-to-import-this-configuration": "هل تريد استيراد إعدادات الذكاء الاصطناعي هذه؟",
-  "detected-ai-configuration-to-import": "تم اكتشاف إعدادات AI في انتظار الاستيراد",
-  "importing": "جارٍ الاستيراد",
-  "cache-cleared-successfully": "تم مسح ذاكرة التخزين المؤقت بنجاح! ستتم إعادة تحميل الصفحة تلقائيًا.",
-  "failed-to-clear-cache": "إزالة ذاكرة التخزين المؤقت للمتصفح فشل. حاول التحديث يدويًا (Ctrl+Shift+R).",
-  "select-deployment": "اختر النشر",
-  "deployment-name": "اسم النشر",
-  "please-set-the-api-endpoint": "يرجى تعيين نقطة نهاية API",
-  "please-set-the-api-key": "يرجى تعيين مفتاح API",
-  "custom-ai-prompt": "تلميحات الذكاء الاصطناعي المخصصة",
-  "available-variables": "المتغيرات المتاحة",
-  "enter-custom-prompt": "مثال: تحليل محتوى الملاحظة التالية {note}، واستنادًا إلى العلامات الحالية {tags}، قُم بإنشاء علامات مناسبة، وقُم بتلخيص الملاحظات لإضافتها إلى التعليق.",
-  "custom": "تخصيص",
-  "global-prompt": "كلمات تلميح عامة",
-  "hide-comments-in-card": "إخفاء التعليقات في البطاقة",
-  "default-home-page": "الصفحة الرئيسية الافتراضية",
-  "select-default-home-page": "اختر الصفحة الرئيسية الافتراضية",
-  "ai-model-desc": "إذا كان النموذج المختار يدعم الرؤية (متعدد الوسائط)، فسيقوم Blinko بفهرسة الصور تلقائيًا.",
-  "grant-microphone-permission": "تفويض الميكروفون",
-  "hotkey.title": "اختصارات الكيبورد",
-  "hotkey.enableGlobalHotkey": "تفعيل الملاحظات السريعة",
-  "hotkey-settings": "إعدادات مفاتيح الاختصار",
-  "enable-hotkeys-desc": "السماح باستخدام اختصارات لفتح نافذة الملاحظات بسرعة",
-  "hotkey.quickNoteShortcut": "اختصارات ملاحظات سريعة",
-  "hotkey.pressShortcut": "يرجى الضغط على مفتاح الاختصار",
-  "hotkey.clickRecordButton": "انقر على زر التسجيل لبدء التسجيل",
-  "hotkey.stop": "توقف",
-  "hotkey.record": "تسجيل",
-  "hotkeys": "اختصارات الكيبورد",
-  "translation-languages": "ترجمة اللغات",
-  "trigger-modifier": "تغيير الاختصارات",
-  "text-selection-toolbar": "شريط أدوات التحديد",
-  "no-update-available": "لا توجد تحديثات متاحة",
-  "update-failed": "فشل التحديث",
-  "checking-for-updates": "تحقق من التحديثات",
-  "downloading-update": "جاري تحميل التحديثات",
-  "installing-update": "تثبيت التحديثات",
-  "update-completed": "تم التحديث بنجاح",
-  "app-update": "تحديث التطبيق",
-  "updating-to-version": "تحديث إلى",
-  "install-from-github": "من GitHub تثبيت",
-  "marketplace-description": "تصفح وقم بتثبيت الإضافات من السوق الرسمي.",
-  "live-preview": "التقديم الفوري",
-  "raw-markdown": "الماركداون الأصلي",
-  "rich-text": "ما تراه هو ما تحصل عليه",
-  "reference-notes": "محتوى الاقتباس",
-  "custom-configuration": "مورد مخصص",
-  "configure-your-own-api-endpoint": "الموردون المخصصون يجب أن يتوافقوا مع معايير OpenAPI",
-  "create": "إنشاء",
-  "back": "العودة",
-  "model-capabilities": "قدرة النموذج",
-  "model-cap-desc": "يرجى اختيار النموذج بعناية. سيؤدي الاختيار الخاطئ إلى عدم قدرة استخدام النموذج.",
-  "model-selection": "اختيار النموذج",
-  "model-name": "اسم النموذج",
-  "create-model": "إضافة نموذج",
-  "no-data": "لا توجد بيانات مؤقتا",
-  "view-provider-info": "查看{{provider}}的",
-  "documentation": "وثيقة",
-  "website": "موقع الكتروني",
-  "and": "و",
-  "for-more-info": "للحصول على مزيد من المعلومات",
-  "test-connection": "اختبار الاتصال",
-  "base-url": "عنوان الويب الأساسي",
-  "api-version": "نسخة API",
-  "enter-provider-name": "أدخل اسم المزود، على سبيل المثال: OpenAI",
-  "enter-api-base-url": "أدخل عنوان URL الأساسي، مثل https://api.openapi.com/v1",
-  "tool-call-details": "تفاصيل استدعاء الأداة",
-  "input-parameters": "معاملات الإدخال",
-  "output-result": "معاملات الإخراج",
+  "verify": "تحقق",
+  "version": "الإصدار",
   "version-info-description": "نسخة الخادم تشير إلى نسخة Docker/التوزيع الخلفي، بينما نسخة العميل تشير إلى نسخة التطبيقات المكتبية/المحمولة. لا يجب أن تتطابق هاتان النسختان، لأنهما تخدمان أغراضًا مختلفة.",
-  "audio-tips": "اضغط مع الاستمرار على مفتاح الاختصار للإدخال، ثم اتركه لإدراجه في مربع النص.",
+  "version-info-title": "About Version Numbers",
+  "view-provider-info": "查看{{provider}}的",
+  "view-tools": "Tools from {{serverName}}",
+  "voice-recognition": "Voice Recognition",
   "voice-recognition-hotkey": "مفتاح الإدخال الصوتي السريع",
-  "local-voice-recognition": "التفريغ الصوتي المحلي",
-  "cuda-acceleration": "تسريع CUDA",
   "voice-tip": "اضغط مع الاستمرار على مفتاح الاختصار للتحدث، لإجراء التحويل الصوتي إلى نص، وعند تحريره سيتم إدراج المحتوى المُحول في صندوق النص.",
-  "dragging": "جاري السحب..."
+  "website": "موقع الكتروني",
+  "wed": "الأربعاء",
+  "weeks-ago": "منذ {{count}} أسبوع",
+  "welcome-to-blinko": "مرحبًا، {{name}}",
+  "well-known-url": "عنوان الرابط المعروف",
+  "when-exporting-memos_prod-db-please-close-the-memos-container-to-avoid-partial-loss-of-data": "عند تصدير memos_prod.db، يرجى إغلاق الحاوية لتجنب فقدان البيانات جزئيًا.",
+  "width-less-than": "عرض أقل من",
+  "width-less-than-1024px": "العرض أقل من 1024 بكسل",
+  "with-link": "برابط",
+  "with-tags": "مع العلامات",
+  "without-tags": "بدون علامات",
+  "would-you-like-to-import-this-configuration": "هل تريد استيراد إعدادات الذكاء الاصطناعي هذه؟",
+  "writing": "الكتابة",
+  "wysiwyg": "ما تراه هو ما تحصل عليه",
+  "years-ago": "منذ {{count}} سنة",
+  "yesterday": "البارحة",
+  "your-azure-openai-instance-name": "اسم مثيل Azure OpenAI الخاص بك",
+  "your-changes-have-been-saved": "تم حفظ التغييرات!"
 }
