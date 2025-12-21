@@ -14,9 +14,9 @@ interface ExpandableContainerProps {
 
 const ANIMATION_CONFIG = {
   type: "spring",
-  damping: 20,
-  stiffness: 300,
-  mass: 0.6,
+  damping: 25,
+  stiffness: 400,
+  mass: 0.5,
 } as const;
 
 
@@ -99,12 +99,12 @@ export const ExpandableContainer = ({ isExpanded, children, onClose, withoutBoxS
         top: isExpanded ? 0 : 'auto',
         left: isExpanded ? 0 : 'auto',
         zIndex: isExpanded ? 50 : 1,
+        willChange: isExpanded ? 'transform, width, height' : 'auto',
       }}
       layout
       animate={{
         width: isExpanded ? "100vw" : "100%",
         height: isExpanded ? "100vh" : "auto",
-        scale: isExpanded ? 1 : 1,
       }}
       transition={ANIMATION_CONFIG}
     >

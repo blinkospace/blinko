@@ -14,6 +14,8 @@ interface AITaskPayload {
 
 export class AIScheduledTaskJob {
   private static isWorkerRegistered = false;
+  // Store worker references for each scheduled task to allow proper cleanup
+  private static taskWorkers: Map<number, Promise<void>> = new Map();
 
   /**
    * Initialize the AI scheduled task worker
@@ -155,12 +157,15 @@ export class AIScheduledTaskJob {
         });
 
         // Worker to forward jobs from schedule queue to main queue
-        await boss.work(scheduleName, { batchSize: 1 }, async (jobs: any[]) => {
+        const workerPromise = boss.work(scheduleName, { batchSize: 1 }, async (jobs: any[]) => {
           const job = jobs[0];
           if (job && job.data) {
             await boss.send(AI_SCHEDULED_TASK_QUEUE, job.data);
           }
         });
+        
+        // Store worker reference for cleanup
+        this.taskWorkers.set(task.id, workerPromise);
 
         console.log(`[AI Scheduled Task] Scheduled task ${task.id}: ${task.name}`);
       } catch (error) {
@@ -213,12 +218,15 @@ export class AIScheduledTaskJob {
     });
 
     // Worker to forward jobs from schedule queue to main queue
-    await boss.work(scheduleName, { batchSize: 1 }, async (jobs: any[]) => {
+    const workerPromise = boss.work(scheduleName, { batchSize: 1 }, async (jobs: any[]) => {
       const job = jobs[0];
       if (job && job.data) {
         await boss.send(AI_SCHEDULED_TASK_QUEUE, job.data);
       }
     });
+    
+    // Store worker reference for cleanup
+    this.taskWorkers.set(task.id, workerPromise);
 
     console.log(`[AI Scheduled Task] Created and scheduled task ${task.id}: ${name}`);
 
@@ -246,6 +254,16 @@ export class AIScheduledTaskJob {
       await boss.unschedule(scheduleName);
     } catch (e) {
       // Ignore if schedule doesn't exist
+    }
+
+    // Stop the worker for this task
+    try {
+      await boss.offWork(scheduleName);
+      this.taskWorkers.delete(taskId);
+      console.log(`[AI Scheduled Task] Stopped worker for task ${taskId}`);
+    } catch (e) {
+      // Ignore if worker doesn't exist
+      console.warn(`[AI Scheduled Task] Failed to stop worker for task ${taskId}:`, e);
     }
 
     // Delete from database
@@ -286,18 +304,24 @@ export class AIScheduledTaskJob {
       });
 
       // Worker to forward jobs from schedule queue to main queue
-      await boss.work(scheduleName, { batchSize: 1 }, async (jobs: any[]) => {
+      const workerPromise = boss.work(scheduleName, { batchSize: 1 }, async (jobs: any[]) => {
         const job = jobs[0];
         if (job && job.data) {
           await boss.send(AI_SCHEDULED_TASK_QUEUE, job.data);
         }
       });
+      
+      // Store worker reference for cleanup
+      this.taskWorkers.set(taskId, workerPromise);
     } else {
-      // Unschedule the task
+      // Unschedule the task and stop worker
       try {
         await boss.unschedule(scheduleName);
+        await boss.offWork(scheduleName);
+        this.taskWorkers.delete(taskId);
+        console.log(`[AI Scheduled Task] Stopped worker for disabled task ${taskId}`);
       } catch (e) {
-        // Ignore
+        // Ignore if schedule/worker doesn't exist
       }
     }
 
