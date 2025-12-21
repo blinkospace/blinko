@@ -35,6 +35,7 @@ model accounts {
   notifications notifications[]
   conversations conversation[]
   sharedNotes   noteInternalShare[]
+  aiScheduledTasks aiScheduledTask[]
 }
 
 model attachments {
@@ -135,15 +136,6 @@ model tagsToNote {
   tag  tag   @relation(fields: [tagId], references: [id])
 
   @@id([noteId, tagId])
-}
-
-model scheduledTask {
-  name      String   @id
-  schedule  String
-  lastRun   DateTime @default(now())
-  isSuccess Boolean  @default(true)
-  isRunning Boolean  @default(false)
-  output    Json?    @db.Json
 }
 
 model noteReference {
@@ -303,4 +295,36 @@ model aiModels {
   provider      aiProviders @relation(fields: [providerId], references: [id], onDelete: Cascade)
 
   @@index([providerId])
+}
+
+model aiScheduledTask {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  prompt      String   @db.Text
+  schedule    String   @db.VarChar(100)
+  isEnabled   Boolean  @default(true)
+  lastRun     DateTime? @db.Timestamptz(6)
+  lastResult  Json?    @db.Json
+  accountId   Int
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  account     accounts @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+}
+
+model mcpServers {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)
+  description String?  @db.Text
+  type        String   @db.VarChar(50)  // "stdio" | "sse" | "streamable-http"
+  command     String?  @db.Text         // for stdio: "npx" or full command
+  args        Json?    @db.Json         // for stdio: command arguments array
+  url         String?  @db.VarChar(500) // for sse/streamable-http
+  env         Json?    @db.Json         // environment variables
+  headers     Json?    @db.Json         // HTTP headers for sse/http
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
 }

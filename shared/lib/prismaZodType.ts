@@ -115,21 +115,6 @@ export const tagsToNoteSchema = z.object({
 export type tagsToNote = z.infer<typeof tagsToNoteSchema>
 
 /////////////////////////////////////////
-// SCHEDULED TASK SCHEMA
-/////////////////////////////////////////
-
-export const scheduledTaskSchema = z.object({
-  name: z.string(),
-  schedule: z.string(),
-  lastRun: z.coerce.date(),
-  isSuccess: z.boolean(),
-  isRunning: z.boolean(),
-  output: z.any(),
-})
-
-export type scheduledTask = z.infer<typeof scheduledTaskSchema>
-
-/////////////////////////////////////////
 // SELECT & INCLUDE
 /////////////////////////////////////////
 
@@ -405,4 +390,44 @@ export const aiModelsSchema = z.object({
 })
 
 export type aiModels = z.infer<typeof aiModelsSchema>
+
+/////////////////////////////////////////
+// AI SCHEDULED TASK SCHEMA
+/////////////////////////////////////////
+
+export const aiScheduledTaskSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  prompt: z.string(),
+  schedule: z.string(),
+  isEnabled: z.boolean(),
+  lastRun: z.coerce.date().nullable().optional(),
+  lastResult: z.any().nullable().optional(),
+  accountId: z.number().int(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type aiScheduledTask = z.infer<typeof aiScheduledTaskSchema>
+
+/////////////////////////////////////////
+// MCP SERVERS SCHEMA
+/////////////////////////////////////////
+
+export const mcpServersSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  type: z.string(), // "stdio" | "sse" | "streamable-http"
+  command: z.string().nullable().optional(),
+  args: z.any().nullable().optional(), // JSON array of strings
+  url: z.string().nullable().optional(),
+  env: z.any().nullable().optional(), // JSON object
+  headers: z.any().nullable().optional(), // JSON object
+  isEnabled: z.boolean(),
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+})
+
+export type mcpServers = z.infer<typeof mcpServersSchema>
 

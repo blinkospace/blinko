@@ -13,6 +13,8 @@ import { webExtra } from './tools/webExtra';
 import { searchBlinkoTool } from './tools/searchBlinko';
 import { updateBlinkoTool } from './tools/updateBlinko';
 import { deleteBlinkoTool } from './tools/deleteBlinko';
+import { createScheduledTaskTool, deleteScheduledTaskTool, listScheduledTasksTool } from './tools/scheduledTask';
+import { getMcpMastraTools, hasMcpServers } from './mcp';
 import { rerank } from '@mastra/rag';
 import { prisma } from '@server/prisma';
 import { getGlobalConfig } from '@server/routerTrpc/config';
@@ -327,7 +329,7 @@ export class AiModelFactory {
       }
     };
   }
-  static async BaseChatAgent({ withTools = true, withOnlineSearch = false }: { withTools?: boolean; withOnlineSearch?: boolean }) {
+  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean }) {
     const provider = await AiModelFactory.GetProvider();
     let tools: Record<string, any> = {};
     if (withTools) {
@@ -340,6 +342,9 @@ export class AiModelFactory {
           webExtra,
           webSearchTool,
           createCommentTool,
+          createScheduledTaskTool,
+          deleteScheduledTaskTool,
+          listScheduledTasksTool,
         },
       };
     }
@@ -347,6 +352,25 @@ export class AiModelFactory {
       tools = {
         tools: { ...tools?.tools, webSearchTool },
       };
+    }
+
+    // Load MCP tools if enabled
+    if (withMcpTools && withTools) {
+      try {
+        const hasMcp = await hasMcpServers();
+        if (hasMcp) {
+          const mcpTools = await getMcpMastraTools();
+          if (Object.keys(mcpTools).length > 0) {
+            tools = {
+              tools: { ...tools?.tools, ...mcpTools },
+            };
+            console.log(`[AI] Loaded ${Object.keys(mcpTools).length} MCP tools`);
+          }
+        }
+      } catch (error) {
+        console.error('[AI] Failed to load MCP tools:', error);
+        // Continue without MCP tools - don't break the agent
+      }
     }
 
     const globalConfig = await AiModelFactory.globalConfig();

@@ -9,6 +9,7 @@ import { deleteBlinkoTool } from "@server/aiServer/tools/deleteBlinko";
 import { createCommentTool } from "@server/aiServer/tools/createComment";
 import { webSearchTool } from "@server/aiServer/tools/webSearch";
 import { webExtra } from "@server/aiServer/tools/webExtra";
+import { createScheduledTaskTool, deleteScheduledTaskTool, listScheduledTasksTool } from "@server/aiServer/tools/scheduledTask";
 import { RuntimeContext } from '@mastra/core/di';
 
 const router = express.Router();
@@ -93,6 +94,9 @@ function serverFactory() {
   createToolWithContext('createComment', createCommentTool);
   createToolWithContext('webSearch', webSearchTool);
   createToolWithContext('webExtra', webExtra);
+  createToolWithContext('createScheduledTask', createScheduledTaskTool);
+  createToolWithContext('deleteScheduledTask', deleteScheduledTaskTool);
+  createToolWithContext('listScheduledTasks', listScheduledTasksTool);
 
   return server;
 }

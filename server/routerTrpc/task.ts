@@ -1,27 +1,82 @@
 import { router, authProcedure, demoAuthMiddleware, superAdminAuthMiddleware } from '@server/middleware';
 import { z } from 'zod';
-import { prisma } from '@server/prisma';
 import { DBJob } from '@server/jobs/dbjob';
-import '@server/jobs/recommandJob';
 import { ArchiveJob } from '@server/jobs/archivejob';
 import { UPLOAD_FILE_PATH } from '@shared/lib/pathConstant';
 import { ARCHIVE_BLINKO_TASK_NAME, DBBAK_TASK_NAME } from '@shared/lib/sharedConstant';
-import { scheduledTaskSchema } from '@shared/lib/prismaZodType';
 import { Memos } from '../jobs/memosJob';
 import { unlink } from 'fs/promises';
 import { FileService } from '../lib/files';
 import path from 'path';
 import fs from 'fs';
 import { MarkdownImporter } from '../jobs/markdownJob';
+import { getPgBoss } from '../lib/pgBoss';
+import { prisma } from '../prisma';
 
+// Schema for task info compatible with frontend
+const taskInfoSchema = z.object({
+  name: z.string(),
+  schedule: z.string(),
+  lastRun: z.date().nullable().optional(),
+  isRunning: z.boolean(),
+  output: z.any().optional(),
+});
+
+// Cache keys for task outputs
+const BACKUP_PROGRESS_CACHE_KEY = "backup-database-progress";
 
 export const taskRouter = router({
   list: authProcedure.use(superAdminAuthMiddleware)
     .meta({ openapi: { method: 'GET', path: '/v1/tasks/list', summary: 'Query user task list', protect: true, tags: ['Task'] } })
     .input(z.void())
-    .output(z.array(scheduledTaskSchema))
+    .output(z.array(taskInfoSchema))
     .query(async () => {
-      return await prisma.scheduledTask.findMany()
+      const boss = await getPgBoss();
+      const schedules = await boss.getSchedules();
+      
+      // Get last completed jobs for each scheduled task
+      const results = await Promise.all(schedules.map(async (s) => {
+        // Get the most recent completed job for this queue
+        let lastRun: Date | null = null;
+        let output: any = null;
+        
+        try {
+          // Query pgboss.job table for the last completed job
+          const lastJob = await prisma.$queryRaw<{ completed_on: Date | null }[]>`
+            SELECT "completed_on" 
+            FROM pgboss.job 
+            WHERE name = ${s.name} AND state = 'completed'
+            ORDER BY "completed_on" DESC 
+            LIMIT 1
+          `;
+          
+          if (lastJob.length > 0 && lastJob[0].completed_on) {
+            lastRun = lastJob[0].completed_on;
+          }
+        } catch (e) {
+          // pgboss tables might not exist yet, ignore
+        }
+        
+        // Get output from cache for backup task
+        if (s.name === DBBAK_TASK_NAME) {
+          const cached = await prisma.cache.findUnique({
+            where: { key: BACKUP_PROGRESS_CACHE_KEY }
+          });
+          if (cached?.value) {
+            output = cached.value;
+          }
+        }
+        
+        return {
+          name: s.name,
+          schedule: s.cron,
+          lastRun,
+          isRunning: true, // If it's in schedules, it's running
+          output,
+        };
+      }));
+      
+      return results;
     }),
   upsertTask: authProcedure.use(superAdminAuthMiddleware)
     .meta({ openapi: { method: 'GET', path: '/v1/tasks/upsert', summary: 'Upsert Task', protect: true, tags: ['Task'] } })
@@ -35,13 +90,28 @@ export const taskRouter = router({
       const { time, type, task } = input
       if (type == 'start') {
         const cronTime = time ?? '0 0 * * *'
-        return task == DBBAK_TASK_NAME ? await DBJob.Start(cronTime, true) : await ArchiveJob.Start(cronTime, true)
+        if (task == DBBAK_TASK_NAME) {
+          await DBJob.Start(cronTime, true);
+        } else {
+          await ArchiveJob.Start(cronTime, true);
+        }
+        return { success: true, action: 'started', cron: cronTime };
       }
       if (type == 'stop') {
-        return task == DBBAK_TASK_NAME ? await DBJob.Stop() : await ArchiveJob.Stop()
+        if (task == DBBAK_TASK_NAME) {
+          await DBJob.Stop();
+        } else {
+          await ArchiveJob.Stop();
+        }
+        return { success: true, action: 'stopped' };
       }
       if (type == 'update' && time) {
-        return task == DBBAK_TASK_NAME ? await DBJob.SetCronTime(time) : await ArchiveJob.SetCronTime(time)
+        if (task == DBBAK_TASK_NAME) {
+          await DBJob.SetCronTime(time);
+        } else {
+          await ArchiveJob.SetCronTime(time);
+        }
+        return { success: true, action: 'updated', cron: time };
       }
     }),
   importFromBlinko: authProcedure.use(demoAuthMiddleware).use(superAdminAuthMiddleware)
@@ -66,7 +136,7 @@ export const taskRouter = router({
         } catch (error) {
         }
       } catch (error) {
-        throw new Error(error)
+        throw new Error(error as string)
       }
     }),
 
@@ -90,7 +160,7 @@ export const taskRouter = router({
         } catch (error) {
         }
       } catch (error) {
-        throw new Error(error)
+        throw new Error(error as string)
       }
     }),
 
@@ -120,7 +190,7 @@ export const taskRouter = router({
         }
       } catch (error) {
         console.error("Error in importFromMarkdown:", error);
-        throw new Error(error);
+        throw new Error(error as string);
       }
     }),
 

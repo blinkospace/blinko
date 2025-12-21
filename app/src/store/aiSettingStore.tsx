@@ -2,12 +2,14 @@ import { makeAutoObservable } from 'mobx';
 import { Store } from './standard/base';
 import { PromiseCall, PromiseState } from './standard/PromiseState';
 import { api } from '@/lib/trpc';
-import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
+import { aiProviders, aiModels, mcpServers } from '@shared/lib/prismaZodType';
 import { DEFAULT_MODEL_TEMPLATES } from '@/components/BlinkoSettings/AiSetting/constants';
 import { RootStore } from './root';
 import { ToastPlugin } from './module/Toast/Toast';
 import i18n from '@/lib/i18n';
 import { defaultUrlTransform } from 'react-markdown';
+
+export type McpServer = mcpServers;
 
 export interface ModelCapabilities {
     inference: boolean;
@@ -310,4 +312,83 @@ export class AiSettingStore implements Store {
     get rerankModels(): AiModel[] {
         return this.allModels.value?.filter(model => model.capabilities.rerank) || [];
     }
+
+    // MCP Server management
+    mcpServers = new PromiseState({
+        function: async () => {
+            const res = await api.mcpServers.list.query();
+            return res;
+        },
+    });
+
+    mcpConnectionStatus = new PromiseState({
+        function: async () => {
+            const res = await api.mcpServers.connectionStatus.query();
+            return res;
+        },
+    });
+
+    createMcpServer = new PromiseState({
+        function: async (data: {
+            name: string;
+            description?: string;
+            type: 'stdio' | 'sse' | 'streamable-http';
+            command?: string;
+            args?: string[];
+            url?: string;
+            env?: Record<string, string>;
+            headers?: Record<string, string>;
+            isEnabled?: boolean;
+        }) => {
+            await PromiseCall(api.mcpServers.create.mutate(data));
+            await this.mcpServers.call();
+        },
+    });
+
+    updateMcpServer = new PromiseState({
+        function: async (data: {
+            id: number;
+            name?: string;
+            description?: string;
+            type?: 'stdio' | 'sse' | 'streamable-http';
+            command?: string;
+            args?: string[];
+            url?: string;
+            env?: Record<string, string>;
+            headers?: Record<string, string>;
+            isEnabled?: boolean;
+        }) => {
+            await PromiseCall(api.mcpServers.update.mutate(data));
+            await this.mcpServers.call();
+        },
+    });
+
+    deleteMcpServer = new PromiseState({
+        function: async (id: number) => {
+            await PromiseCall(api.mcpServers.delete.mutate({ id }));
+            await this.mcpServers.call();
+        },
+    });
+
+    toggleMcpServer = new PromiseState({
+        function: async (id: number, enabled: boolean) => {
+            await PromiseCall(api.mcpServers.toggle.mutate({ id, enabled }));
+            await this.mcpServers.call();
+        },
+    });
+
+    testMcpConnection = new PromiseState({
+        function: async (id: number) => {
+            const res = await PromiseCall(api.mcpServers.testConnection.mutate({ id }));
+            await this.mcpConnectionStatus.call();
+            return res;
+        },
+    });
+
+    disconnectMcpServer = new PromiseState({
+        function: async (id: number) => {
+            await PromiseCall(api.mcpServers.disconnect.mutate({ id }));
+            await this.mcpConnectionStatus.call();
+        },
+    });
 }

@@ -15,6 +15,7 @@ import i18n from '@/lib/i18n';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from '../Common/ScrollArea';
 import AiSetting from '../BlinkoSettings/AiSetting/AiSetting';
+import { useRef } from 'react';
 
 interface AiInputProps {
   mode?: 'card' | 'inline';
@@ -114,6 +115,30 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
   const aiStore = RootStore.Get(AiStore);
   let mode = aiStore.isChatting ? 'inline' : 'card';
   const { t } = useTranslation();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  const handleSubmit = () => {
+    if (onSubmit) {
+      onSubmit(aiStore.input);
+    } else {
+      aiStore.onInputSubmit();
+    }
+    // Blur textarea on mobile to dismiss keyboard
+    if (!isPc) {
+      setTimeout(() => {
+        // Try to blur the active element (textarea) to dismiss keyboard
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
+          activeElement.blur();
+        }
+        // Also try to blur via ref if available
+        if (textareaRef.current) {
+          textareaRef.current.blur();
+        }
+      }, 100);
+    }
+  };
+  
   return (
     <motion.div
       className={`w-full p-2 ${withoutOutline ? '' : 'rounded-3xl bg-background'} ${className}`}
@@ -128,17 +153,22 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
           data-focus-visible="false"
           autoFocus
           value={aiStore.input}
+          ref={(el) => {
+            // Store reference to the underlying textarea element
+            if (el) {
+              const textareaElement = el.querySelector('textarea') as HTMLTextAreaElement;
+              if (textareaElement) {
+                textareaRef.current = textareaElement;
+              }
+            }
+          }}
           onKeyDown={(e) => {
             // Handle Enter key press to submit input, but ignore if user is composing text (e.g. using IME)
             const isComposing = Boolean(e.isComposing || (e.nativeEvent && e.nativeEvent.isComposing));
 
             if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
               e.preventDefault();
-              if (onSubmit) {
-                onSubmit(aiStore.input);
-              } else {
-                aiStore.onInputSubmit();
-              }
+              handleSubmit();
             }
           }}
           onChange={(e) => (aiStore.input = e.target.value)}
@@ -218,11 +248,7 @@ export const AiInput = observer(({ onSubmit, className, withoutOutline }: AiInpu
               if (aiStore.input.trim() == '') {
                 return;
               } else {
-                if (onSubmit) {
-                  onSubmit(aiStore.input);
-                } else {
-                  aiStore.onInputSubmit();
-                }
+                handleSubmit();
               }
             }}
           >

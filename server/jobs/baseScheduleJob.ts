@@ -1,130 +1,157 @@
 // src/server/plugins/BaseScheduleJob.ts
-import { CronJob, CronTime } from "cron";
-import { prisma } from "../prisma";
+import { getPgBoss } from "../lib/pgBoss";
 
 export abstract class BaseScheduleJob {
-  protected static job: CronJob;
   protected static taskName: string;
+  protected static cronSchedule: string = '0 0 * * *'; // Default: daily at midnight
+  protected static isWorkerRegistered: boolean = false;
 
+  /**
+   * The main task logic - must be implemented by subclasses
+   */
   protected static async RunTask(): Promise<any> {
     throw new Error('RunTask must be implemented');
   }
 
-  protected static createJob() {
-    return new CronJob('* * * * *', async () => {
-      try {
-        const res = await this.RunTask();
-        await prisma.scheduledTask.update({
-          where: { name: this.taskName },
-          data: {
-            isSuccess: true,
-            output: res,
-            lastRun: new Date()
-          }
-        });
-      } catch (error) {
-        await prisma.scheduledTask.update({
-          where: { name: this.taskName },
-          data: {
-            isSuccess: false,
-            output: { error: error.message ?? 'internal error' },
-            lastRun: new Date()
-          }
-        });
-      }
-    }, null, false);
-  }
+  /**
+   * Register the worker for this job type
+   * This should be called once during initialization
+   */
+  protected static async registerWorker(): Promise<void> {
+    if (this.isWorkerRegistered) {
+      return;
+    }
 
-  static async Start(cronTime: string, immediate: boolean = true) {
-    let success = false, output;
-    let hasTask = await prisma.scheduledTask.findFirst({
-      where: { name: this.taskName }
+    const boss = await getPgBoss();
+    const taskName = this.taskName;
+    const RunTask = this.RunTask.bind(this);
+
+    // Create the queue first (required in pg-boss v10+)
+    await boss.createQueue(taskName);
+
+    await boss.work(taskName, async (job) => {
+      console.log(`[${taskName}] Starting job execution...`);
+      try {
+        const res = await RunTask();
+        console.log(`[${taskName}] Job completed successfully`);
+        return res;
+      } catch (error: any) {
+        console.error(`[${taskName}] Job failed:`, error);
+        throw error;
+      }
     });
 
-    this.job.setTime(new CronTime(cronTime));
-    this.job.start();
+    this.isWorkerRegistered = true;
+    console.log(`[${taskName}] Worker registered`);
+  }
 
+  /**
+   * Start the scheduled job with optional cron time
+   * @param cronTime - Cron expression (e.g., '0 0 * * *' for daily at midnight)
+   * @param immediate - Whether to run the task immediately
+   */
+  static async Start(cronTime?: string, immediate: boolean = true): Promise<void> {
+    const boss = await getPgBoss();
+    const schedule = cronTime || this.cronSchedule;
+
+    // Register the worker first
+    await this.registerWorker();
+
+    // Schedule the job with pg-boss
+    await boss.schedule(this.taskName, schedule, {}, {
+      tz: 'UTC'
+    });
+
+    console.log(`[${this.taskName}] Scheduled with cron: ${schedule}`);
+
+    // Run immediately if requested
     if (immediate) {
       try {
-        output = await this.RunTask();
-        hasTask = await prisma.scheduledTask.findFirst({
-          where: { name: this.taskName }
-        });
-        success = true;
-      } catch (error) {
-        output = error ?? (error.message ?? "internal error");
+        await this.RunTask();
+      } catch (error: any) {
+        console.error(`[${this.taskName}] Immediate run failed:`, error);
       }
     }
+  }
 
-    if (!hasTask) {
-      return await prisma.scheduledTask.create({
-        data: {
-          lastRun: new Date(),
-          output,
-          isSuccess: success,
-          schedule: cronTime,
-          name: this.taskName,
-          isRunning: this.job.isActive
-        }
-      });
-    } else {
-      return await prisma.scheduledTask.update({
-        where: { name: this.taskName },
-        data: {
-          lastRun: new Date(),
-          output,
-          isSuccess: success,
-          schedule: cronTime,
-          isRunning: this.job.isActive
-        }
-      });
+  /**
+   * Stop the scheduled job
+   */
+  static async Stop(): Promise<void> {
+    const boss = await getPgBoss();
+    await boss.unschedule(this.taskName);
+    console.log(`[${this.taskName}] Unscheduled`);
+  }
+
+  /**
+   * Update the cron schedule for the job
+   * @param cronTime - New cron expression
+   */
+  static async SetCronTime(cronTime: string): Promise<void> {
+    const boss = await getPgBoss();
+
+    // Unschedule current and reschedule with new time
+    await boss.unschedule(this.taskName);
+    await boss.schedule(this.taskName, cronTime, {}, {
+      tz: 'UTC'
+    });
+
+    console.log(`[${this.taskName}] Rescheduled with cron: ${cronTime}`);
+
+    // Run immediately after rescheduling
+    try {
+      await this.RunTask();
+    } catch (error: any) {
+      console.error(`[${this.taskName}] Run after reschedule failed:`, error);
     }
   }
 
-  static async Stop() {
-    this.job.stop();
-    return await prisma.scheduledTask.update({
-      where: { name: this.taskName },
-      data: { isRunning: this.job.isActive }
-    });
+  /**
+   * Trigger the job to run immediately (outside of schedule)
+   */
+  static async TriggerNow(): Promise<string | null> {
+    const boss = await getPgBoss();
+    
+    // Ensure worker is registered
+    await this.registerWorker();
+    
+    // Send a job to be processed immediately
+    const jobId = await boss.send(this.taskName, {});
+    console.log(`[${this.taskName}] Triggered immediately, jobId: ${jobId}`);
+    
+    return jobId;
   }
 
-  static async SetCronTime(cronTime: string) {
-    this.job.setTime(new CronTime(cronTime));
-    await this.Start(cronTime, true);
-  }
-
-  protected static async autoStart(schedule: string) {
-    const task = await prisma.scheduledTask.findFirst({
-      where: { name: this.taskName }
-    });
-    if (!task) {
-      await this.Start(schedule, true);
+  /**
+   * Initialize the job - should be called once at startup
+   * This replaces the old static {} block initialization
+   */
+  static async initialize(defaultSchedule?: string): Promise<void> {
+    const schedule = defaultSchedule || this.cronSchedule;
+    
+    try {
+      // Register worker
+      await this.registerWorker();
+      console.log(`[${this.taskName}] Initialized with default schedule: ${schedule}`);
+    } catch (error) {
+      console.error(`[${this.taskName}] Failed to initialize:`, error);
     }
-    await this.initializeJob();
   }
 
-  protected static async initializeJob() {
-    setTimeout(async () => {
-      try {
-        const task = await prisma.scheduledTask.findFirst({
-          where: { name: this.taskName }
-        });
+  /**
+   * Get the current schedule from pg-boss
+   */
+  static async getSchedule(): Promise<{ name: string; cron: string; data: any } | null> {
+    const boss = await getPgBoss();
+    const schedules = await boss.getSchedules();
+    return schedules.find(s => s.name === this.taskName) || null;
+  }
 
-        if (task?.isRunning) {
-          this.job.setTime(new CronTime(task.schedule));
-          this.job.start();
-
-          const now = new Date().getTime();
-          const [next1, next2] = this.job.nextDates(2);
-          if (next1 == null || next2 == null ||
-            now - task.lastRun.getTime() > next2.toMillis() - next1.toMillis()) {
-            this.job.fireOnTick();
-          }
-        }
-      } catch (error) {
-        console.error(`Failed to initialize ${this.taskName}:`, error);
-      }
-    }, 1000);
+  /**
+   * Check if the job is currently scheduled
+   */
+  static async isScheduled(): Promise<boolean> {
+    const schedule = await this.getSchedule();
+    return schedule !== null;
   }
 }

@@ -6,6 +6,14 @@ import fs from 'fs';
 import authRoutes from './routerExpress/auth';
 import { configureSession } from './routerExpress/auth/config';
 
+// pg-boss job scheduling
+import { getPgBoss, stopPgBoss } from './lib/pgBoss';
+import { ArchiveJob } from './jobs/archivejob';
+import { DBJob } from './jobs/dbjob';
+import { RebuildEmbeddingJob } from './jobs/rebuildEmbeddingJob';
+import { RecommandJob } from './jobs/recommandJob';
+import { AIScheduledTaskJob } from './jobs/aiScheduledTaskJob';
+
 // tRPC related imports
 import { createContext } from './context';
 import { appRouter } from './routerTrpc/_app';
@@ -38,17 +46,47 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('unhandledRejection:', reason);
 });
 
-process.on('SIGTERM', () => {
-  console.log('SIGTERM');
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  await stopPgBoss();
+  process.exit(0);
 });
 
-process.on('SIGINT', () => {
-  console.log('SIGINT');
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  await stopPgBoss();
+  process.exit(0);
 });
 
 process.on('exit', (code) => {
   console.log(`process exit, code: ${code}`);
 });
+
+/**
+ * Initialize all scheduled jobs
+ * This sets up pg-boss and registers all job workers
+ */
+async function initializeJobs() {
+  try {
+    console.log('Initializing pg-boss scheduled jobs...');
+    
+    // Start pg-boss
+    await getPgBoss();
+    
+    // Initialize all jobs
+    // These will restore their schedules from the database if they were running
+    await ArchiveJob.initialize();
+    await DBJob.initialize();
+    await RebuildEmbeddingJob.initialize();
+    await RecommandJob.initialize();
+    await AIScheduledTaskJob.initialize();
+    
+    console.log('All scheduled jobs initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize scheduled jobs:', error);
+    // Don't throw - allow server to start even if jobs fail to initialize
+  }
+}
 
 // Server configuration
 const app = express();
@@ -231,6 +269,9 @@ async function bootstrap() {
     app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
       errorHandler(err, req, res, next);
     });
+
+    // Initialize scheduled jobs
+    await initializeJobs();
 
     // Start or update server
     if (!server) {
