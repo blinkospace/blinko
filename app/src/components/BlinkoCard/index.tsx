@@ -20,6 +20,8 @@ import { AvatarAccount, SimpleCommentList } from "./commentButton";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
 import { PluginRender } from "@/store/plugin/pluginRender";
 import { useLocation } from "react-router-dom";
+import { SwipeableCard } from "./SwipeableCard";
+import { api } from "@/lib/trpc";
 
 
 export type BlinkoItem = Note & {
@@ -80,6 +82,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   };
 
   const handleClick = () => {
+    if (isExpanded) return;
     if (blinko.isMultiSelectMode) {
       blinko.onMultiSelectNote(blinkoItem.id!);
     } else {
@@ -99,6 +102,19 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
     FocusEditorFixMobile()
   };
 
+  const handleSwipePin = () => {
+    blinko.upsertNote.call({
+      id: blinkoItem.id,
+      isTop: !blinkoItem.isTop
+    });
+  };
+
+  const handleSwipeDelete = () => {
+    api.notes.trashMany.mutate({ ids: [blinkoItem.id!] }).then(() => {
+      blinko.updateTicker++;
+    });
+  };
+
   return (
     <ExpandableContainer withoutBoxShadow={withoutBoxShadow} isExpanded={isExpanded} key={blinkoItem.id} onClose={() => setIsExpanded(false)}>
       {(() => {
@@ -115,14 +131,35 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               shadow='none'
               className={`
                 flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} !transition-all group/card
-                ${isExpanded ? 'h-screen overflow-y-scroll rounded-none' : ''}
+                ${isExpanded ? 'h-screen overflow-y-scroll rounded-none cursor-default' : ''}
                 ${isPc && !isExpanded && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''}
-                ${blinkoItem.isBlog ? 'cursor-pointer' : ''}
+                ${blinkoItem.isBlog && !isExpanded ? 'cursor-pointer' : ''}
                 ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
                 ${className}
               `}
             >
-              <div className={isExpanded ? 'max-w-[800px] mx-auto relative md:p-4 w-full' : 'w-full'}>
+              {/* Clickable side areas when expanded */}
+              {isExpanded && (
+                <>
+                  <div 
+                    className="fixed left-0 top-0 bottom-0 w-[calc((100vw-800px)/2)] cursor-pointer z-[100]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsExpanded(false);
+                    }}
+                  />
+                  <div 
+                    className="fixed right-0 top-0 bottom-0 w-[calc((100vw-800px)/2)] cursor-pointer z-[100]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsExpanded(false);
+                    }}
+                  />
+                </>
+              )}
+              <div 
+                className={isExpanded ? 'max-w-[800px] mx-auto relative md:p-4 w-full' : 'w-full'}
+              >
                 <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={isExpanded} account={account} />
 
                 {blinkoItem.isBlog && !isExpanded && (
@@ -181,11 +218,26 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
           </div>
         );
 
-        return isShareMode ? cardContent : (
+        const wrappedContent = isShareMode ? cardContent : (
           <ContextMenuTrigger id="blink-item-context-menu">
             {cardContent}
           </ContextMenuTrigger>
         );
+
+        // On mobile, wrap with SwipeableCard for swipe actions (only when not expanded)
+        if (!isPc && !isExpanded && !isShareMode) {
+          return (
+            <SwipeableCard
+              onPin={handleSwipePin}
+              onDelete={handleSwipeDelete}
+              isPinned={blinkoItem.isTop}
+            >
+              {wrappedContent}
+            </SwipeableCard>
+          );
+        }
+
+        return wrappedContent;
       })()}
     </ExpandableContainer>
   );
