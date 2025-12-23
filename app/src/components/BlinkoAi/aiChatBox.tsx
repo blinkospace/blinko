@@ -1,24 +1,21 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { observer } from "mobx-react-lite";
 import { Button, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
-import { ScrollArea, ScrollAreaHandles } from "../Common/ScrollArea";
+import { ScrollArea } from "../Common/ScrollArea";
 import { motion, AnimatePresence } from "framer-motion";
 import { MarkdownRender } from "../Common/MarkdownRender";
 import { AiStore, AssisantMessageMetadata } from "@/store/aiStore";
 import { RootStore } from "@/store";
-import { useEffect } from "react";
-import { useRef } from "react";
+import { useEffect, useRef, useCallback, memo, useState } from "react";
 import { BlinkoCard, BlinkoItem } from "../BlinkoCard";
-import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { IconButton } from "../Common/Editor/Toolbar/IconButton";
 import copy from "copy-to-clipboard";
 import { ToastPlugin } from "@/store/module/Toast/Toast";
 import i18n from "@/lib/i18n";
 import { BlinkoStore } from "@/store/blinkoStore";
 import { NoteType } from "@shared/lib/types";
-import { ToolUsageChip, StreamToolRenderer } from "./ToolComponents";
+import { StreamToolRenderer } from "./ToolComponents";
 import { useMediaQuery } from "usehooks-ts";
-import { useState } from "react";
 import { Textarea } from "@heroui/react";
 import { DialogStore } from "@/store/module/Dialog";
 import { api } from '@/lib/trpc';
@@ -68,7 +65,7 @@ const EditMessageContent = ({ initialContent, onConfirm }: {
   );
 };
 
-const UserMessage = ({ content, time, id, onEdit, shareMode = false }: {
+const UserMessage = memo(({ content, time, id, onEdit, shareMode = false }: {
   content: string;
   time: string;
   id?: number;
@@ -114,13 +111,14 @@ const UserMessage = ({ content, time, id, onEdit, shareMode = false }: {
       )}
     </motion.div>
   );
-};
+});
 
-const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = false, id, metadata, shareMode = false }:
+const AiMessage = memo(({ content, withoutAnimation = false, withStreamAnimation = false, id, metadata, shareMode = false, isStreaming = false }:
   {
     content: string, withoutAnimation?: boolean, withStreamAnimation?: boolean, id?: number,
     metadata?: AssisantMessageMetadata,
-    shareMode?: boolean
+    shareMode?: boolean,
+    isStreaming?: boolean
   }) => {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -136,7 +134,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
         >
           <>
             {
-              !!metadata?.notes?.length && metadata?.notes?.length > 0 && (
+              !!metadata?.notes?.length && (
                 <Popover placement="bottom-start">
                   <PopoverTrigger>
                     <Button
@@ -155,8 +153,8 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
                     <ScrollArea className="flex flex-col gap-2 p-2 h-[400px]" onBottom={() => { }}>
                       {
                         //@ts-ignore
-                        metadata?.notes?.map((item: BlinkoItem) => (
-                          <BlinkoCard className='w-[300px] md:w-[600px]' blinkoItem={item!} withoutHoverAnimation />
+                        metadata?.notes?.map((item: BlinkoItem, index: number) => (
+                          <BlinkoCard key={item.id || index} className='w-[300px] md:w-[600px]' blinkoItem={item!} withoutHoverAnimation />
                         ))
                       }
                     </ScrollArea>
@@ -170,9 +168,9 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
             <MarkdownRender content={content} largeSpacing={true} />
           </div>
           {
-            !shareMode && (
+            !shareMode && !isStreaming && (
               <div className={`${isMobile ? 'opacity-70' : 'opacity-0 group-hover:opacity-100'} transition-opacity duration-200 mb-4`}>
-                <div className="flex gap-2  backdrop-blur-sm rounded-full p-1 items-center">
+                <div className="flex gap-2 backdrop-blur-sm rounded-full p-1 items-center">
                   <IconButton
                     tooltip={i18n.t('add-to-blinko')}
                     icon="basil:lightning-solid"
@@ -257,7 +255,7 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
                   />
 
                   {
-                    !!metadata?.usage?.totalTokens && <div className="ml-auto text-desc text-xs font-bold ml-1 select-none line-clamp-1">
+                    !!metadata?.usage?.totalTokens && <div className="ml-auto text-desc text-xs font-bold select-none line-clamp-1">
                       {i18n.t('total-tokens')}: {metadata?.usage?.totalTokens} | {i18n.t('first-char-delay')}: {metadata?.fristCharDelay}ms
                     </div>
                   }
@@ -269,17 +267,162 @@ const AiMessage = ({ content, withoutAnimation = false, withStreamAnimation = fa
       )}
     </>
   );
-};
+});
+
+// Streaming message component with throttled rendering to reduce MarkdownRender updates
+const StreamingAiMessage = observer(({ shareMode = false }: { shareMode?: boolean }) => {
+  const aiStore = RootStore.Get(AiStore);
+  const content = aiStore.currentMessageResult.content;
+  const metadata = aiStore.currentMessageResult;
+  const id = aiStore.currentMessageResult.id;
+
+  // Throttled content for markdown rendering
+  const [throttledContent, setThrottledContent] = useState('');
+  const lastUpdateRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const now = Date.now();
+    // Update every 80ms to balance smoothness and performance
+    if (now - lastUpdateRef.current >= 80) {
+      setThrottledContent(content);
+      lastUpdateRef.current = now;
+    } else {
+      // Ensure final content gets rendered
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      rafRef.current = requestAnimationFrame(() => {
+        setThrottledContent(content);
+        lastUpdateRef.current = Date.now();
+      });
+    }
+
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [content]);
+
+  // Ensure complete content is displayed when streaming ends
+  useEffect(() => {
+    if (!aiStore.isAnswering && content) {
+      setThrottledContent(content);
+    }
+  }, [aiStore.isAnswering, content]);
+
+  if (!throttledContent) return null;
+
+  return (
+    <AiMessage
+      content={throttledContent}
+      withStreamAnimation
+      metadata={metadata}
+      id={id}
+      shareMode={shareMode}
+      isStreaming={aiStore.isAnswering}
+    />
+  );
+});
 
 export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: boolean } = {}) => {
   const aiStore = RootStore.Get(AiStore)
-  const scrollAreaRef = useRef<ScrollAreaHandles>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const bottomAnchorRef = useRef<HTMLDivElement>(null)
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollToBottom()
+  // Refs for tracking scroll state
+  const shouldAutoScrollRef = useRef(true)
+  const lastContentLengthRef = useRef(0)
+  const lastScrollTopRef = useRef(0)
+  const rafIdRef = useRef<number | null>(null)
+
+  // Scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    if (containerRef.current && shouldAutoScrollRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight
     }
-  }, [aiStore.currentConversation.value, aiStore.currentMessageResult.content])
+  }, [])
+
+  // Use IntersectionObserver to detect if bottom anchor is visible
+  useEffect(() => {
+    const bottomAnchor = bottomAnchorRef.current
+    const container = containerRef.current
+    if (!bottomAnchor || !container) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0]
+        if (entry.isIntersecting) {
+          // Bottom anchor visible, resume auto-scroll
+          shouldAutoScrollRef.current = true
+        }
+      },
+      {
+        root: container,
+        threshold: 0.1,
+      }
+    )
+
+    observer.observe(bottomAnchor)
+    return () => observer.disconnect()
+  }, [])
+
+  // Handle scroll event - detect upward scroll to stop auto-scrolling
+  const handleScroll = useCallback(() => {
+    if (!containerRef.current) return
+
+    const currentScrollTop = containerRef.current.scrollTop
+
+    // User scrolled up more than 10px, stop auto-scroll
+    if (currentScrollTop < lastScrollTopRef.current - 10) {
+      shouldAutoScrollRef.current = false
+    }
+
+    lastScrollTopRef.current = currentScrollTop
+  }, [])
+
+  // Watch message list changes - scroll on new messages
+  useEffect(() => {
+    const messagesCount = aiStore.currentConversation.value?.messages?.length || 0
+    if (messagesCount > 0) {
+      scrollToBottom()
+    }
+  }, [aiStore.currentConversation.value?.messages?.length, scrollToBottom])
+
+  // Watch streaming content changes - throttle scroll with RAF
+  useEffect(() => {
+    const currentLength = aiStore.currentMessageResult.content.length
+
+    if (currentLength > lastContentLengthRef.current && shouldAutoScrollRef.current) {
+      // Cancel previous RAF to avoid duplicate scrolls
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current)
+      }
+      rafIdRef.current = requestAnimationFrame(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = containerRef.current.scrollHeight
+        }
+      })
+    }
+
+    lastContentLengthRef.current = currentLength
+
+    return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current)
+      }
+    }
+  }, [aiStore.currentMessageResult.content.length])
+
+  // Reset state when switching conversations
+  useEffect(() => {
+    shouldAutoScrollRef.current = true
+    lastContentLengthRef.current = 0
+    lastScrollTopRef.current = 0
+    setTimeout(scrollToBottom, 50)
+  }, [aiStore.currentConversationId, scrollToBottom])
 
   const handleEditMessage = (id: number, content: string) => {
     if (shareMode) return; // Disable editing in share mode
@@ -303,13 +446,19 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
   const firstMessageTime = aiStore.currentConversation.value?.messages?.[0]?.createdAt?.toLocaleString() || '';
 
   return (
-    <ScrollArea
-      fixMobileTopBar
-      ref={scrollAreaRef}
-      onBottom={() => { }}
-      className="h-full"
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="h-full overflow-y-auto overflow-x-hidden"
     >
-      <div className="flex flex-col p-0 md:p-2 relative h-full w-[95%] md:w-[78%] mx-auto">
+
+      {/* Mobile top spacing */}
+      {isMobile && <div className="h-16"></div>}
+
+      <div className="flex flex-col p-0 md:p-2 relative min-h-full w-[95%] md:w-[78%] mx-auto">
+        {/* Flex spacer */}
+        <div className="flex-grow" />
+
         {/* Chat time header */}
         {firstMessageTime && (
           <div className="text-center text-desc mb-4 text-xs">
@@ -319,40 +468,43 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
 
         <AnimatePresence>
           {
-            aiStore.currentConversation.value?.messages.find((item) => item.role == 'system') && (
-              <div className="mx-auto text-desc text-xs text-center font-bold select-none line-clamp-1 p-3 border-2 border-ignore rounded-lg">
-                {aiStore.currentConversation.value?.messages.find((item) => item.role == 'system')?.content}
-              </div>
-            )
+            (() => {
+              const systemMessage = aiStore.currentConversation.value?.messages.find((item) => item.role == 'system');
+              return systemMessage && (
+                <div className="mx-auto text-desc text-xs text-center font-bold select-none line-clamp-1 p-3 border-2 border-ignore rounded-lg">
+                  {systemMessage.content}
+                </div>
+              );
+            })()
           }
           {
-            aiStore.currentConversation.value?.messages.map((item, index) => (
-              <>
-                {item.role == 'user' && (
-                  <UserMessage
-                    key={item.content}
-                    content={item.content}
-                    time={item.createdAt.toLocaleString()}
-                    id={item.id}
-                    onEdit={handleEditMessage}
-                    shareMode={shareMode}
-                  />
-                )}
-                {item.role == 'assistant' && (
-                  <AiMessage
-                    key={item.content}
-                    id={item.id}
-                    metadata={item.metadata as AssisantMessageMetadata}
-                    content={item.content}
-                    shareMode={shareMode}
-                  />
-                )}
-              </>
+            aiStore.currentConversation.value?.messages.map((item) => (
+              item.role == 'user' ? (
+                <UserMessage
+                  key={`user-${item.id}`}
+                  content={item.content}
+                  time={item.createdAt.toLocaleString()}
+                  id={item.id}
+                  onEdit={handleEditMessage}
+                  shareMode={shareMode}
+                />
+              ) : item.role == 'assistant' ? (
+                <AiMessage
+                  key={`assistant-${item.id}`}
+                  id={item.id}
+                  metadata={item.metadata as AssisantMessageMetadata}
+                  content={item.content}
+                  shareMode={shareMode}
+                />
+              ) : null
             ))
           }
 
+          {/* Loading: Show only when last message is from user and AI is answering but has no content yet */}
           {
-            aiStore.isAnswering && !aiStore.currentMessageResult.content && (
+            aiStore.isAnswering &&
+            !aiStore.currentMessageResult.content &&
+            aiStore.currentConversation.value?.messages?.at(-1)?.role === 'user' && (
               <Icon className="text-desc" icon="eos-icons:three-dots-loading" width="40" height="40" />
             )
           }
@@ -369,16 +521,12 @@ export const BlinkoChatBox = observer(({ shareMode = false }: { shareMode?: bool
             )
           }
 
-          <AiMessage
-            key="streaming-message"
-            content={aiStore.currentMessageResult.content}
-            withStreamAnimation
-            metadata={aiStore.currentMessageResult}
-            id={aiStore.currentMessageResult.id}
-            shareMode={shareMode}
-          />
+          <StreamingAiMessage shareMode={shareMode} />
         </AnimatePresence>
+
+        {/* Bottom anchor for scroll detection */}
+        <div ref={bottomAnchorRef} className="h-4" />
       </div>
-    </ScrollArea>
+    </div>
   )
 })
