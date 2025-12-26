@@ -9,6 +9,8 @@ import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
 import { getAllPathTags } from '@server/lib/helper';
 import { ModelCapabilities } from '@server/aiServer/types';
 import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
+import { fetchWithProxy } from '@server/lib/proxy';
+import { inferModelCapabilities } from '@shared/lib/modelTemplates';
 
 export const aiRouter = router({
   embeddingUpsert: authProcedure
@@ -583,5 +585,153 @@ export const aiRouter = router({
       }
 
       return createdModels;
+    }),
+
+  fetchProviderModels: authProcedure
+    .input(z.object({
+      providerId: z.number()
+    }))
+    .mutation(async ({ input }) => {
+      const { providerId } = input;
+
+      const provider = await prisma.aiProviders.findUnique({
+        where: { id: providerId }
+      });
+
+      if (!provider) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Provider not found'
+        });
+      }
+
+      const proxiedFetch = await fetchWithProxy();
+      let modelList: any[] = [];
+
+      try {
+        switch (provider.provider.toLowerCase()) {
+          case 'ollama': {
+            const endpoint = provider.baseURL || 'http://127.0.0.1:11434';
+            const response = await proxiedFetch(`${endpoint}/api/tags`);
+            const data = await response.json() as any;
+            modelList = data.models?.map((model: any) => ({
+              id: model.name,
+              name: model.name,
+              description: model.description || '',
+              capabilities: inferModelCapabilities(model.name)
+            })) || [];
+            break;
+          }
+
+          case 'openai': {
+            const endpoint = provider.baseURL || 'https://api.openai.com/v1';
+            const response = await proxiedFetch(`${endpoint}/models`, {
+              headers: { 'Authorization': `Bearer ${provider.apiKey}` }
+            });
+            const data = await response.json() as any;
+            modelList = data.data?.map((model: any) => ({
+              id: model.id,
+              name: model.id,
+              description: '',
+              capabilities: inferModelCapabilities(model.id)
+            })) || [];
+            break;
+          }
+
+          case 'anthropic': {
+            // Static list - Anthropic doesn't provide a list models API
+            modelList = [
+              { id: 'claude-3-5-sonnet-20241022', name: 'claude-3-5-sonnet-20241022', capabilities: inferModelCapabilities('claude-3-5-sonnet-20241022') },
+              { id: 'claude-3-5-sonnet-20240620', name: 'claude-3-5-sonnet-20240620', capabilities: inferModelCapabilities('claude-3-5-sonnet-20240620') },
+              { id: 'claude-3-5-haiku-20241022', name: 'claude-3-5-haiku-20241022', capabilities: inferModelCapabilities('claude-3-5-haiku-20241022') },
+              { id: 'claude-3-opus-20240229', name: 'claude-3-opus-20240229', capabilities: inferModelCapabilities('claude-3-opus-20240229') },
+              { id: 'claude-3-sonnet-20240229', name: 'claude-3-sonnet-20240229', capabilities: inferModelCapabilities('claude-3-sonnet-20240229') },
+              { id: 'claude-3-haiku-20240307', name: 'claude-3-haiku-20240307', capabilities: inferModelCapabilities('claude-3-haiku-20240307') }
+            ];
+            break;
+          }
+
+          case 'voyageai': {
+            // Static list - VoyageAI doesn't provide a list models API
+            modelList = [
+              { id: 'voyage-3', name: 'voyage-3', capabilities: inferModelCapabilities('voyage-3') },
+              { id: 'voyage-3-lite', name: 'voyage-3-lite', capabilities: inferModelCapabilities('voyage-3-lite') },
+              { id: 'voyage-finance-2', name: 'voyage-finance-2', capabilities: inferModelCapabilities('voyage-finance-2') },
+              { id: 'voyage-multilingual-2', name: 'voyage-multilingual-2', capabilities: inferModelCapabilities('voyage-multilingual-2') },
+              { id: 'voyage-law-2', name: 'voyage-law-2', capabilities: inferModelCapabilities('voyage-law-2') },
+              { id: 'voyage-code-2', name: 'voyage-code-2', capabilities: inferModelCapabilities('voyage-code-2') },
+              { id: 'voyage-large-2-instruct', name: 'voyage-large-2-instruct', capabilities: inferModelCapabilities('voyage-large-2-instruct') },
+              { id: 'voyage-large-2', name: 'voyage-large-2', capabilities: inferModelCapabilities('voyage-large-2') }
+            ];
+            break;
+          }
+
+          case 'google': {
+            const endpoint = provider.baseURL || 'https://generativelanguage.googleapis.com/v1beta';
+            const response = await proxiedFetch(`${endpoint}/models?key=${provider.apiKey}`);
+            const data = await response.json() as any;
+            modelList = data.models?.map((model: any) => ({
+              id: model.name.replace('models/', ''),
+              name: model.displayName || model.name.replace('models/', ''),
+              description: model.description || '',
+              capabilities: inferModelCapabilities(model.name)
+            })) || [];
+            break;
+          }
+
+          case 'azure': {
+            const endpoint = provider.baseURL;
+            const response = await proxiedFetch(`${endpoint}/openai/models?api-version=2024-02-01`, {
+              headers: { 'api-key': provider.apiKey || '' }
+            });
+            const data = await response.json() as any;
+            modelList = data.data?.map((model: any) => ({
+              id: model.id,
+              name: model.id,
+              description: '',
+              capabilities: inferModelCapabilities(model.id)
+            })) || [];
+            break;
+          }
+
+          default: {
+            // Default: use OpenAI-compatible API format
+            const endpoint = provider.baseURL;
+            if (!endpoint) {
+              throw new Error('Base URL is required for custom providers');
+            }
+            const response = await proxiedFetch(`${endpoint}/models`, {
+              headers: { 'Authorization': `Bearer ${provider.apiKey}` }
+            });
+            const data = await response.json() as any;
+            modelList = data.data?.map((model: any) => ({
+              id: model.id,
+              name: model.id,
+              description: '',
+              capabilities: inferModelCapabilities(model.id)
+            })) || [];
+            break;
+          }
+        }
+
+        // Update provider config with fetched models
+        await prisma.aiProviders.update({
+          where: { id: providerId },
+          data: {
+            config: {
+              ...(provider.config as any || {}),
+              models: modelList
+            }
+          }
+        });
+
+        return modelList;
+      } catch (error: any) {
+        console.error('Error fetching provider models:', error);
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to fetch models: ${error?.message || 'Unknown error'}`
+        });
+      }
     }),
 })

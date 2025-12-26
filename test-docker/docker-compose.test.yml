@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Mock OpenAI API for testing Docker internal network connectivity
+  mock-openai:
+    image: node:20-alpine
+    container_name: mock-openai
+    working_dir: /app
+    command: node server.js
+    volumes:
+      - ./mock-openai:/app
+    networks:
+      - blinko-test-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/models"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    container_name: blinko-test-postgres
+    environment:
+      POSTGRES_USER: blinko
+      POSTGRES_PASSWORD: blinko
+      POSTGRES_DB: blinko
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - blinko-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U blinko"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Blinko application
+  blinko:
+    image: blinkospace/blinko:latest
+    container_name: blinko-test
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mock-openai:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://blinko:blinko@postgres:5432/blinko
+      - NEXTAUTH_SECRET=test-secret-key-for-testing
+      - NEXTAUTH_URL=http://localhost:1111
+    ports:
+      - "1111:1111"
+    networks:
+      - blinko-test-network
+
+networks:
+  blinko-test-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
