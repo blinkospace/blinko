@@ -78,7 +78,7 @@ export const PROVIDER_TEMPLATES = [
     value: 'google',
     label: 'Google AI',
     defaultName: 'Google AI',
-    defaultBaseURL: 'https://generativelanguage.googleapis.com',
+    defaultBaseURL: 'https://generativelanguage.googleapis.com/v1',
     website: 'https://ai.google.dev',
     docs: 'https://ai.google.dev/docs',
     icon: 'google',
