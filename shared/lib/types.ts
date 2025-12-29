@@ -47,6 +47,7 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('twoFactorSecret'),
   z.literal('themeColor'),
   z.literal('themeForegroundColor'),
+  z.literal('fontStyle'),
   z.literal('isCloseDailyReview'),
   z.literal('maxHomePageWidth'),
   z.literal('isUseBlinkoHub'),
@@ -186,6 +187,7 @@ export const ZConfigSchema = z.object({
   defaultHomePage: z.string().optional(),
   desktopHotkeys: z.any().optional(),
   systemTray: z.any().optional(),
+  fontStyle: z.string().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

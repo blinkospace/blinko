@@ -15,6 +15,7 @@ import { CollapsibleCard } from "../Common/CollapsibleCard";
 import { GradientBackground } from "../Common/GradientBackground";
 import { UserStore } from "@/store/user";
 import { BaseStore } from "@/store/baseStore";
+import FontSwitcher from "../Common/FontSwitcher";
 
 export const PerferSetting = observer(() => {
   const { t } = useTranslation()
@@ -336,7 +337,25 @@ export const PerferSetting = observer(() => {
           }}
         />
       } />
-
+  
+    <Item 
+      leftContent={<>{t('font-style')}</>}
+      rightContent={
+        <FontSwitcher fontname={blinko.config.value?.fontStyle} onChange={async fontname => {
+          await PromiseCall(api.config.update.mutate({
+            key: 'fontStyle',
+            value: fontname
+          }))
+          
+          // Apply font globally to body element
+          if (fontname === 'default') {
+            document.body.style.fontFamily = '';
+          } else {
+            document.body.style.fontFamily = fontname;
+          }
+        }}/>
+      }
+    />
     <Item
       leftContent={<>{t('toolbar-visibility')}</>}
       rightContent={

@@ -21,6 +21,7 @@ export const getGlobalConfig = async ({ ctx, useAdmin = false }: { ctx?: Context
       || item.key == 'theme'
       || item.key == 'themeColor'
       || item.key == 'themeForegroundColor'
+      || item.key == 'fontStyle'
       || item.key == 'maxHomePageWidth'
       || item.key == 'customBackgroundUrl'
       || item.key == 'hidePcEditor'

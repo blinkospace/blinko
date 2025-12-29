@@ -280,6 +280,15 @@ export class UserStore implements Store {
       }
     }
 
+    // Apply saved font to body element
+    if (config?.fontStyle) {
+      if (config.fontStyle === 'default') {
+        document.body.style.fontFamily = '';
+      } else {
+        document.body.style.fontFamily = config.fontStyle;
+      }
+    }
+
     if (this.isLogin) {
       try {
         if (config) {
