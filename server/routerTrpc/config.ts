@@ -225,7 +225,7 @@ export const configRouter = router({
     }).nullable())
     .query(async function ({ input, ctx }) {
       const { type } = input;
-      console.log(123)
+
       const model = await getAiModelConfig(type, ctx);
       return model;
     })
