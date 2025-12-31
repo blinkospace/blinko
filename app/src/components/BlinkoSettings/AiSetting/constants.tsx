@@ -1,7 +1,7 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { ModelCapabilities } from '@server/aiServer/types';
 // Re-export from shared module for backward compatibility
-export { ModelTemplate, DEFAULT_MODEL_TEMPLATES, inferModelCapabilities } from '@shared/lib/modelTemplates';
+export { DEFAULT_MODEL_TEMPLATES, inferModelCapabilities } from '@shared/lib/modelTemplates';
 
 export const CAPABILITY_ICONS = {
   inference: <Icon icon="hugeicons:chat" width="16" height="16" />,
