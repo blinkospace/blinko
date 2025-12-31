@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 
 import { promises as fs } from 'fs';
 import { randomBytes, pbkdf2 } from 'crypto';
+import * as path from 'path';
+import { FontSeed, systemDefaultFont, cdnFonts } from './defaultFonts';
 
 export async function hashPassword(password: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -95,6 +97,146 @@ async function main() {
   } catch (error) {
     console.log(error)
   }
+  await seedDefaultFonts();
+}
+
+export async function seedDefaultFonts() {
+  const fontsDir = path.resolve(__dirname, "../app/public/fonts");
+
+  const localFonts = await scanLocalFonts(fontsDir);
+
+  const allFonts: FontSeed[] = [systemDefaultFont, ...cdnFonts, ...localFonts];
+
+  console.log("🔤 Seeding fonts...");
+  console.log(`   🌐 CDN fonts: ${cdnFonts.length}`);
+  console.log(`   📁 Local fonts: ${localFonts.length}`);
+
+  for (const font of allFonts) {
+    const fontData = {
+      ...font,
+      fileData: font.fileData ? Buffer.from(font.fileData) : null,
+    };
+    await prisma.fonts.upsert({
+      where: { name: font.name },
+      update: fontData,
+      create: fontData,
+    });
+  }
+}
+/**
+ * Scan the fonts directory and discover all local font families
+ * Expects structure: fonts/{FontName}/{FontName}-*.woff2
+ */
+async function scanLocalFonts(fontsDir: string): Promise<FontSeed[]> {
+  try {
+    await fs.access(fontsDir);
+  } catch {
+    console.log(`ℹ Fonts directory not found: ${fontsDir}`);
+    return [];
+  }
+
+  const entries = await fs.readdir(fontsDir, { withFileTypes: true });
+
+  const tasks = entries
+    .filter(e => e.isDirectory())
+    .map((entry, index) => processFontFamily(fontsDir, entry.name, index + 1));
+
+  return (await Promise.all(tasks)).filter(
+    (f): f is FontSeed => f !== null
+  );
+}
+
+
+
+async function processFontFamily(
+  fontsDir: string,
+  fontName: string,
+  sortOrder: number
+): Promise<FontSeed | null> {
+  try {
+    const fontDir = path.join(fontsDir, fontName);
+    const files = await fs.readdir(fontDir);
+
+    const fontFiles = files.filter(f => f.endsWith(".woff") || f.endsWith(".woff2"));
+    if (!fontFiles.length) return null;
+
+    const mainFontFile = pickMainFont(fontFiles);
+    if (!mainFontFile) return null;
+
+    const filePath = path.join(fontDir, mainFontFile);
+    const buffer = await fs.readFile(filePath);
+
+    return {
+      name: fontName,
+      displayName: `${fontName} (Ext)`,
+      url: null,
+      fileData: new Uint8Array(buffer),
+      isLocal: true,
+      weights: isVariableFont(mainFontFile)
+        ? [100, 200, 300, 400, 500, 600, 700, 800, 900]
+        : [400, 500, 600, 700],
+      category: detectFontCategory(fontName),
+      isSystem: false,
+      sortOrder,
+    };
+  } catch (err) {
+    console.warn(`⚠ Failed to load font: ${fontName}`);
+    return null;
+  }
+}
+function pickMainFont(files: string[]): string | null {
+  return (
+    files.find(f => /variablefont/i.test(f) && !/italic/i.test(f) && f.endsWith(".woff2")) ||
+    files.find(f => !/italic/i.test(f) && f.endsWith(".woff2")) ||
+    files.find(f => f.endsWith(".woff2")) ||
+    files[0] ||
+    null
+  );
+}
+
+function isVariableFont(fileName: string): boolean {
+  return /variablefont/i.test(fileName);
+}
+
+/**
+ * Detect font category based on font name
+ */
+function detectFontCategory(fontName: string): string {
+  const name = fontName.toLowerCase();
+
+  if (
+    name.includes("mono") ||
+    name.includes("code") ||
+    name.includes("consola") ||
+    name.includes("courier") ||
+    name.includes("fira") ||
+    name.includes("jetbrains")
+  ) return "monospace";
+
+  if (
+    name.includes("serif") ||
+    name.includes("times") ||
+    name.includes("georgia") ||
+    name.includes("merriweather") ||
+    name.includes("playfair") ||
+    name.includes("baskerville")
+  ) return "serif";
+
+  if (
+    name.includes("display") ||
+    name.includes("black") ||
+    name.includes("ultra")
+  ) return "display";
+
+  if (
+    name.includes("script") ||
+    name.includes("cursive") ||
+    name.includes("hand") ||
+    name.includes("pacifico") ||
+    name.includes("dancing")
+  ) return "handwriting";
+
+  return "sans-serif";
 }
 
 main()
