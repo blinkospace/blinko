@@ -221,8 +221,8 @@ class FontManagerClass {
                      format === 'ttf' ? 'font/ttf' : 
                      'font/opentype';
     
-    // Create a new Uint8Array copy for Blob compatibility
-    const blob = new Blob([new Uint8Array(binaryData).buffer as ArrayBuffer], { type: mimeType });
+    // Create Blob directly from existing Uint8Array
+    const blob = new Blob([binaryData], { type: mimeType });
     const blobUrl = URL.createObjectURL(blob);
 
     // Store blob URL for cleanup
@@ -360,7 +360,7 @@ class FontManagerClass {
     }
     
     // Font might still work even if we can't confirm it's loaded
-    console.warn(`FontManager: Timeout waiting for font "${fontName}" to load, proceeding anyway`);
+    console.warn(`FontManager: Timeout waiting for font "${fontName}" to load; continuing without confirmed load status (font may not be applied correctly)`);
   }
 
   /**
