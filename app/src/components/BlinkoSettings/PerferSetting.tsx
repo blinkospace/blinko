@@ -28,6 +28,7 @@ export const PerferSetting = observer(() => {
   const user = RootStore.Get(UserStore)
 
   useEffect(() => {
+    blinko.config.call();
     setTextLength(blinko.config.value?.textFoldLength?.toString() || '500');
     setMaxHomePageWidth(blinko.config.value?.maxHomePageWidth?.toString() || '0');
     setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
@@ -85,7 +86,7 @@ export const PerferSetting = observer(() => {
           value: value
         }))
       }} />} />
-      
+
     <Item
       leftContent={<>{t('default-home-page')}</>}
       rightContent={
@@ -337,8 +338,7 @@ export const PerferSetting = observer(() => {
           }}
         />
       } />
-  
-    <Item 
+    <Item
       leftContent={<>{t('font-style')}</>}
       rightContent={
         <FontSwitcher fontname={blinko.config.value?.fontStyle} onChange={async fontname => {
@@ -346,14 +346,9 @@ export const PerferSetting = observer(() => {
             key: 'fontStyle',
             value: fontname
           }))
-          
-          // Apply font globally to body element
-          if (fontname === 'default') {
-            document.body.style.fontFamily = '';
-          } else {
-            document.body.style.fontFamily = fontname;
-          }
-        }}/>
+          // Refresh config to update UI
+          await blinko.config.call()
+        }} />
       }
     />
     <Item

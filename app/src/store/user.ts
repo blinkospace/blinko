@@ -19,6 +19,7 @@ import { ToastPlugin } from './module/Toast/Toast';
 import { StorageState } from './standard/StorageState';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { isInTauri, setTauriTheme } from '@/lib/tauriHelper';
+import { FontManager } from '@/lib/fontManager';
 
 export class UserStore implements Store {
   sid = 'user';
@@ -165,6 +166,22 @@ export class UserStore implements Store {
     eventBus.emit('user:ready', this);
   }
 
+
+  async initializeFonts(savedFontStyle: string) {
+    try {
+      if (api.fonts) {
+        const fonts = await api.fonts.list.query();
+        FontManager.initializeRegistry(fonts);
+      }
+      await FontManager.applyFont(savedFontStyle);
+    } catch (error) {
+      console.error('Failed to initialize fonts:', error);
+      if (savedFontStyle && savedFontStyle !== 'default') {
+        document.body.style.fontFamily = savedFontStyle;
+      }
+    }
+  }
+
   clear() {
     this.tokenData.save(null);
     this.isSetup = false;
@@ -280,13 +297,10 @@ export class UserStore implements Store {
       }
     }
 
-    // Apply saved font to body element
+    // Apply saved font using FontManager
     if (config?.fontStyle) {
-      if (config.fontStyle === 'default') {
-        document.body.style.fontFamily = '';
-      } else {
-        document.body.style.fontFamily = config.fontStyle;
-      }
+      // Initialize FontManager with fonts from database and apply saved font
+      this.initializeFonts(config.fontStyle);
     }
 
     if (this.isLogin) {
