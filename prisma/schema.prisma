@@ -328,3 +328,20 @@ model mcpServers {
   createdAt   DateTime @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @db.Timestamptz(6)
 }
+
+model fonts {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255)           // Font family name (e.g., "Roboto")
+  displayName String   @db.VarChar(255)           // Display name in UI
+  url         String?  @db.Text                   // CDN URL for the font CSS (Google Fonts style)
+  fileData    Bytes?   @db.ByteA                  // Font 
+  isLocal     Boolean  @default(false)            // True if font is loaded from local files
+  isSystem    Boolean  @default(false)
+  weights     Json     @db.Json                   // Available weights: [400, 500, 700]
+  category    String   @default("sans-serif") @db.VarChar(50) // serif, sans-serif, monospace, display, handwriting
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  @@unique([name])
+}
