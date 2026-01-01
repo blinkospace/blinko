@@ -43,6 +43,8 @@ class FontManagerClass {
   private fontRegistry: Map<string, FontConfig> = new Map();
   private currentFont: string = 'default';
   private initialized: boolean = false;
+  private observer: MutationObserver | null = null;
+  private currentFontFamily: string = '';
 
   private constructor() {
     // Initialize with default font
@@ -52,8 +54,83 @@ class FontManagerClass {
       loading: false,
       error: null,
     });
+    
+    // Setup MutationObserver to watch for new markdown-body elements
+    this.setupMutationObserver();
   }
-
+  
+  /**
+   * Setup MutationObserver to automatically apply font to new markdown-body elements
+   */
+  private setupMutationObserver(): void {
+    if (typeof window === 'undefined' || !window.MutationObserver) return;
+    
+    // Use a debounce mechanism to avoid excessive DOM queries
+    let debounceTimer: number | null = null;
+    this.observer = new MutationObserver((mutations) => {
+      if (!this.currentFontFamily) return;
+      
+      // Debounce: batch DOM updates
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+      
+      debounceTimer = window.setTimeout(() => {
+        const elementsToUpdate: HTMLElement[] = [];
+        
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as HTMLElement;
+              
+              // Check if the added node is a markdown-body
+              if (element.classList?.contains('markdown-body')) {
+                elementsToUpdate.push(element);
+              }
+              
+              // Check for markdown-body descendants
+              const markdownBodies = element.querySelectorAll?.('.markdown-body');
+              markdownBodies?.forEach((mb) => {
+                elementsToUpdate.push(mb as HTMLElement);
+              });
+            }
+          });
+        });
+        
+        // Batch apply font family
+        elementsToUpdate.forEach((el) => {
+          el.style.fontFamily = this.currentFontFamily;
+        });
+      }, 50); // 50ms debounce
+    });
+    
+    // Start observing
+    if (document.body) {
+      this.observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+    } else {
+      // Wait for body to be available (with timeout to prevent infinite loop)
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds max wait
+      const checkBody = setInterval(() => {
+        attempts++;
+        if (document.body) {
+          this.observer?.observe(document.body, {
+            childList: true,
+            subtree: true,
+          });
+          clearInterval(checkBody);
+        } else if (attempts >= maxAttempts) {
+          // Give up after max attempts
+          clearInterval(checkBody);
+          console.warn('FontManager: document.body not available after timeout, MutationObserver not started');
+        }
+      }, 100);
+    }
+  }
+  
   /**
    * Get singleton instance
    */
@@ -299,8 +376,8 @@ class FontManagerClass {
       return 'otf';
     }
 
-    // Default to woff2 as that's most common for modern fonts
-    return 'woff2';
+    // Default to ttf as fallback (more compatible than assuming woff2)
+    return 'ttf';
   }
 
 
@@ -384,29 +461,69 @@ class FontManagerClass {
   }
 
   /**
-   * Apply a font to the document body
+   * Apply a font to the document body and CSS variables
    */
   public async applyFont(fontName: string): Promise<boolean> {
-    // Load font first if needed
-    const loaded = await this.loadFont(fontName);
-    
     if (fontName === 'default') {
       // Reset to system font stack
+      this.currentFontFamily = '';
       document.body.style.fontFamily = '';
+      document.documentElement.style.setProperty('--font-family', '');
+      
+      // Clear font from all elements
+      const expandedContainers = document.querySelectorAll('.expanded-container');
+      expandedContainers.forEach((container) => {
+        (container as HTMLElement).style.fontFamily = '';
+      });
+      
+      const markdownBodies = document.querySelectorAll('.markdown-body');
+      markdownBodies.forEach((element) => {
+        (element as HTMLElement).style.fontFamily = '';
+      });
+      
       this.currentFont = 'default';
       return true;
     }
     
-    if (loaded || fontName) {
-      // Apply the font with fallbacks
-      const fontConfig = this.fontRegistry.get(fontName);
-      const fallback = this.getFallbackStack(fontConfig?.category || 'sans-serif');
-      document.body.style.fontFamily = `"${fontName}", ${fallback}`;
-      this.currentFont = fontName;
-      return true;
+    // Get font config to build font family string
+    const fontConfig = this.fontRegistry.get(fontName);
+    if (!fontConfig) {
+      console.warn(`FontManager: Font "${fontName}" not found in registry`);
+      return false;
     }
     
-    return false;
+    const fallback = this.getFallbackStack(fontConfig.category || 'sans-serif');
+    const fontFamily = `"${fontName}", ${fallback}`;
+    
+    // ⚡ IMMEDIATE: Apply font name right away (browser will use fallback until font loads)
+    this.currentFontFamily = fontFamily;
+    this.currentFont = fontName;
+    
+    // Apply to document body immediately
+    document.body.style.fontFamily = fontFamily;
+    
+    // Apply to CSS variable for global use
+    document.documentElement.style.setProperty('--font-family', fontFamily);
+    
+    // Apply to all existing elements immediately
+    const expandedContainers = document.querySelectorAll('.expanded-container');
+    expandedContainers.forEach((container) => {
+      (container as HTMLElement).style.fontFamily = fontFamily;
+    });
+    
+    const markdownBodies = document.querySelectorAll('.markdown-body');
+    markdownBodies.forEach((element) => {
+      (element as HTMLElement).style.fontFamily = fontFamily;
+    });
+    
+    // 🔄 BACKGROUND: Load font asynchronously (browser will switch when ready)
+    // Don't wait for this - let it happen in background
+    this.loadFont(fontName).catch((error) => {
+      console.warn(`FontManager: Background font load failed for "${fontName}":`, error);
+      // Font name is already applied, so fallback will be used
+    });
+    
+    return true;
   }
 
   /**

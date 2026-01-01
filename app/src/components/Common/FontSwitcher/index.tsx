@@ -50,7 +50,10 @@ const FontSwitcher = ({ fontname = 'default', onChange }: FontSwitcherProps) => 
   // Load the current font on mount if not default
   useEffect(() => {
     if (fontname && fontname !== 'default' && fonts.length > 0) {
-      FontManager.loadFont(fontname);
+      // Apply font immediately (will load in background)
+      FontManager.applyFont(fontname).catch((error) => {
+        console.warn('Failed to apply font on mount:', error);
+      });
     }
   }, [fontname, fonts]);
 

@@ -248,9 +248,20 @@ export const fontRouter = router({
 
       // Decode base64 to Buffer
       const fileBuffer = Buffer.from(input.fileData, 'base64');
+      
+      // Validate file size (max 10MB to prevent memory issues)
+      const MAX_FONT_SIZE = 10 * 1024 * 1024; // 10MB
+      if (fileBuffer.length > MAX_FONT_SIZE) {
+        throw new Error(`Font file too large. Maximum size is ${MAX_FONT_SIZE / 1024 / 1024}MB`);
+      }
+      
+      if (fileBuffer.length === 0) {
+        throw new Error('Font file is empty');
+      }
 
       // Detect if it's a variable font (check file size heuristic - variable fonts are usually larger)
       // For simplicity, assume variable font weights
+      // TODO: Could improve by actually parsing font file to detect weights
       const weights = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       // Get the next sort order
