@@ -112,122 +112,18 @@ export class AiSettingStore implements Store {
         },
     });
 
-    // Provider model fetching
+    // Provider model fetching - now calls backend API for Docker network compatibility
     fetchProviderModels = new PromiseState({
         successMsg: i18n.t('model-list-updated'),
         function: async (provider: AiProvider) => {
             try {
-                let modelList: any = [];
-
-                switch (provider.provider) {
-                    case 'ollama': {
-                        const endpoint = provider.baseURL || 'http://127.0.0.1:11434';
-                        const response = await fetch(`${endpoint}/api/tags`);
-                        const data = await response.json();
-                        modelList = data.models.map((model: any) => ({
-                            id: model.name,
-                            name: model.name,
-                            description: model.description || '',
-                            capabilities: this.inferModelCapabilities(model.name)
-                        }));
-                        break;
-                    }
-                    case 'openai': {
-                        const endpoint = provider.baseURL || 'https://api.openai.com/v1';
-                        const response = await fetch(`${endpoint}/models`, {
-                            headers: {
-                                'Authorization': `Bearer ${provider.apiKey}`
-                            }
-                        });
-                        const data = await response.json();
-                        modelList = data.data.map((model: any) => ({
-                            id: model.id,
-                            name: model.id,
-                            description: '',
-                            capabilities: this.inferModelCapabilities(model.id)
-                        }));
-                        break;
-                    }
-                    case 'anthropic': {
-                        modelList = [
-                            { id: 'claude-3-5-sonnet-20241022', name: 'claude-3-5-sonnet-20241022', capabilities: this.inferModelCapabilities('claude-3-5-sonnet-20241022') },
-                            { id: 'claude-3-5-sonnet-20240620', name: 'claude-3-5-sonnet-20240620', capabilities: this.inferModelCapabilities('claude-3-5-sonnet-20240620') },
-                            { id: 'claude-3-5-haiku-20241022', name: 'claude-3-5-haiku-20241022', capabilities: this.inferModelCapabilities('claude-3-5-haiku-20241022') },
-                            { id: 'claude-3-opus-20240229', name: 'claude-3-opus-20240229', capabilities: this.inferModelCapabilities('claude-3-opus-20240229') },
-                            { id: 'claude-3-sonnet-20240229', name: 'claude-3-sonnet-20240229', capabilities: this.inferModelCapabilities('claude-3-sonnet-20240229') },
-                            { id: 'claude-3-haiku-20240307', name: 'claude-3-haiku-20240307', capabilities: this.inferModelCapabilities('claude-3-haiku-20240307') }
-                        ];
-                        break;
-                    }
-                    case 'voyageai': {
-                        modelList = [
-                            { id: 'voyage-3', name: 'voyage-3', capabilities: this.inferModelCapabilities('voyage-3') },
-                            { id: 'voyage-3-lite', name: 'voyage-3-lite', capabilities: this.inferModelCapabilities('voyage-3-lite') },
-                            { id: 'voyage-finance-2', name: 'voyage-finance-2', capabilities: this.inferModelCapabilities('voyage-finance-2') },
-                            { id: 'voyage-multilingual-2', name: 'voyage-multilingual-2', capabilities: this.inferModelCapabilities('voyage-multilingual-2') },
-                            { id: 'voyage-law-2', name: 'voyage-law-2', capabilities: this.inferModelCapabilities('voyage-law-2') },
-                            { id: 'voyage-code-2', name: 'voyage-code-2', capabilities: this.inferModelCapabilities('voyage-code-2') },
-                            { id: 'voyage-large-2-instruct', name: 'voyage-large-2-instruct', capabilities: this.inferModelCapabilities('voyage-large-2-instruct') },
-                            { id: 'voyage-large-2', name: 'voyage-large-2', capabilities: this.inferModelCapabilities('voyage-large-2') }
-                        ];
-                        break;
-                    }
-                    case 'google': {
-                        const endpoint = provider.baseURL || 'https://generativelanguage.googleapis.com/v1beta';
-                        const response = await fetch(`${endpoint}/models?key=${provider.apiKey}`);
-                        const data = await response.json();
-                        modelList = data.models?.map((model: any) => ({
-                            id: model.name.replace('models/', ''),
-                            name: model.displayName || model.name.replace('models/', ''),
-                            description: model.description || '',
-                            capabilities: this.inferModelCapabilities(model.name)
-                        })) || [];
-                        break;
-                    }
-                    case 'azure': {
-                        const endpoint = provider.baseURL;
-                        const response = await fetch(`${endpoint}/openai/models?api-version=2024-02-01`, {
-                            headers: {
-                                'api-key': provider.apiKey || ''
-                            }
-                        });
-                        const data = await response.json();
-                        modelList = data.data.map((model: any) => ({
-                            id: model.id,
-                            name: model.id,
-                            description: '',
-                            capabilities: this.inferModelCapabilities(model.id)
-                        }));
-                        break;
-                    }
-                    default: {
-                        const endpoint = provider.baseURL;
-                        const response = await fetch(`${endpoint}/models`, {
-                            headers: {
-                                'Authorization': `Bearer ${provider.apiKey}`
-                            }
-                        });
-                        const data = await response.json();
-                        modelList = data.data.map((model: any) => ({
-                            id: model.id,
-                            name: model.id,
-                            description: '',
-                            capabilities: this.inferModelCapabilities(model.id)
-                        }));
-                        break;
-                    }
-                }
-
-                // Save models to provider config
-                const updatedConfig = {
-                    ...provider.config,
-                    models: modelList
-                };
-
-                await this.updateProvider.call({
-                    id: provider.id,
-                    config: updatedConfig
+                // Call backend API to fetch models (enables Docker internal network access)
+                const modelList = await api.ai.fetchProviderModels.mutate({
+                    providerId: provider.id
                 });
+
+                // Reload providers to get updated config
+                await this.aiProviders.call();
 
                 return modelList;
             } catch (error) {
