@@ -75,6 +75,7 @@ body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
   background-color: var(--secondbackground);
+  font-family: var(--font-family);
 }
 
 .h-mobile-full {
@@ -161,6 +162,7 @@ body {
 
 @layer base {
   :root {
+    --font-family: 'Inter', sans-serif;
     --swiper-3d-shadow: rgba(0, 0, 0, .15);
     --background: hsl(0 0% 100%);
     --foreground: hsl(222.2 47.4% 11.2%);

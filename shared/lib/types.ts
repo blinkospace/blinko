@@ -2,7 +2,7 @@ import { RouterOutput } from "../../server/routerTrpc/_app";
 import { z } from "zod";
 
 export type Note = Partial<NonNullable<RouterOutput['notes']['list'][0]>>
-export type Attachment = NonNullable<Note['attachments']>[0] & { size: any }
+export type Attachment = NonNullable<Note['attachments']>[0] & { size: number }
 export type Tag = NonNullable<RouterOutput['tags']['list']>[0]
 export type Config = NonNullable<RouterOutput['config']['list']>
 export type LinkInfo = NonNullable<RouterOutput['public']['linkPreview']>
@@ -47,6 +47,7 @@ export const ZUserPerferConfigKey = z.union([
   z.literal('twoFactorSecret'),
   z.literal('themeColor'),
   z.literal('themeForegroundColor'),
+  z.literal('fontStyle'),
   z.literal('isCloseDailyReview'),
   z.literal('maxHomePageWidth'),
   z.literal('isUseBlinkoHub'),
@@ -186,6 +187,7 @@ export const ZConfigSchema = z.object({
   defaultHomePage: z.string().optional(),
   desktopHotkeys: z.any().optional(),
   systemTray: z.any().optional(),
+  fontStyle: z.string().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;
@@ -282,7 +284,11 @@ export const DEFAULT_TEXT_SELECTION_TOOLBAR_CONFIG: TextSelectionToolbarConfig =
 export const DEFAULT_VOICE_RECOGNITION_CONFIG: VoiceRecognitionConfig = {
   enabled: false,
   hotkey: 'F2',
-  gpuAcceleration: typeof window !== 'undefined' && navigator.platform.indexOf('Win') > -1, // Windows default
+  gpuAcceleration:
+    typeof window !== 'undefined' &&
+    typeof navigator !== 'undefined' &&
+    typeof navigator.platform === 'string' &&
+    navigator.platform.indexOf('Win') > -1, // Windows default
   modelPath: '', // User must select model path
   language: 'auto',
   sensitivity: 0.6,

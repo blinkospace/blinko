@@ -22,6 +22,7 @@ import { messageRouter } from './message';
 import { taskRouter } from './task';
 import { aiScheduledTaskRouter } from './aiScheduledTask';
 import { mcpServersRouter } from './mcpServers';
+import { fontRouter } from './font';
 export const appRouter = router({
   ai: aiRouter,
   notes: noteRouter,
@@ -40,6 +41,7 @@ export const appRouter = router({
   conversation: conversationRouter,
   message: messageRouter,
   mcpServers: mcpServersRouter,
+  fonts: fontRouter,
 });
 
 export const createCaller = t.createCallerFactory(appRouter);

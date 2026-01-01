@@ -43,7 +43,7 @@ const LanguageSwitcher = ({ value, onChange }: LanguageSwitcherProps = {}) => {
               onSelectChange(locale.value);
             }}
           >
-            <div className='flex'> {locale.label}
+            <div className='flex items-center justify-between'> {locale.label}
               {currentLocale === locale.value && <Icon icon="mingcute:check-fill" width="18" height="18" />}</div>
           </DropdownItem>
         ))}

@@ -543,6 +543,8 @@
   "output-result": "Выходные параметры",
   "over": "над",
   "page-size": "Размер страницы",
+  "font-size": "Размер шрифта",
+  "font-style": "Стиль шрифта",
   "paragraph": "Параграф",
   "password": "пароль",
   "password-error": "Ошибка пароля",

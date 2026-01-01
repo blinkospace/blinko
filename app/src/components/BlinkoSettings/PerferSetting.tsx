@@ -15,6 +15,7 @@ import { CollapsibleCard } from "../Common/CollapsibleCard";
 import { GradientBackground } from "../Common/GradientBackground";
 import { UserStore } from "@/store/user";
 import { BaseStore } from "@/store/baseStore";
+import FontSwitcher from "../Common/FontSwitcher";
 
 export const PerferSetting = observer(() => {
   const { t } = useTranslation()
@@ -27,6 +28,7 @@ export const PerferSetting = observer(() => {
   const user = RootStore.Get(UserStore)
 
   useEffect(() => {
+    blinko.config.call();
     setTextLength(blinko.config.value?.textFoldLength?.toString() || '500');
     setMaxHomePageWidth(blinko.config.value?.maxHomePageWidth?.toString() || '0');
     setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
@@ -84,7 +86,7 @@ export const PerferSetting = observer(() => {
           value: value
         }))
       }} />} />
-      
+
     <Item
       leftContent={<>{t('default-home-page')}</>}
       rightContent={
@@ -336,7 +338,19 @@ export const PerferSetting = observer(() => {
           }}
         />
       } />
-
+    <Item
+      leftContent={<>{t('font-style')}</>}
+      rightContent={
+        <FontSwitcher fontname={blinko.config.value?.fontStyle} onChange={async fontname => {
+          await PromiseCall(api.config.update.mutate({
+            key: 'fontStyle',
+            value: fontname
+          }))
+          // Refresh config to update UI
+          await blinko.config.call()
+        }} />
+      }
+    />
     <Item
       leftContent={<>{t('toolbar-visibility')}</>}
       rightContent={

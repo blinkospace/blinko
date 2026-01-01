@@ -219,6 +219,8 @@
   "trash": "回收站",
   "custom-path": "自定义路径",
   "page-size": "每页加载数",
+  "font-size": "字体大小",
+  "font-style": "字体样式",
   "toolbar-visibility": "工具栏可见性",
   "always-hide-toolbar": "始终隐藏",
   "always-show-toolbar": "始终显示",
