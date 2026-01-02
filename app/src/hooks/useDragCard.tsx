@@ -6,6 +6,8 @@ import { api } from '@/lib/trpc';
 import { BlinkoCard } from '@/components/BlinkoCard';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/Common/Iconify/icons';
+import { RootStore } from '@/store';
+import { BlinkoStore } from '@/store/blinkoStore';
 
 interface UseDragCardProps {
   notes: any[] | undefined;
@@ -21,6 +23,7 @@ interface UseDragCardProps {
 export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, insertPosition, setInsertPosition, isDragForbidden, setIsDragForbidden }: UseDragCardProps) => {
   const [localNotes, setLocalNotes] = useState<any[]>([]);
   const isDraggingRef = useRef(false);
+  const blinko = RootStore.Get(BlinkoStore);
 
   // Update local notes when the list changes (but not during drag operations)
   useEffect(() => {
@@ -42,22 +45,39 @@ export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, inser
     }
   }, [notes]);
 
+  // Disable sensors when fullscreen editor is open
+  const shouldEnableDrag = blinko.fullscreenEditorNoteId === null;
+  
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      activationConstraint: {
+      activationConstraint: shouldEnableDrag ? {
         delay: 250,
         tolerance: 5,
+      } : {
+        // Impossible to activate
+        delay: 999999,
+        distance: 999999,
       },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: {
+      activationConstraint: shouldEnableDrag ? {
         delay: 250,
         tolerance: 5,
+      } : {
+        // Impossible to activate
+        delay: 999999,
+        distance: 999999,
       },
     })
   );
 
   const handleDragStart = (event: any) => {
+    // Check if fullscreen editor is open, if so, prevent drag
+    const blinko = RootStore.Get(BlinkoStore);
+    if (blinko.fullscreenEditorNoteId !== null) {
+      return; // Don't start drag if fullscreen editor is open
+    }
+    
     setActiveId(event.active.id as number);
     isDraggingRef.current = true;
   };
@@ -206,25 +226,13 @@ export const DraggableBlinkoCard = ({ blinkoItem, showInsertLine, insertPosition
           </div>
         ) : (
           // Draggable area - long press to drag using dnd-kit's activationConstraint
-          // The drag will be prevented by checking blinkoItem.isExpand in the card's event handlers
+          // When item is expanded (fullscreen editor open), don't apply drag listeners
           <div
             ref={setDraggableRef}
             style={dragStyle}
-            {...attributes}
-            {...listeners}
+            {...(blinkoItem.isExpand ? {} : attributes)}
+            {...(blinkoItem.isExpand ? {} : listeners)}
             className="cursor-default!"
-            onPointerDown={(e) => {
-              // Check if expanded and prevent drag
-              if (blinkoItem.isExpand === true) {
-                e.stopPropagation();
-              }
-            }}
-            onTouchStart={(e) => {
-              // Check if expanded and prevent drag
-              if (blinkoItem.isExpand === true) {
-                e.stopPropagation();
-              }
-            }}
           >
             <BlinkoCard blinkoItem={blinkoItem} />
           </div>
