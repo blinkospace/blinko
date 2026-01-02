@@ -14,10 +14,11 @@ type IProps = {
   height?: number,
   isInDialog?: boolean,
   withoutOutline?: boolean,
-  initialData?: { file?: File, text?: string }
+  initialData?: { file?: File, text?: string },
+  showTopToolbar?: boolean
 }
 
-export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline, initialData }: IProps) => {
+export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false }: IProps) => {
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
@@ -37,6 +38,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
         }
       } else {
         try {
+          if (!blinko.curSelectedNote) return '';
           const local = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
           const blinkoContent = blinko.curSelectedNote?.content ?? ''
           return local?.content != '' ? (local?.content ?? blinkoContent) : blinkoContent
@@ -55,7 +57,8 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
         }
       } else {
         try {
-          blinko.curSelectedNote!.content = v
+          if (!blinko.curSelectedNote) return;
+          blinko.curSelectedNote.content = v
           const hasLocal = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
           if (hasLocal) {
             hasLocal.content = v
@@ -101,9 +104,10 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
     } else {
       document.documentElement.style.setProperty('--min-editor-height', `unset`)
       try {
+        if (!blinko.curSelectedNote) return;
         const local = blinko.editContentStorage.list?.find(i => Number(i.id) == Number(blinko.curSelectedNote!.id))
         if (local && local?.content != '') {
-          blinko.curSelectedNote!.content = local!.content
+          blinko.curSelectedNote.content = local.content
         }
       } catch (error) {
         console.error(error)
@@ -114,7 +118,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
   // Use Tauri hotkey hook
 
 
-  return <div className={`h-full ${withoutOutline ? '' : ''}`} ref={editorRef} id='global-editor' data-tauri-drag-region onClick={() => {
+  return <div className={`h-full flex flex-col ${withoutOutline ? '' : ''}`} ref={editorRef} id='global-editor' data-tauri-drag-region onClick={() => {
     blinko.isCreateMode = mode == 'create'
   }}>
     <Editor
@@ -127,6 +131,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       }}
       withoutOutline={withoutOutline}
       initialData={initialData}
+      showTopToolbar={showTopToolbar}
       onHeightChange={() => {
         onHeightChange?.(editorRef.current?.clientHeight ?? 75)
         if (editorRef.current) {
@@ -140,7 +145,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       isSendLoading={blinko.upsertNote.loading.value}
       bottomSlot={
         isCreateMode ? <div className='text-xs text-ignore ml-2'>Drop to upload files</div> :
-          <div className='text-xs text-desc'>{dayjs(blinko.curSelectedNote!.createdAt).format("YYYY-MM-DD hh:mm:ss")}</div>
+          blinko.curSelectedNote?.createdAt ? <div className='text-xs text-desc'>{dayjs(blinko.curSelectedNote.createdAt).format("YYYY-MM-DD hh:mm:ss")}</div> : null
       }
       onSend={async ({ files, references, noteType, metadata }) => {
         if (isCreateMode) {
@@ -159,15 +164,17 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
           }
           blinko.updateTicker++
         } else {
+          if (!blinko.curSelectedNote) return;
           await blinko.upsertNote.call({
-            id: blinko.curSelectedNote!.id,
+            id: blinko.curSelectedNote.id,
             type: noteType,
             //@ts-ignore
             content: blinko.curSelectedNote.content,
             //@ts-ignore
             attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }),
             references,
-            metadata
+            metadata,
+            refresh: true // Ensure list is refreshed after update
           })
           try {
             const index = blinko.editAttachmentsStorage.list?.findIndex(i => i.id == blinko.curSelectedNote!.id)

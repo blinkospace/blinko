@@ -5,7 +5,6 @@ import { PromiseState } from "@/store/standard/PromiseState";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
-import VanillaTilt from 'vanilla-tilt';
 import { Card, InputOtp, Button } from "@heroui/react";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from "react-i18next";
@@ -57,16 +56,6 @@ const Page: React.FC = observer(() => {
     }
   }, [location.pathname, id, searchParams.get('password')])
 
-  useEffect(() => {
-    if (!isPc) return
-    const elements = document.querySelectorAll(".tilt-card");
-    VanillaTilt.init(elements as any, {
-      max: 2,
-      speed: 400,
-      glare: false,
-      "max-glare": 0
-    });
-  }, [store.shareNote?.value]);
 
   const handleVerify = () => {
     setError(false);
@@ -126,8 +115,8 @@ const Page: React.FC = observer(() => {
     <GradientBackground>
       <div className='p-4 h-[100vh] w-full flex justify-center items-center'>
         {store.shareNote?.value && (
-          <div className="tilt-card glass-effect max-h-[90vh] overflow-y-scroll w-[95%] md:min-w-[30%] md:max-w-[50%] rounded-xl shadow-[1px_0_25px_11px_rgba(98,0,114,0.17)]">
-            <BlinkoCard blinkoItem={store.shareNote?.value} isShareMode glassEffect />
+          <div className="glass-effect max-h-[90vh] overflow-y-scroll w-[95%] md:min-w-[30%] md:max-w-[50%] rounded-xl shadow-[1px_0_25px_11px_rgba(98,0,114,0.17)]">
+            <BlinkoCard blinkoItem={store.shareNote?.value} isShareMode glassEffect defaultExpanded={true} />
           </div>
         )}
       </div>

@@ -1413,20 +1413,20 @@ iframe {
 }
 
 .markdown-large-spacing p {
-  margin-bottom: 1rem !important;
-  line-height: 1.6 !important;
-  letter-spacing: 0.005em !important;
+  margin-bottom: 1.25rem !important;
+  line-height: 1.8 !important;
+  letter-spacing: 0.01em !important;
 }
 
 .markdown-large-spacing ul,
 .markdown-large-spacing ol {
-  margin-bottom: 1rem !important;
-  line-height: 1.6 !important;
+  margin-bottom: 1.25rem !important;
+  line-height: 1.8 !important;
 }
 
 .markdown-large-spacing li {
-  margin-bottom: 0.25rem !important;
-  line-height: 1.6 !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.8 !important;
 }
 
 .markdown-large-spacing blockquote {

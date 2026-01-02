@@ -9,8 +9,8 @@ import { BlinkoCard } from '@/components/BlinkoCard';
 import { useMediaQuery } from 'usehooks-ts';
 import { BlinkoAddButton } from '@/components/BlinkoAddButton';
 import { LoadingAndEmpty } from '@/components/Common/LoadingAndEmpty';
-import { useSearchParams } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import dayjs from '@/lib/dayjs';
 import { NoteType } from '@shared/lib/types';
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -29,6 +29,7 @@ const Home = observer(() => {
   blinko.use()
   blinko.useQuery();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const isTodoView = searchParams.get('path') === 'todo';
   const isNotesView = searchParams.get('path') === 'notes';
   const isArchivedView = searchParams.get('path') === 'archived';
@@ -37,6 +38,7 @@ const Home = observer(() => {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [insertPosition, setInsertPosition] = useState<number | null>(null);
   const [isDragForbidden, setIsDragForbidden] = useState<boolean>(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const currentListState = useMemo(() => {
     if (isNotesView) {
@@ -107,6 +109,21 @@ const Home = observer(() => {
       }, {} as Record<string, TodoGroup>);
   }, [currentListState.value, isTodoView, t]);
 
+  // Restore scroll position when returning from editor
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('restore-scroll-position');
+    if (savedPosition && scrollAreaRef.current) {
+      const position = Number(savedPosition);
+      setTimeout(() => {
+        if (scrollAreaRef.current) {
+          scrollAreaRef.current.scrollTop = position;
+        }
+        // Clear the saved position after restoring
+        sessionStorage.removeItem('restore-scroll-position');
+      }, 100);
+    }
+  }, [location.key]);
+
   return (
     <div
       style={{
@@ -130,6 +147,7 @@ const Home = observer(() => {
       {
         !currentListState.isEmpty &&
         <ScrollArea
+          ref={scrollAreaRef}
           fixMobileTopBar
           onRefresh={async () => {
             await currentListState.resetAndCall({})

@@ -11,11 +11,171 @@ import { UserStore } from '@/store/user';
 import { i18nEditor } from '../EditorToolbar/i18n';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from 'usehooks-ts';
+import { useTheme } from 'next-themes';
 import { AIExtend, Extend } from '../EditorToolbar/extends';
 import { NoteType, toNoteTypeEnum } from '@shared/lib/types';
 import { api } from '@/lib/trpc';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import * as echarts from 'echarts';
+import { FontManager } from '@/lib/fontManager';
+// Expose echarts globally for vditor chartRender
+if (typeof window !== 'undefined' && !(window as any).echarts) {
+  (window as any).echarts = echarts;
+}
+
+/**
+ * Get code highlight style name based on theme
+ */
+const getHighlightStyle = (theme: string): 'github' | 'github-dark' => {
+  return theme === 'dark' ? 'github-dark' : 'github';
+};
+
+/**
+ * Update code highlight CSS link
+ * This function ensures CSS file is loaded before code highlighting renders
+ * 
+ * @param theme - Current theme ('dark' | 'light')
+ * @param cdn - CDN URL
+ */
+const updateHighlightCSS = (theme: string, cdn: string): void => {
+  const styleName = getHighlightStyle(theme);
+  const href = `${cdn}/dist/js/highlight.js/styles/${styleName}.min.css`;
+  const existingLink = document.getElementById("vditorHljsStyle") as HTMLLinkElement;
+  
+  // Update if link doesn't exist or href doesn't match
+  if (!existingLink || existingLink.getAttribute('href') !== href) {
+    // Remove old link
+    if (existingLink) {
+      existingLink.remove();
+    }
+    
+    // Create new link
+    const styleElement = document.createElement("link");
+    styleElement.id = "vditorHljsStyle";
+    styleElement.rel = "stylesheet";
+    styleElement.type = "text/css";
+    styleElement.href = href;
+    document.getElementsByTagName("head")[0].appendChild(styleElement);
+  }
+};
+
+/**
+ * Update vditor instance code highlight theme configuration
+ * 
+ * @param vditorInstance - Vditor instance
+ * @param theme - Current theme
+ */
+const updateVditorHighlightConfig = (vditorInstance: Vditor, theme: string): void => {
+  const styleName = getHighlightStyle(theme);
+  // Vditor's internal configuration for subsequent preview rendering
+  const vditorOptions = (vditorInstance as any).options;
+  if (vditorOptions?.preview?.hljs) {
+    vditorOptions.preview.hljs.style = styleName;
+  }
+};
+
+/**
+ * Apply theme class to editor element for CSS-based theme support (ABCJS, mindmap)
+ */
+const applyThemeToEditor = (mode: string, theme: string): void => {
+  const editorElement = document.querySelector(`#vditor-${mode}`) as HTMLElement;
+  if (editorElement) {
+    if (theme === 'dark') {
+      editorElement.classList.add('vditor-theme-dark');
+      editorElement.classList.remove('vditor-theme-light');
+    } else {
+      editorElement.classList.add('vditor-theme-light');
+      editorElement.classList.remove('vditor-theme-dark');
+    }
+  }
+};
+
+/**
+ * Render all supported Vditor content types
+ * @param editorElement - Editor element
+ * @param mode - Editor mode (for finding element)
+ * @param theme - Current theme
+ * @param vditorInstance - Vditor instance (optional, for updating configuration)
+ */
+const renderAllVditorContent = (
+  editorElement: HTMLElement | null,
+  mode: string,
+  theme: string,
+  vditorInstance?: Vditor
+) => {
+  if (!editorElement) {
+    const element = document.querySelector(`#vditor-${mode}`);
+    if (!element) return;
+    editorElement = element as HTMLElement;
+  }
+
+  const cdn = getBlinkoEndpoint('').replace(/\/$/, "");
+  const styleName = getHighlightStyle(theme);
+
+  // Update CSS link (ensure it's loaded before rendering)
+  updateHighlightCSS(theme, cdn);
+  
+  // Update vditor instance configuration (if instance is provided)
+  if (vditorInstance) {
+    updateVditorHighlightConfig(vditorInstance, theme);
+  }
+
+  // Render code blocks with copy button
+  Vditor.codeRender(editorElement);
+
+  // Render code syntax highlighting
+  // Try to find preview element first, fallback to editor element
+  const previewElement = editorElement.querySelector('.vditor-preview') as HTMLElement;
+  const targetElement = previewElement || editorElement;
+  
+  Vditor.highlightRender({
+    enable: true,
+    style: styleName,
+    lineNumber: true,
+  }, targetElement, cdn);
+
+  // Render math formulas (use MathJax as configured in vditor options)
+  Vditor.mathRender(editorElement, { 
+    cdn,
+    math: {
+      engine: 'MathJax'
+    }
+  });
+
+  // Render Mermaid diagrams (flowchart, sequence diagram, gantt chart, etc.)
+  Vditor.mermaidRender(editorElement, cdn, theme);
+
+  // Render Graphviz diagrams
+  Vditor.graphvizRender(editorElement, cdn);
+
+  // Render PlantUML diagrams
+  Vditor.plantumlRender(editorElement, cdn);
+
+  // Render ECharts charts
+  Vditor.chartRender(editorElement, cdn, theme);
+
+  // Render flowchart.js
+  Vditor.flowchartRender(editorElement, cdn);
+
+  // Render mindmap
+  Vditor.mindmapRender(editorElement, cdn, theme);
+
+  // Render markmap (markdown mindmap)
+  Vditor.markmapRender(editorElement, cdn);
+
+  // Render SMILES (chemical structures)
+  Vditor.SMILESRender(editorElement, cdn, theme);
+
+  // Render ABC notation (musical staves)
+  Vditor.abcRender(editorElement, cdn);
+
+  // Render media (video, audio, iframe)
+  Vditor.mediaRender(editorElement);
+
+  // Lazy load images
+  Vditor.lazyLoadImageRender(editorElement);
+};
 
 export const useEditorInit = (
   store: EditorStore,
@@ -27,6 +187,7 @@ export const useEditorInit = (
 ) => {
   const { t } = useTranslation()
   const isPc = useMediaQuery('(min-width: 768px)')
+  const { theme: currentTheme } = useTheme()
   const blinko = RootStore.Get(BlinkoStore)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -211,7 +372,14 @@ export const useEditorInit = (
       document.head.appendChild(script);
     }
 
-    const theme = RootStore.Get(UserStore).theme
+    // Use currentTheme from useTheme hook, fallback to UserStore if not ready
+    const theme = currentTheme || RootStore.Get(UserStore).theme || 'light';
+    const cdn = getBlinkoEndpoint('').replace(/\/$/, "");
+    
+    // Pre-load CSS before vditor initialization to ensure it's ready when code blocks render
+    // This is key: load CSS before vditor initialization to ensure styles are available when code highlighting renders
+    updateHighlightCSS(theme, cdn);
+    
     const vditor = new Vditor("vditor" + "-" + mode, {
       width: '100%',
       "toolbar": isPc ? ToolbarPC : ToolbarMobile,
@@ -220,7 +388,8 @@ export const useEditorInit = (
       hint: {
         extend: mode != 'comment' ? Extend : AIExtend
       },
-      cdn: getBlinkoEndpoint('').replace(/\/$/, ""),
+      // Use local server for vditor dependencies (downloaded to server/dist/js/)
+      cdn,
       async ctrlEnter(md) {
         await store.handleSend()
       },
@@ -233,6 +402,15 @@ export const useEditorInit = (
       },
       input: (value) => {
         onChange?.(value)
+        // Re-render all content when content changes (for preview mode)
+        if (store.viewMode !== 'raw') {
+          setTimeout(() => {
+            const inputTheme = currentTheme || RootStore.Get(UserStore).theme || 'light';
+            renderAllVditorContent(null, mode, inputTheme, vditor);
+            // Apply theme class to editor for ABCJS and mindmap dark mode support
+            applyThemeToEditor(mode, inputTheme);
+          }, 100);
+        }
       },
       upload: {
         url: getBlinkoEndpoint('/api/file/upload'),
@@ -275,7 +453,7 @@ export const useEditorInit = (
       preview: {
         hljs: {
           enable: true,
-          style: theme === 'dark' ? 'github-dark' : 'github',
+          style: getHighlightStyle(theme),
           lineNumber: true,
         },
         theme,
@@ -301,6 +479,13 @@ export const useEditorInit = (
           }
         }
 
+        // Render all supported content types in preview
+        // Use currentTheme to ensure correct theme is used
+        const finalTheme = currentTheme || theme;
+        renderAllVditorContent(null, mode, finalTheme, vditor);
+        // Apply theme class to editor for ABCJS and mindmap dark mode support
+        applyThemeToEditor(mode, finalTheme);
+
         isPc ? store.focus() : FocusEditorFixMobile()
       },
     });
@@ -311,6 +496,54 @@ export const useEditorInit = (
     };
 
   }, [mode, blinko.config.value?.toolbarVisibility, store.viewMode, isPc]);
+
+  // Update vditor theme configuration when theme changes
+  useEffect(() => {
+    if (store.vditor && currentTheme) {
+      const cdn = getBlinkoEndpoint('').replace(/\/$/, "");
+      
+      // Update CSS link
+      updateHighlightCSS(currentTheme, cdn);
+      
+      // Update vditor instance configuration
+      updateVditorHighlightConfig(store.vditor, currentTheme);
+      
+      // Re-render code highlighting
+      const editorElement = document.querySelector(`#vditor-${mode}`) as HTMLElement;
+      if (editorElement) {
+        const previewElement = editorElement.querySelector('.vditor-preview') as HTMLElement;
+        const targetElement = previewElement || editorElement;
+        Vditor.highlightRender({
+          enable: true,
+          style: getHighlightStyle(currentTheme),
+          lineNumber: true,
+        }, targetElement, cdn);
+        
+        // Apply theme class for ABCJS and mindmap dark mode support
+        applyThemeToEditor(mode, currentTheme);
+      }
+    }
+  }, [currentTheme, store.vditor, mode]);
+
+  // Update vditor content when content changes (for edit mode when note changes)
+  useEffect(() => {
+    if (store.vditor && content !== undefined) {
+      const currentValue = store.vditor.getValue();
+      if (currentValue !== content) {
+        store.vditor.setValue(content);
+      }
+    }
+  }, [content, store.vditor]);
+
+  // Update vditor font when font style changes
+  useEffect(() => {
+    if (store.vditor && blinko.config.value?.fontStyle) {
+      const currentFontFamily = FontManager.getCurrentFontFamily();
+      if (currentFontFamily) {
+        FontManager.applyFontToVditor(currentFontFamily);
+      }
+    }
+  }, [blinko.config.value?.fontStyle, store.vditor]);
 
   useEffect(() => {
     store.references = originReference
@@ -461,6 +694,13 @@ export const useEditorEvents = (store: EditorStore) => {
           (previewElement as HTMLElement).style.display = 'none';
         } else {
           (previewElement as HTMLElement).style.display = '';
+          // Re-render all content when switching to preview mode
+          setTimeout(() => {
+            const currentTheme = RootStore.Get(UserStore).theme;
+            renderAllVditorContent(null, store.mode, currentTheme, store.vditor || undefined);
+            // Apply theme class for ABCJS and mindmap dark mode support
+            applyThemeToEditor(store.mode, currentTheme);
+          }, 100);
         }
       }
 

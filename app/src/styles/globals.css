@@ -139,7 +139,7 @@ body {
 }
 
 .PhotoView-Portal {
-  z-index: 3000;
+  z-index: 10000;
 }
 
 .swiper-3d .swiper-slide-shadow {

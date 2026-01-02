@@ -66,6 +66,79 @@
   padding-bottom: 5px;
 }
 
+/* Fullscreen editor mode - remove max-height restriction */
+.vditor.fullscreen-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.vditor.fullscreen-editor .vditor-reset {
+  max-height: none !important;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.vditor.fullscreen-editor .vditor-content {
+  flex: 1;
+  min-height: 0;
+}
+
+.vditor.fullscreen-editor .vditor-preview {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Ensure vditor-ir, vditor-sv, vditor-wysiwyg can scroll in fullscreen mode */
+.vditor.fullscreen-editor .vditor-ir,
+.vditor.fullscreen-editor .vditor-sv,
+.vditor.fullscreen-editor .vditor-wysiwyg {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.vditor.fullscreen-editor .vditor-ir .vditor-reset,
+.vditor.fullscreen-editor .vditor-sv .vditor-reset,
+.vditor.fullscreen-editor .vditor-wysiwyg .vditor-reset {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Long text mode - increased spacing */
+.editor-long-text .vditor-reset {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  line-height: 1.8;
+}
+
+.editor-long-text .vditor-reset p {
+  margin-bottom: 16px;
+}
+
+.editor-long-text .attachment-container{
+  padding-left: 15px !important;
+  padding-right: 15px !important;
+}
+
+.editor-long-text .vditor-reset h1,
+.editor-long-text .vditor-reset h2,
+.editor-long-text .vditor-reset h3,
+.editor-long-text .vditor-reset h4,
+.editor-long-text .vditor-reset h5,
+.editor-long-text .vditor-reset h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
 .vditor-reset p {
   margin-bottom: 8px;
 }
@@ -242,12 +315,26 @@
 
 .vditor-outline {
   margin-top: 16px;
-  border-radius: 14px;
   background-color: var(--secondbackground);
+  border-right: 1px solid var(--border);
 }
 
 .vditor-outline__title {
   background-color: transparent;
+  color: var(--foreground);
+}
+
+.vditor-outline li > span > span {
+  color: var(--foreground);
+}
+
+.vditor-outline li > span > span:hover {
+  color: var(--primary);
+  transition: all 0.3s;
+}
+
+.vditor-outline li > span > svg {
+  fill: var(--foreground);
 }
 
 .vditor-reset h1,
@@ -277,4 +364,32 @@
 .vditor-reset blockquote {
   border-left: 0.25em solid #EAB308;
   color: var(--desc);
+}
+
+/* ABCJS (musical notation) dark mode support */
+.vditor-theme-dark .abcjs-container svg path,
+.vditor-theme-dark .abcjs-container svg line,
+.vditor-theme-dark .abcjs-container svg polyline,
+.vditor-theme-dark .abcjs-container svg polygon,
+.vditor-theme-dark .abcjs-container svg circle,
+.vditor-theme-dark .abcjs-container svg ellipse,
+.vditor-theme-dark .abcjs-container svg rect,
+.vditor-theme-dark .abcjs-container svg text {
+  stroke: #e5e7eb;
+  fill: #e5e7eb;
+}
+
+.vditor-theme-dark .abcjs-container svg text {
+  fill: #e5e7eb;
+}
+
+/* Mindmap dark mode support - override hardcoded colors */
+.vditor-theme-dark .vditor-preview .vditor-mindmap,
+.vditor-theme-dark .vditor-ir__preview .vditor-mindmap {
+  background-color: transparent;
+}
+
+.vditor-theme-dark .vditor-preview .vditor-mindmap .echarts,
+.vditor-theme-dark .vditor-ir__preview .vditor-mindmap .echarts {
+  background-color: transparent;
 }

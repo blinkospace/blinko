@@ -1,5 +1,5 @@
 import { Icon } from '@/components/Common/Iconify/icons';
-import { Button, Tooltip } from '@heroui/react';
+import { Tooltip } from '@heroui/react';
 import { Copy } from "../Common/Copy";
 import { LeftCickMenu, ShowEditTimeModel } from "../BlinkoRightClickMenu";
 import { BlinkoStore } from '@/store/blinkoStore';
@@ -55,20 +55,6 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
   return (
     <div className={`flex items-center select-none ${isExpanded ? 'mb-4' : 'mb-1'}`}>
       <div className={`flex items-center w-full gap-1 ${isExpanded ? 'text-base' : 'text-xs'}`}>
-        {isExpanded && (
-          <Button
-            isIconOnly
-            variant='flat'
-            size='sm'
-            className='mr-2'
-            onPress={(e) => {
-              window.history.back();
-            }}
-          >
-            <Icon icon="tabler:arrow-left" width={iconSize} height={iconSize} />
-          </Button>
-        )}
-
         {blinkoItem.isShare && !isShareMode && (
           <Tooltip content={t('shared')} delay={1000}>
             <div className="flex items-center gap-2">

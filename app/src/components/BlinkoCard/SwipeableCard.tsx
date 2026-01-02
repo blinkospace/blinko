@@ -12,6 +12,7 @@ interface SwipeableCardProps {
 
 const SWIPE_THRESHOLD = 80;
 const ACTION_WIDTH = 160;
+const SWIPE_DIRECTION_THRESHOLD = 1.5; // Horizontal movement must be 1.5x vertical movement
 
 export const SwipeableCard = ({ 
   children, 
@@ -25,20 +26,47 @@ export const SwipeableCard = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const startXRef = useRef(0);
+  const startYRef = useRef(0);
   const currentXRef = useRef(0);
+  const isHorizontalSwipeRef = useRef<boolean | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled) return;
     startXRef.current = e.touches[0].clientX;
+    startYRef.current = e.touches[0].clientY;
     currentXRef.current = translateX;
+    isHorizontalSwipeRef.current = null;
     setIsDragging(true);
   }, [translateX, disabled]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDragging || disabled) return;
     
-    const diff = startXRef.current - e.touches[0].clientX;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const deltaX = Math.abs(startXRef.current - currentX);
+    const deltaY = Math.abs(startYRef.current - currentY);
+    
+    // Determine swipe direction if not already determined
+    if (isHorizontalSwipeRef.current === null) {
+      // Only allow horizontal swipe if horizontal movement is significantly greater than vertical
+      if (deltaX > 10 && deltaX > deltaY * SWIPE_DIRECTION_THRESHOLD) {
+        isHorizontalSwipeRef.current = true;
+      } else if (deltaY > 10 && deltaY > deltaX * SWIPE_DIRECTION_THRESHOLD) {
+        isHorizontalSwipeRef.current = false;
+        // If it's a vertical swipe, stop dragging
+        setIsDragging(false);
+        return;
+      }
+    }
+    
+    // Only process horizontal movement if it's confirmed as horizontal swipe
+    if (isHorizontalSwipeRef.current === false) {
+      return;
+    }
+    
+    const diff = startXRef.current - currentX;
     let newTranslateX = currentXRef.current - diff;
     
     // Limit the swipe range
@@ -51,6 +79,14 @@ export const SwipeableCard = ({
   const handleTouchEnd = useCallback(() => {
     if (!isDragging || disabled) return;
     setIsDragging(false);
+    
+    // Only snap if it was a horizontal swipe
+    if (isHorizontalSwipeRef.current === false) {
+      // Reset position if it was a vertical swipe
+      setTranslateX(0);
+      setIsOpen(false);
+      return;
+    }
     
     // Snap to open or closed position
     if (translateX < -SWIPE_THRESHOLD) {

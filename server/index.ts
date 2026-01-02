@@ -151,31 +151,51 @@ async function setupApiRoutes(app: express.Application) {
   app.use('/api/file/delete', deleteRouter);
   app.use('/api/s3file', s3fileRouter);
   
-  // Special handling for lute.min.js with gzip compression
-  app.use('/dist/js/lute/lute.min.js', (req, res) => {
-    const filePath = path.resolve(__dirname, './lute.min.js');
-    
-    // Check if client accepts gzip encoding
-    const acceptEncoding = req.headers['accept-encoding'] || '';
-    const supportsGzip = acceptEncoding.includes('gzip');
-    
-    res.set({
-      'Cache-Control': 'public, max-age=604800, immutable',
-      'Expires': new Date(Date.now() + 604800000).toUTCString(),
-      'Content-Type': 'application/javascript'
+  // Helper function to serve vditor dependencies with gzip compression
+  const serveVditorFile = (routePath: string, filePath: string) => {
+    app.use(routePath, (req, res) => {
+      const fullPath = path.resolve(__dirname, filePath);
+      
+      // Check if file exists
+      if (!fs.existsSync(fullPath)) {
+        res.status(404).send('File not found');
+        return;
+      }
+      
+      // Check if client accepts gzip encoding
+      const acceptEncoding = req.headers['accept-encoding'] || '';
+      const supportsGzip = acceptEncoding.includes('gzip');
+      
+      // Determine content type based on file extension
+      const contentType = filePath.endsWith('.css') 
+        ? 'text/css' 
+        : filePath.endsWith('.js') 
+        ? 'application/javascript'
+        : 'application/octet-stream';
+      
+      res.set({
+        'Cache-Control': 'public, max-age=604800, immutable',
+        'Expires': new Date(Date.now() + 604800000).toUTCString(),
+        'Content-Type': contentType
+      });
+      
+      // CSS files should not be gzipped (they're already minified)
+      // Only gzip JS files
+      if (supportsGzip && !filePath.endsWith('.css')) {
+        // Send gzip compressed version for JS files
+        res.set('Content-Encoding', 'gzip');
+        const readStream = fs.createReadStream(fullPath);
+        const gzipStream = zlib.createGzip({ level: 6 });
+        readStream.pipe(gzipStream).pipe(res);
+      } else {
+        // Send uncompressed version (for CSS or when gzip not supported)
+        res.sendFile(fullPath);
+      }
     });
-    
-    if (supportsGzip) {
-      // Send gzip compressed version
-      res.set('Content-Encoding', 'gzip');
-      const readStream = fs.createReadStream(filePath);
-      const gzipStream = zlib.createGzip({ level: 6 });
-      readStream.pipe(gzipStream).pipe(res);
-    } else {
-      // Send uncompressed version
-      res.sendFile(filePath);
-    }
-  });
+  };
+
+  // Special handling for lute.min.js with gzip compression
+  serveVditorFile('/dist/js/lute/lute.min.js', './lute.min.js');
   
   app.use('/dist/js/icons/ant.js', (req, res) => {
     res.set({
@@ -184,6 +204,24 @@ async function setupApiRoutes(app: express.Application) {
     });
     res.sendFile(path.resolve(__dirname, './lute.min.js'));
   });
+
+  // Serve vditor dependencies from local files
+  serveVditorFile('/dist/js/mathjax/tex-svg-full.js', './vditor/js/mathjax/tex-svg-full.js');
+  serveVditorFile('/dist/js/graphviz/full.render.js', './vditor/js/graphviz/full.render.js');
+  serveVditorFile('/dist/js/graphviz/viz.js', './vditor/js/graphviz/viz.js');
+  serveVditorFile('/dist/js/mermaid/mermaid.min.js', './vditor/js/mermaid/mermaid.min.js');
+  serveVditorFile('/dist/js/echarts/echarts.min.js', './vditor/js/echarts/echarts.min.js');
+  serveVditorFile('/dist/js/flowchart.js/flowchart.min.js', './vditor/js/flowchart.js/flowchart.min.js');
+  serveVditorFile('/dist/js/abcjs/abcjs_basic.min.js', './vditor/js/abcjs/abcjs_basic.min.js');
+  serveVditorFile('/dist/js/highlight.js/highlight.min.js', './vditor/js/highlight.js/highlight.min.js');
+  serveVditorFile('/dist/js/highlight.js/third-languages.js', './vditor/js/highlight.js/third-languages.js');
+  serveVditorFile('/dist/js/highlight.js/styles/github.min.css', './vditor/js/highlight.js/styles/github.min.css');
+  serveVditorFile('/dist/js/highlight.js/styles/github-dark.min.css', './vditor/js/highlight.js/styles/github-dark.min.css');
+  serveVditorFile('/dist/js/plantuml/plantuml-encoder.min.js', './vditor/js/plantuml/plantuml-encoder.min.js');
+  serveVditorFile('/dist/js/markmap/markmap.min.js', './vditor/js/markmap/markmap.min.js');
+  serveVditorFile('/dist/js/smiles-drawer/smiles-drawer.min.js', './vditor/js/smiles-drawer/smiles-drawer.min.js');
+  serveVditorFile('/dist/js/katex/katex.min.js', './vditor/js/katex/katex.min.js');
+  serveVditorFile('/dist/js/katex/mhchem.min.js', './vditor/js/katex/mhchem.min.js');
   app.use('/plugins', pluginRouter);
 
   // Other API endpoints

@@ -17,6 +17,7 @@ type IProps = {
 
 export type ScrollAreaHandles = {
   scrollToBottom: () => void;
+  scrollTo: (position: number) => void;
 }
 
 export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
@@ -50,6 +51,11 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   useImperativeHandle(ref, () => ({
     scrollToBottom: () => {
       scrollRef.current!.scrollTop = scrollRef.current!.scrollHeight;
+    },
+    scrollTo: (position: number) => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = position;
+      }
     },
   }));
 

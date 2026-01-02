@@ -4,6 +4,7 @@ import { RootStore } from '@/store';
 import React, { ReactElement, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { observer, useLocalObservable } from 'mobx-react-lite';
+import { createPortal } from 'react-dom';
 import { FileType, OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useTranslation } from 'react-i18next';
@@ -45,10 +46,11 @@ type IProps = {
   originReference?: number[],
   hiddenToolbar?: boolean,
   withoutOutline?: boolean,
-  initialData?: { file?: File, text?: string }
+  initialData?: { file?: File, text?: string },
+  showTopToolbar?: boolean
 }
 
-const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData }: IProps) => {
+const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -68,6 +70,85 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
       eventBus.off('plugin:closeToolBarContent', handleClosePopover);
     };
   }, [openPopover]);
+
+  // Render toolbar to top when showTopToolbar is true
+  const renderToolbar = () => {
+    if (!hiddenToolbar) {
+      return (
+        <>
+          <NoteTypeButton
+            noteType={store.noteType}
+            setNoteType={(noteType) => {
+              store.noteType = noteType
+            }}
+          />
+          <HashtagButton store={store} content={content} />
+          <ReferenceButton store={store} />
+          <ResourceReferenceButton store={store} />
+          {blinko.config.value?.mainModelId && (
+            <AIWriteButton />
+          )}
+          <UploadButtons
+            getInputProps={getInputProps}
+            open={open}
+            onFileUpload={store.uploadFiles}
+          />
+          {pluginApi.customToolbarIcons
+            .map((item) => (
+              item.content ? (
+                <Popover
+                  key={item.name}
+                  placement={item.placement}
+                  isOpen={openPopover === item.name}
+                  onOpenChange={(open) => {
+                    setOpenPopover(open ? item.name : null);
+                  }}
+                >
+                  <PopoverTrigger>
+                    <div className="hover:bg-default-100 rounded-md">
+                      <IconButton icon={item.icon} tooltip={item.tooltip} onClick={item.onClick} />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <PluginRender content={item.content} data={mode} />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <div key={item.name} className="hover:bg-default-100 rounded-md">
+                  <IconButton icon={item.icon} tooltip={item.tooltip} onClick={item.onClick} />
+                </div>
+              )
+            ))}
+        </>
+      );
+    }
+    return null;
+  };
+
+  const renderRightToolbar = () => (
+    <div className='flex items-center gap-1 ml-auto'>
+      {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
+      {isPc && !showTopToolbar && <FullScreenButton isFullscreen={store.isFullscreen} onClick={handleFullScreenToggle} />}
+      <ViewModeButton viewMode={store.viewMode} />
+      <SendButton store={store} isSendLoading={isSendLoading} />
+    </div>
+  );
+
+  const [topToolbarElement, setTopToolbarElement] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (showTopToolbar) {
+      // Try to find toolbar container with note-specific id first, then fallback to default
+      const noteSpecificId = `editor-top-toolbar-${blinko.curSelectedNote?.id}`;
+      let element = document.getElementById(noteSpecificId);
+      if (!element) {
+        element = document.getElementById('editor-top-toolbar');
+      }
+      setTopToolbarElement(element);
+    } else {
+      setTopToolbarElement(null);
+    }
+  }, [showTopToolbar, blinko.curSelectedNote?.id]);
 
   let initalContent = content
   if (initialData && mode === 'create' && initialData.text) {
@@ -123,10 +204,20 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   };
 
   return (
-    <div {...getRootProps()} className={isDragAccept ? 'border-2 border-green-500 border-dashed' : ''}>
+    <>
+      {/* Top toolbar portal */}
+      {showTopToolbar && topToolbarElement && createPortal(
+        <div className='flex w-full items-center gap-1'>
+          {renderToolbar()}
+          {renderRightToolbar()}
+        </div>,
+        topToolbarElement
+      )}
+      
+      <div {...getRootProps()} className={`${isDragAccept ? 'border-2 border-green-500 border-dashed' : ''} ${showTopToolbar ? 'h-full flex flex-col' : ''}`}>
       <Card
         shadow='none'
-        className={`p-2 relative ${withoutOutline ? '' : 'border-2 border-border'} !transition-all overflow-visible 
+        className={`${showTopToolbar ? 'h-full flex flex-col flex-1 min-h-0' : 'p-2'} relative ${withoutOutline ? '' : 'border-2 border-border'} !transition-all ${showTopToolbar ? 'overflow-hidden' : 'overflow-visible'} 
         ${store.isFullscreen ? 'fixed inset-0 z-[9999] m-0 rounded-none border-none bg-background' : ''}`}
         ref={el => {
           if (el) {
@@ -136,14 +227,14 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
         }}>
 
         <div ref={cardRef}
-          className="overflow-visible relative"
+          className={`overflow-visible relative ${showTopToolbar ? 'flex-1 flex flex-col min-h-0' : ''}`}
           onKeyDown={e => {
             onHeightChange?.()
             if (isPc) return
             store.adjustMobileEditorHeight()
           }}>
 
-          <div id={`vditor-${mode}`} className="vditor" />
+            <div id={`vditor-${mode}`} className={`vditor ${showTopToolbar ? 'flex-1 overflow-hidden flex flex-col fullscreen-editor' : ''}`} />
           {store.files.length > 0 && (
             <div className='w-full my-2 attachment-container'>
               <AttachmentsRender files={store.files} onReorder={handleFileReorder} />
@@ -178,64 +269,16 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
               </div>
             ))}
 
-          <div className='flex w-full items-center gap-1 mt-auto'>
-            {!hiddenToolbar && (
-              <>
-                <NoteTypeButton
-                  noteType={store.noteType}
-                  setNoteType={(noteType) => {
-                    store.noteType = noteType
-                  }}
-                />
-                <HashtagButton store={store} content={content} />
-                <ReferenceButton store={store} />
-                <ResourceReferenceButton store={store} />
-                {blinko.config.value?.mainModelId && (
-                  <AIWriteButton />
-                )}
-                <UploadButtons
-                  getInputProps={getInputProps}
-                  open={open}
-                  onFileUpload={store.uploadFiles}
-                />
-                {pluginApi.customToolbarIcons
-                  .map((item) => (
-                    item.content ? (
-                      <Popover
-                        key={item.name}
-                        placement={item.placement}
-                        isOpen={openPopover === item.name}
-                        onOpenChange={(open) => {
-                          setOpenPopover(open ? item.name : null);
-                        }}
-                      >
-                        <PopoverTrigger>
-                          <div className="hover:bg-default-100 rounded-md">
-                            <IconButton icon={item.icon} tooltip={item.tooltip} onClick={item.onClick} />
-                          </div>
-                        </PopoverTrigger>
-                        <PopoverContent>
-                          <PluginRender content={item.content} data={mode} />
-                        </PopoverContent>
-                      </Popover>
-                    ) : (
-                      <div key={item.name} className="hover:bg-default-100 rounded-md">
-                        <IconButton icon={item.icon} tooltip={item.tooltip} onClick={item.onClick} />
-                      </div>
-                    )
-                  ))}
-              </>
-            )}
-            <div className='flex items-center gap-1 ml-auto'>
-              {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
-              {isPc && <FullScreenButton isFullscreen={store.isFullscreen} onClick={handleFullScreenToggle} />}
-              <ViewModeButton viewMode={store.viewMode} />
-              <SendButton store={store} isSendLoading={isSendLoading} />
+          {!showTopToolbar && (
+            <div className='flex w-full items-center gap-1 mt-auto'>
+              {renderToolbar()}
+              {renderRightToolbar()}
             </div>
-          </div>
+          )}
         </div>
       </Card>
     </div>
+    </>
   );
 });
 
