@@ -7,14 +7,12 @@ import { Note } from '@shared/lib/types';
 import { ShowEditBlinkoModel } from "../BlinkoRightClickMenu";
 import { useMediaQuery } from "usehooks-ts";
 import { _ } from '@/lib/lodash';
-import { useState, useEffect } from "react";
-import { ExpandableContainer } from "./expandContainer";
+import { useState } from "react";
 import { CardBlogBox } from "./cardBlogBox";
 import { NoteContent } from "./noteContent";
 import { helper } from "@/lib/helper";
 import { CardHeader } from "./cardHeader";
 import { CardFooter } from "./cardFooter";
-import { useHistoryBack } from "@/lib/hooks";
 import { FocusEditorFixMobile } from "../Common/Editor/editorUtils";
 import { AvatarAccount, SimpleCommentList } from "./commentButton";
 import { PluginApiStore } from "@/store/plugin/pluginApiStore";
@@ -22,12 +20,14 @@ import { PluginRender } from "@/store/plugin/pluginRender";
 import { useLocation } from "react-router-dom";
 import { SwipeableCard } from "./SwipeableCard";
 import { api } from "@/lib/trpc";
+import { FullscreenEditor } from "./FullscreenEditor";
 
 
 export type BlinkoItem = Note & {
   isBlog?: boolean;
   title?: string;
   originURL?: string;
+  isExpand?: boolean;
 }
 
 interface BlinkoCardProps {
@@ -46,20 +46,11 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const pluginApi = RootStore.Get(PluginApiStore);
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const { pathname } = useLocation();
-  
-  useHistoryBack({
-    state: isExpanded,
-    onStateChange: () => setIsExpanded(false),
-    historyState: 'expanded'
-  });
+  const [isFullscreenEditorOpen, setIsFullscreenEditorOpen] = useState(false);
 
-  useEffect(() => {
-    if (defaultExpanded) {
-      setIsExpanded(true);
-    }
-  }, [defaultExpanded]);
+  // Set isExpand flag to prevent drag when fullscreen editor is open for this note
+  blinkoItem.isExpand = blinko.fullscreenEditorNoteId === blinkoItem.id;
 
   if (forceBlog) {
     blinkoItem.isBlog = true
@@ -71,22 +62,14 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
     if (helper.regex.isContainHashTag.test(line)) return false;
     return true;
   }) || '';
-  
-  // Set expand state on the item for drag/drop to access
-  blinkoItem.isExpand = isExpanded;
 
-  const handleExpand = () => {
-    if (blinkoItem.isBlog) {
-      setIsExpanded(true);
-    }
-  };
 
   const handleClick = () => {
-    if (isExpanded) return;
     if (blinko.isMultiSelectMode) {
       blinko.onMultiSelectNote(blinkoItem.id!);
-    } else {
-      handleExpand();
+    } else if (blinkoItem.isBlog && !isShareMode) {
+      setIsFullscreenEditorOpen(true);
+      blinko.fullscreenEditorNoteId = blinkoItem.id!;
     }
   };
 
@@ -116,7 +99,14 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   };
 
   return (
-    <ExpandableContainer withoutBoxShadow={withoutBoxShadow} isExpanded={isExpanded} key={blinkoItem.id} onClose={() => setIsExpanded(false)}>
+    <>
+      {/* Fullscreen Editor Overlay */}
+      <FullscreenEditor
+        blinkoItem={blinkoItem}
+        isOpen={isFullscreenEditorOpen}
+        onClose={() => setIsFullscreenEditorOpen(false)}
+      />
+
       {(() => {
         const cardContent = (
           <div
@@ -131,42 +121,20 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               shadow='none'
               className={`
                 flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} !transition-all group/card
-                ${isExpanded ? 'h-screen overflow-y-scroll rounded-none cursor-default' : ''}
-                ${isPc && !isExpanded && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''}
-                ${blinkoItem.isBlog && !isExpanded ? 'cursor-pointer' : ''}
+                ${isPc && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''}
+                ${blinkoItem.isBlog ? 'cursor-pointer' : ''}
                 ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
                 ${className}
               `}
             >
-              {/* Clickable side areas when expanded */}
-              {isExpanded && (
-                <>
-                  <div 
-                    className="fixed left-0 top-0 bottom-0 w-[calc((100vw-800px)/2)] cursor-pointer z-[100]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsExpanded(false);
-                    }}
-                  />
-                  <div 
-                    className="fixed right-0 top-0 bottom-0 w-[calc((100vw-800px)/2)] cursor-pointer z-[100]"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsExpanded(false);
-                    }}
-                  />
-                </>
-              )}
-              <div 
-                className={isExpanded ? 'max-w-[800px] mx-auto relative md:p-4 w-full' : 'w-full'}
-              >
-                <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={isExpanded} account={account} />
+              <div className="w-full">
+                <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={defaultExpanded} account={account} />
 
-                {blinkoItem.isBlog && !isExpanded && (
-                  <CardBlogBox blinkoItem={blinkoItem} />
+                {blinkoItem.isBlog && (
+                  <CardBlogBox blinkoItem={blinkoItem} isExpanded={defaultExpanded} />
                 )}
 
-                {(!blinkoItem.isBlog || isExpanded) && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={isExpanded} />}
+                {!blinkoItem.isBlog && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={defaultExpanded} isShareMode={isShareMode} />}
 
                 {/* Custom Footer Slots */}
                 {pluginApi.customCardFooterSlots
@@ -196,23 +164,6 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
                 {!blinko.config.value?.isHideCommentInCard && blinkoItem.comments && blinkoItem.comments.length > 0 && (
                   <SimpleCommentList blinkoItem={blinkoItem} />
                 )}
-
-                {isExpanded && (
-                  <>
-                    <div className="halation absolute bottom-10 left-0 md:left-[50%] h-[400px] w-[400px] overflow-hidden blur-3xl z-[0] pointer-events-none">
-                      <div
-                        className="w-full h-[100%] bg-[#c45cff] opacity-5"
-                        style={{ clipPath: "circle(50% at 50% 50%)" }}
-                      />
-                    </div>
-                    <div className="halation absolute top-10 md:right-[50%] h-[400px] w-[400px] overflow-hidden blur-3xl z-[0] pointer-events-none">
-                      <div
-                        className="w-full h-[100%] bg-[#c45cff] opacity-5"
-                        style={{ clipPath: "circle(50% at 50% 50%)" }}
-                      />
-                    </div>
-                  </>
-                )}
               </div>
             </Card>
           </div>
@@ -224,8 +175,8 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
           </ContextMenuTrigger>
         );
 
-        // On mobile, wrap with SwipeableCard for swipe actions (only when not expanded)
-        if (!isPc && !isExpanded && !isShareMode) {
+        // On mobile, wrap with SwipeableCard for swipe actions
+        if (!isPc && !isShareMode) {
           return (
             <SwipeableCard
               onPin={handleSwipePin}
@@ -239,6 +190,6 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
 
         return wrappedContent;
       })()}
-    </ExpandableContainer>
+    </>
   );
 });
