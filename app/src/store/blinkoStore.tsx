@@ -84,6 +84,7 @@ export class BlinkoStore implements Store {
   curSelectedNote: Note | null = null;
   curMultiSelectIds: number[] = [];
   isMultiSelectMode: boolean = false;
+  fullscreenEditorNoteId: number | null = null;
   forceQuery: number = 0;
   allTagRouter = {
     title: 'total',
