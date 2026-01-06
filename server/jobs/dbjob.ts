@@ -456,7 +456,9 @@ export class DBJob extends BaseScheduleJob {
           if (note.attachments?.length) {
             await Promise.all(note.attachments.map(async (attachment) => {
               try {
-                const response = await fetch(`${baseURL}${attachment.path}`);
+                // Fix: Add authentication token to allow downloading private note attachments
+                const tokenParam = ctx.token ? `?token=${ctx.token}` : '';
+                const response = await fetch(`${baseURL}${attachment.path}${tokenParam}`);
                 const buffer = await response.arrayBuffer();
                 const attachmentPath = path.join(attachmentsDir, attachment.name);
                 //@ts-ignore

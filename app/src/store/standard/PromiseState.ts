@@ -239,7 +239,14 @@ export class PromisePageState<T extends (...args: any) => Promise<any>, U = Retu
           this.setValue(res);
         } else {
           //@ts-ignore
-          this.setValue(this.value!.concat(res));
+          // Fix: Deduplicate items when concatenating pages to avoid duplicate display
+          const existingMap = new Map(this.value!.map(item => [item.id, item]));
+          res.forEach(item => {
+            if (!existingMap.has(item.id)) {
+              existingMap.set(item.id, item);
+            }
+          });
+          this.setValue(Array.from(existingMap.values()));
         }
       } else {
         if (this.page == 1) {

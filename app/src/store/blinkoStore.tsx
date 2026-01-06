@@ -543,8 +543,12 @@ export class BlinkoStore implements Store {
 
 
   async refreshData() {
+    // Fix: Clear multi-select state when refreshing data to avoid stale selections
+    this.curMultiSelectIds = [];
+    this.isMultiSelectMode = false;
+
     this.tagList.call()
-    
+
     const currentPath = new URLSearchParams(window.location.search).get('path');
     
     if (currentPath === 'notes') {
@@ -613,6 +617,10 @@ export class BlinkoStore implements Store {
       this.noteListFilterConfig.endDate = null
       this.noteListFilterConfig.isShare = null
       this.noteListFilterConfig.hasTodo = false
+
+      // Fix: Clear multi-select state when switching paths to avoid stale selections
+      this.curMultiSelectIds = [];
+      this.isMultiSelectMode = false;
 
       if (path == 'notes') {
         this.noteListFilterConfig.type = NoteType.NOTE
