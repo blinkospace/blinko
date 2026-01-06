@@ -6,13 +6,11 @@ ARG USE_MIRROR=false
 
 WORKDIR /app
 
+# Install CA certificates for SSL connections
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
 # Set Sharp environment variables to speed up ARM installation
 ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
-ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
-ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
-
-# Set Prisma environment variables to optimize installation
-ENV PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma"
 ENV PRISMA_SKIP_POSTINSTALL_GENERATE=true
 
 # Copy Project Files
@@ -21,7 +19,10 @@ COPY . .
 # Configure Mirror Based on USE_MIRROR Parameter
 RUN if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using Taobao Mirror to Install Dependencies" && \
-        echo '{ "install": { "registry": "https://registry.npmmirror.com" } }' > .bunfig.json; \
+        echo '{ "install": { "registry": "https://registry.npmmirror.com" } }' > .bunfig.json && \
+        export PRISMA_ENGINES_MIRROR="https://registry.npmmirror.com/-/binary/prisma" && \
+        export npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp" && \
+        export npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"; \
     else \
         echo "Using Default Mirror to Install Dependencies"; \
     fi
@@ -37,7 +38,8 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
 
 # Install Dependencies and Build App
 RUN bun install --unsafe-perm
-RUN bunx prisma generate
+# Workaround for SSL certificate issues during build
+RUN NODE_TLS_REJECT_UNAUTHORIZED=0 bunx prisma generate
 RUN bun run build:web
 RUN bun run build:seed
 
@@ -73,13 +75,19 @@ ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV npm_config_sharp_binary_host="https://npmmirror.com/mirrors/sharp"
 ENV npm_config_sharp_libvips_binary_host="https://npmmirror.com/mirrors/sharp-libvips"
 
-RUN apk add --no-cache openssl vips-dev python3 py3-setuptools make g++ gcc libc-dev linux-headers && \
+RUN apk add --no-cache openssl ca-certificates vips-dev python3 py3-setuptools make g++ gcc libc-dev linux-headers && \
+    update-ca-certificates && \
+    npm config set strict-ssl false && \
     if [ "$USE_MIRROR" = "true" ]; then \
         echo "Using Taobao Mirror to Install Dependencies" && \
         npm config set registry https://registry.npmmirror.com; \
     else \
         echo "Using Default Mirror to Install Dependencies"; \
     fi
+
+# Set SSL-related env vars for npm and node-gyp
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
+ENV npm_config_strict_ssl=false
 
 # Copy Build Artifacts and Necessary Files
 COPY --from=builder /app/dist ./server
@@ -100,16 +108,14 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
         npm install --force @img/sharp-linux-arm64 --no-save; \
     fi
 
-# Install dependencies with --ignore-scripts to skip native compilation
+# Install dependencies - use --ignore-scripts for llamaindex to skip tree-sitter native build
 RUN echo "Installing additional dependencies..." && \
     npm install @node-rs/crc32 lightningcss sharp@0.34.1 prisma@5.21.1 && \
     npm install -g prisma@5.21.1 && \
     npm install sqlite3@5.1.7 && \
-    npm install llamaindex @langchain/community@0.3.40 && \
+    npm install llamaindex @langchain/community@0.3.40 --ignore-scripts && \
     npm install @libsql/client @libsql/core && \
     npx prisma generate && \
-    # find / -type d -name "onnxruntime-*" -exec rm -rf {} + 2>/dev/null || true && \
-    # npm cache clean --force && \
     rm -rf /tmp/* && \
     apk del python3 py3-setuptools make g++ gcc libc-dev linux-headers && \
     rm -rf /var/cache/apk/* /root/.npm /root/.cache

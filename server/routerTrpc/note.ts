@@ -1195,7 +1195,13 @@ export const noteRouter = router({
           }
 
           // Process with AI if post-processing is enabled
+          console.log('[DEBUG] AI Post-Processing Check:', {
+            isEnabled: config?.isUseAiPostProcessing,
+            mode: config?.aiPostProcessingMode,
+            noteId: note.id
+          });
           if (config?.isUseAiPostProcessing) {
+            console.log('[DEBUG] Starting AI post-processing for note:', note.id);
             try {
               // Run post-processing asynchronously to not block the response
               AiService.postProcessNote({ noteId: note.id, ctx }).catch((err) => {
@@ -1204,6 +1210,8 @@ export const noteRouter = router({
             } catch (error) {
               console.error('Failed to start post-processing:', error);
             }
+          } else {
+            console.log('[DEBUG] AI post-processing is disabled');
           }
 
           SendWebhook({ ...note, attachments }, 'create', ctx);

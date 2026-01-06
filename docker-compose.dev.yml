@@ -1,0 +1,32 @@
+# docker-compose.dev.yml - Build from local source, use existing postgres
+
+services:
+  blinko-website:
+    container_name: blinko-dev
+    build:
+      context: .
+      dockerfile: ./dockerfile
+    environment:
+      NODE_ENV: production
+      NEXTAUTH_URL: http://localhost:1111
+      NEXT_PUBLIC_BASE_URL: http://localhost:1111
+      NEXTAUTH_SECRET: my_ultra_secure_nextauth_secret
+      # Connect to existing blinko-postgres container
+      DATABASE_URL: postgresql://postgres:mysecretpassword@blinko-postgres:5432/postgres
+    extra_hosts:
+      # Required for Ollama access
+      - "host.docker.internal:host-gateway"
+    restart: always
+    ports:
+      - 1111:1111
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:1111/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  default:
+    name: blinko-network
+    external: true
