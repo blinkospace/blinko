@@ -531,7 +531,8 @@ export class BlinkoStore implements Store {
   onMultiSelectRest() {
     this.isMultiSelectMode = false
     this.curMultiSelectIds = []
-    this.updateTicker++
+    // Fix: Remove updateTicker++ to avoid unnecessary list refresh and duplicate display
+    // this.updateTicker++
   }
 
   firstLoad() {
