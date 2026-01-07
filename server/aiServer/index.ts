@@ -441,6 +441,17 @@ export class AiService {
           });
 
           console.log('[DEBUG] Note updated successfully with corrected text');
+
+          // Broadcast update via SSE
+          try {
+            const { SSEService } = await import('../lib/sseService');
+            SSEService.broadcastNoteUpdate(note.accountId ?? 0, noteId);
+            console.log('[DEBUG] SSE broadcast sent for note:', noteId);
+          } catch (error) {
+            console.error('[DEBUG] Failed to broadcast SSE update:', error);
+            // Don't fail the whole operation if SSE broadcast fails
+          }
+
           return { success: true, message: 'Custom processing completed' };
         } catch (error) {
           console.error('[DEBUG] Error in custom processing:', error);
