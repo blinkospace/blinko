@@ -33,6 +33,7 @@ import pluginRouter from './routerExpress/file/plugin';
 import rssRouter from './routerExpress/rss';
 import openaiRouter from './routerExpress/openai';
 import mcpRouter from './routerExpress/mcp';
+import sseRouter from './routerExpress/sse';
 
 // Vite integration
 import ViteExpress from 'vite-express';
@@ -226,6 +227,7 @@ async function setupApiRoutes(app: express.Application) {
 
   // Other API endpoints
   app.use('/api/rss', rssRouter);
+  app.use('/api', sseRouter);
   app.use('/v1', openaiRouter);
 
   // OpenAPI documentation endpoints

@@ -844,5 +844,8 @@
   "years-ago": "",
   "yesterday": "昨天",
   "your-azure-openai-instance-name": "您的 Azure OpenAI 实例名称",
-  "your-changes-have-been-saved": "您的更改已保存！"
+  "your-changes-have-been-saved": "您的更改已保存！",
+  "connection-restored": "連接已恢復",
+  "connection-lost": "連接已斷開 - 即時更新不可用",
+  "note-auto-updated": "筆記已自動更新"
 }

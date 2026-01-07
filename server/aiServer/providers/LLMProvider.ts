@@ -7,6 +7,7 @@ import { createDeepSeek } from '@ai-sdk/deepseek';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { createXai } from '@ai-sdk/xai';
 import { createAzure } from '@ai-sdk/azure';
+import { createGroq } from '@ai-sdk/groq';
 import { BaseProvider } from './BaseProvider';
 
 interface LLMConfig {
@@ -73,6 +74,13 @@ export class LLMProvider extends BaseProvider {
           apiKey: config.apiKey,
           baseURL: config.baseURL || undefined,
           apiVersion: config.apiVersion || undefined,
+          fetch: this.proxiedFetch
+        }).languageModel(config.modelKey);
+
+      case 'groq':
+        return createGroq({
+          apiKey: config.apiKey,
+          baseURL: config.baseURL || undefined,
           fetch: this.proxiedFetch
         }).languageModel(config.modelKey);
 

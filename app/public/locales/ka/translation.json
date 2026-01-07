@@ -837,5 +837,8 @@
   "wysiwyg": "WYSIWYG რედაქტორი",
   "yesterday": "გუშინ",
   "your-azure-openai-instance-name": "თქვენი Azure OpenAI ეგზემპლარის სახელი",
-  "your-changes-have-been-saved": "თქვენი ცვლილებები შენახულია!"
+  "your-changes-have-been-saved": "თქვენი ცვლილებები შენახულია!",
+  "connection-restored": "კავშირი აღდგენილია",
+  "connection-lost": "კავშირი დაიკარგა - რეალურ დროში განახლებები მიუწვდომელია",
+  "note-auto-updated": "ჩანაწერი ავტომატურად განახლდა"
 }

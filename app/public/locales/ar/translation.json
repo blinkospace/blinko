@@ -844,5 +844,8 @@
   "years-ago": "منذ {{count}} سنة",
   "yesterday": "البارحة",
   "your-azure-openai-instance-name": "اسم مثيل Azure OpenAI الخاص بك",
-  "your-changes-have-been-saved": "تم حفظ التغييرات!"
+  "your-changes-have-been-saved": "تم حفظ التغييرات!",
+  "connection-restored": "تم استعادة الاتصال",
+  "connection-lost": "فقد الاتصال - التحديثات الفورية غير متاحة",
+  "note-auto-updated": "تم تحديث الملاحظة تلقائيًا"
 }

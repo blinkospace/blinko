@@ -33,3 +33,4 @@ dev-dist
 .claude/settings.local.json
 target
 server/public
+.worktrees

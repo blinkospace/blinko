@@ -396,6 +396,7 @@ export class AiService {
 
       // Handle custom processing mode
       if (processingMode === 'custom') {
+        console.log('[DEBUG] Custom mode processing started for note:', noteId);
         // Get all tags for tag replacement
         const tags = await getAllPathTags();
         const tagsList = tags.join(', ');
@@ -403,32 +404,63 @@ export class AiService {
         // Get custom prompt and replace variables
         let customPrompt = config.aiCustomPrompt || 'Analyze the following note content and provide feedback.';
         customPrompt = customPrompt.replace('{tags}', tagsList).replace('{note}', note.content);
-        const withOnlineSearch = !!config.tavilyApiKey;
-        // Process with AI using BaseChatAgent with tools
+        console.log('[DEBUG] Custom prompt:', customPrompt);
 
-        const agent = await AiModelFactory.BaseChatAgent({ withTools: true, withOnlineSearch: withOnlineSearch });
-        const result = await agent.generate([
-          {
-            role: 'system',
-            content: `You are an AI assistant that helps to process notes. You MUST use the available tools to complete your task.
-This is a one-time conversation, so you MUST take action immediately using the tools provided.
-You have access to tools that can help you modify notes, add comments, or create new notes.
-DO NOT just respond with suggestions or analysis - you MUST use the appropriate tool to implement your changes.
-If you need to add a comment, use the createCommentTool.
-If you need to update the note, use the updateBlinkoTool.
-If you need to create a new note, use the upsertBlinkoTool.
-Remember: ALWAYS use tools to implement your suggestions rather than just describing what should be done.`
-          },
-          {
-            role: 'user',
-            content: `Current user name: ${ctx.name}\n${customPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}
-            Current Note Type: ${noteType}`
+        // Process with AI WITHOUT tools - just get text response
+        console.log('[DEBUG] Creating agent without tools for text-only response...');
+        const agent = await AiModelFactory.BaseChatAgent({ withTools: false, withOnlineSearch: false });
+        console.log('[DEBUG] Generating AI response...');
+
+        try {
+          const result = await agent.generate([
+            {
+              role: 'user',
+              content: `${customPrompt}\n\nText to fix:\n${note.content}\n\nReturn ONLY the corrected text, nothing else.`
+            }
+          ]);
+
+          console.log('[DEBUG] AI response generated successfully.');
+          const correctedText = result.text?.trim();
+
+          if (!correctedText) {
+            console.log('[DEBUG] No text returned from AI');
+            return { success: false, message: 'AI returned empty response' };
           }
-        ], {
-          runtimeContext
-        });
 
-        return { success: true, message: 'Custom processing completed' };
+          console.log('[DEBUG] Corrected text:', correctedText);
+
+          // Manually update the note with corrected text
+          const { upsertBlinkoTool } = await import('./tools/createBlinko');
+          await upsertBlinkoTool.execute({
+            context: {
+              id: noteId,
+              content: correctedText,
+              type: noteType
+            },
+            runtimeContext
+          });
+
+          console.log('[DEBUG] Note updated successfully with corrected text');
+
+          // Broadcast update via SSE
+          try {
+            if (!note.accountId) {
+              console.warn('[DEBUG] Skipping SSE broadcast: note has no accountId');
+            } else {
+              const { SSEService } = await import('../lib/sseService');
+              SSEService.broadcastNoteUpdate(note.accountId, noteId);
+              console.log('[DEBUG] SSE broadcast sent for note:', noteId);
+            }
+          } catch (error) {
+            console.error('[DEBUG] Failed to broadcast SSE update:', error);
+            // Don't fail the whole operation if SSE broadcast fails
+          }
+
+          return { success: true, message: 'Custom processing completed' };
+        } catch (error) {
+          console.error('[DEBUG] Error in custom processing:', error);
+          throw error;
+        }
       }
 
       // Get the custom prompt, or use default
