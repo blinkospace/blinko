@@ -444,9 +444,13 @@ export class AiService {
 
           // Broadcast update via SSE
           try {
-            const { SSEService } = await import('../lib/sseService');
-            SSEService.broadcastNoteUpdate(note.accountId ?? 0, noteId);
-            console.log('[DEBUG] SSE broadcast sent for note:', noteId);
+            if (!note.accountId) {
+              console.warn('[DEBUG] Skipping SSE broadcast: note has no accountId');
+            } else {
+              const { SSEService } = await import('../lib/sseService');
+              SSEService.broadcastNoteUpdate(note.accountId, noteId);
+              console.log('[DEBUG] SSE broadcast sent for note:', noteId);
+            }
           } catch (error) {
             console.error('[DEBUG] Failed to broadcast SSE update:', error);
             // Don't fail the whole operation if SSE broadcast fails
