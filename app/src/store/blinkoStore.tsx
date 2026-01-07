@@ -671,6 +671,8 @@ export class BlinkoStore implements Store {
     eventBus.on('user:signout', () => {
       this.clear()
     })
+    // Listen for SSE note updates
+    eventBus.on('note-updated', this.handleNoteUpdate);
   }
 
   removeCreateAttachments(file: { name: string, }) {
@@ -683,4 +685,53 @@ export class BlinkoStore implements Store {
     this.noteListFilterConfig.type = -1
     this.noteList.resetAndCall({});
   }
+
+  /**
+   * Handle real-time note update from SSE
+   */
+  handleNoteUpdate = async (data: { noteId: number; timestamp: string }) => {
+    const { noteId } = data;
+    console.log('[BlinkoStore] Handling note update:', noteId);
+
+    try {
+      // Refetch note details
+      const updated = await api.notes.detail.query({ id: noteId });
+
+      // Update in all relevant list views
+      let found = false;
+      const lists = [
+        this.blinkoList,
+        this.noteOnlyList,
+        this.todoList,
+        this.archivedList,
+        this.trashList,
+        this.noteList
+      ];
+
+      for (const list of lists) {
+        if (list.value && Array.isArray(list.value)) {
+          const index = list.value.findIndex((n: Note) => n.id === noteId);
+          if (index !== -1) {
+            list.value[index] = updated;
+            found = true;
+          }
+        }
+      }
+
+      if (found) {
+        // Force re-render by updating forceQuery
+        this.forceQuery++;
+      }
+
+      // Update currently selected note if viewing/editing
+      if (this.curSelectedNote?.id === noteId) {
+        this.curSelectedNote = updated;
+      }
+
+      // Show toast notification
+      RootStore.Get(ToastPlugin).success(i18n.t('note-auto-updated') || 'Note updated automatically');
+    } catch (error) {
+      console.error('[BlinkoStore] Failed to handle note update:', error);
+    }
+  };
 }
