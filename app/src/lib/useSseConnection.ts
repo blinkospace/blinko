@@ -25,12 +25,13 @@ export function useSseConnection() {
 
         eventSource.addEventListener('connected', (event) => {
           console.log('[SSE] Connected:', event.data);
-          reconnectAttempts.current = 0;
 
           // Show connection restored toast if this was a reconnection
           if (reconnectAttempts.current > 0) {
             RootStore.Get(ToastPlugin).success(i18n.t('connection-restored') || 'Connection restored');
           }
+
+          reconnectAttempts.current = 0;
         });
 
         eventSource.addEventListener('note-updated', (event) => {
