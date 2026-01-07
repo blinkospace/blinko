@@ -833,5 +833,8 @@
   "mcp-server-tools": "Tools available from {{serverName}}:",
   "view-tools": "Tools from {{serverName}}",
   "close": "Close",
-  "add": "Add"
+  "add": "Add",
+  "connection-restored": "Connection restored",
+  "connection-lost": "Connection lost - real-time updates unavailable",
+  "note-auto-updated": "Note updated automatically"
 }

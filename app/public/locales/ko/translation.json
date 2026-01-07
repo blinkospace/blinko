@@ -830,5 +830,8 @@
   "wysiwyg": "WYSIWYG",
   "yesterday": "어제",
   "your-azure-openai-instance-name": "Azure OpenAI 인스턴스 이름",
-  "your-changes-have-been-saved": "변경 사항이 저장되었습니다!"
+  "your-changes-have-been-saved": "변경 사항이 저장되었습니다!",
+  "connection-restored": "연결이 복원되었습니다",
+  "connection-lost": "연결이 끊어졌습니다 - 실시간 업데이트를 사용할 수 없습니다",
+  "note-auto-updated": "노트가 자동으로 업데이트되었습니다"
 }

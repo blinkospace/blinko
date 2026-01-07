@@ -844,5 +844,8 @@
   "years-ago": "",
   "yesterday": "Вчера",
   "your-azure-openai-instance-name": "Имя вашего экземпляра Azure OpenAI",
-  "your-changes-have-been-saved": "Ваши данные сохранены!"
+  "your-changes-have-been-saved": "Ваши данные сохранены!",
+  "connection-restored": "Соединение восстановлено",
+  "connection-lost": "Соединение потеряно - обновления в реальном времени недоступны",
+  "note-auto-updated": "Заметка автоматически обновлена"
 }

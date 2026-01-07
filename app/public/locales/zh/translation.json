@@ -850,5 +850,8 @@
   "mcp-server-tools": "来自 {{serverName}} 的可用工具：",
   "view-tools": "{{serverName}} 的工具",
   "close": "关闭",
-  "add": "添加"
+  "add": "添加",
+  "connection-restored": "连接已恢复",
+  "connection-lost": "连接已断开 - 实时更新不可用",
+  "note-auto-updated": "笔记已自动更新"
 }

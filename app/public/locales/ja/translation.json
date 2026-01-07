@@ -844,5 +844,8 @@
   "years-ago": "",
   "yesterday": "昨日",
   "your-azure-openai-instance-name": "Azure OpenAIインスタンス名",
-  "your-changes-have-been-saved": "変更が保存されました！"
+  "your-changes-have-been-saved": "変更が保存されました！",
+  "connection-restored": "接続が復元されました",
+  "connection-lost": "接続が切断されました - リアルタイム更新は利用できません",
+  "note-auto-updated": "ノートが自動的に更新されました"
 }

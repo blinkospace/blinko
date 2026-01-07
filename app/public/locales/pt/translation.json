@@ -844,5 +844,8 @@
   "years-ago": "",
   "yesterday": "ontem",
   "your-azure-openai-instance-name": "O nome da sua instância do Azure OpenAI",
-  "your-changes-have-been-saved": "As suas alterações foram guardadas!"
+  "your-changes-have-been-saved": "As suas alterações foram guardadas!",
+  "connection-restored": "Conexão restaurada",
+  "connection-lost": "Conexão perdida - atualizações em tempo real indisponíveis",
+  "note-auto-updated": "Nota atualizada automaticamente"
 }

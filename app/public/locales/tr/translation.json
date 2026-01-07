@@ -844,5 +844,8 @@
   "years-ago": "",
   "yesterday": "dün",
   "your-azure-openai-instance-name": "Azure OpenAI örnek adınız",
-  "your-changes-have-been-saved": "Değişiklikleriniz kaydedildi!"
+  "your-changes-have-been-saved": "Değişiklikleriniz kaydedildi!",
+  "connection-restored": "Bağlantı geri yüklendi",
+  "connection-lost": "Bağlantı kesildi - gerçek zamanlı güncellemeler kullanılamıyor",
+  "note-auto-updated": "Not otomatik olarak güncellendi"
 }

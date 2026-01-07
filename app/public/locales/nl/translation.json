@@ -830,5 +830,8 @@
   "wysiwyg": "WYSIWYG",
   "yesterday": "Gisteren",
   "your-azure-openai-instance-name": "Je Azure OpenAI instantienaam",
-  "your-changes-have-been-saved": "Je wijzigingen zijn opgeslagen!"
+  "your-changes-have-been-saved": "Je wijzigingen zijn opgeslagen!",
+  "connection-restored": "Verbinding hersteld",
+  "connection-lost": "Verbinding verloren - realtime updates niet beschikbaar",
+  "note-auto-updated": "Notitie automatisch bijgewerkt"
 }

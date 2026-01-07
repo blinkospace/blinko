@@ -830,5 +830,8 @@
   "wysiwyg": "WYSIWYG",
   "yesterday": "Iḍelli",
   "your-azure-openai-instance-name": "",
-  "your-changes-have-been-saved": ""
+  "your-changes-have-been-saved": "",
+  "connection-restored": "Connection restored",
+  "connection-lost": "Connection lost - real-time updates unavailable",
+  "note-auto-updated": "Note updated automatically"
 }
