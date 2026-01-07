@@ -26,6 +26,7 @@ import QuickNotePage from "./pages/quicknote";
 import QuickAIPage from "./pages/quickai";
 import QuickToolPage from "./pages/quicktool";
 import { useQuicknoteHotkey } from "./hooks/useQuicknoteHotkey";
+import { useSseConnection } from '@/lib/useSseConnection';
 
 const HomePage = lazy(() => import('./pages/index'));
 const SignInPage = lazy(() => import('./pages/signin'));
@@ -257,7 +258,10 @@ function AppRoutes() {
 
 function App() {
   initStore();
-  
+
+  // Establish SSE connection
+  useSseConnection();
+
   // Initialize Android shortcuts handler
   useAndroidShortcuts();
 
