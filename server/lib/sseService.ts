@@ -13,6 +13,10 @@ class SSEServiceClass {
 
   constructor() {
     this.startHeartbeat();
+
+    // Graceful shutdown on process exit
+    process.on('SIGTERM', () => this.cleanup());
+    process.on('SIGINT', () => this.cleanup());
   }
 
   /**
@@ -27,9 +31,11 @@ class SSEServiceClass {
 
     // Enforce max connections
     if (userConnections.size >= this.MAX_CONNECTIONS_PER_USER) {
-      console.warn(`User ${userId} exceeded max SSE connections`);
-      // Remove oldest connection
-      const oldest = Array.from(userConnections)[0];
+      // Find truly oldest connection by connectedAt timestamp
+      const oldest = Array.from(userConnections).reduce((prev, current) =>
+        prev.connectedAt < current.connectedAt ? prev : current
+      );
+      console.warn(`User ${userId} exceeded max SSE connections, removing oldest: ${oldest.connectedAt}`);
       this.disconnect(userId, oldest.response);
     }
 
@@ -119,6 +125,27 @@ class SSEServiceClass {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
     }
+  }
+
+  /**
+   * Cleanup all connections and resources
+   */
+  cleanup(): void {
+    console.log('[SSEService] Cleaning up connections...');
+
+    // Close all connections
+    for (const [userId, connections] of this.connections.entries()) {
+      for (const conn of connections) {
+        try {
+          conn.response.end();
+        } catch (e) {
+          // Ignore errors during cleanup
+        }
+      }
+    }
+
+    this.connections.clear();
+    this.stopHeartbeat();
   }
 
   /**
