@@ -8,6 +8,7 @@ export const upsertBlinkoTool = createTool({
   id: 'upsert-blinko-tool',
   description: 'You are a blinko assistant. You can create different types of content. "Blinko" means flash thoughts or sudden inspiration - those fleeting ideas that pop into mind.',
   inputSchema: z.object({
+    id: z.number().optional().describe('Optional: The note ID to update. If provided, updates the existing note; if omitted, creates a new note.'),
     content: z.string().describe("The content to save. Tag is start with #"),
     type: z.string().optional().default('blinko').describe('Optional: The type of content: "blinko" (flash thoughts/sudden ideas/fleeting inspiration - the default), "note" (longer, structured content), or "todo" (tasks to be done)'),
     token: z.string().optional().describe("internal use, do not pass!")
@@ -47,13 +48,14 @@ export const upsertBlinkoTool = createTool({
         role: 'superadmin'
       })
       const note = await caller.notes.upsert({
+        id: context.id, // Pass the id if provided, otherwise undefined (will create new)
         content: context.content,
         type: noteType,
       })
-      console.log('Created note:', note)
+      console.log(context.id ? 'Updated note:' : 'Created note:', note)
       return note
     } catch (error) {
-      console.log('Error creating note:', error)
+      console.log('Error creating/updating note:', error)
       return error.message
     }
   }

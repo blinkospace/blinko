@@ -405,75 +405,45 @@ export class AiService {
         let customPrompt = config.aiCustomPrompt || 'Analyze the following note content and provide feedback.';
         customPrompt = customPrompt.replace('{tags}', tagsList).replace('{note}', note.content);
         console.log('[DEBUG] Custom prompt:', customPrompt);
-        const withOnlineSearch = !!config.tavilyApiKey;
-        // Process with AI using BaseChatAgent with tools
 
-        console.log('[DEBUG] Creating BaseChatAgent with tools...');
-        const agent = await AiModelFactory.BaseChatAgent({ withTools: true, withOnlineSearch: withOnlineSearch });
+        // Process with AI WITHOUT tools - just get text response
+        console.log('[DEBUG] Creating agent without tools for text-only response...');
+        const agent = await AiModelFactory.BaseChatAgent({ withTools: false, withOnlineSearch: false });
         console.log('[DEBUG] Generating AI response...');
 
         try {
           const result = await agent.generate([
             {
-              role: 'system',
-              content: `You are an AI assistant that helps to process notes. You MUST use the available tools to complete your task.
-This is a one-time conversation, so you MUST take action immediately using the tools provided.
-You have access to tools that can help you modify notes, add comments, or create new notes.
-DO NOT just respond with suggestions or analysis - you MUST use the appropriate tool to implement your changes.
-If you need to add a comment, use the createCommentTool.
-If you need to update the note, use the updateBlinkoTool.
-If you need to create a new note, use the upsertBlinkoTool.
-Remember: ALWAYS use tools to implement your suggestions rather than just describing what should be done.`
-            },
-            {
               role: 'user',
-              content: `Current user name: ${ctx.name}\n${customPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}
-            Current Note Type: ${noteType}`
+              content: `${customPrompt}\n\nText to fix:\n${note.content}\n\nReturn ONLY the corrected text, nothing else.`
             }
-          ], {
+          ]);
+
+          console.log('[DEBUG] AI response generated successfully.');
+          const correctedText = result.text?.trim();
+
+          if (!correctedText) {
+            console.log('[DEBUG] No text returned from AI');
+            return { success: false, message: 'AI returned empty response' };
+          }
+
+          console.log('[DEBUG] Corrected text:', correctedText);
+
+          // Manually update the note with corrected text
+          const { upsertBlinkoTool } = await import('./tools/createBlinko');
+          await upsertBlinkoTool.execute({
+            context: {
+              id: noteId,
+              content: correctedText,
+              type: noteType
+            },
             runtimeContext
           });
 
-          console.log('[DEBUG] AI response generated successfully. Result:', result);
+          console.log('[DEBUG] Note updated successfully with corrected text');
           return { success: true, message: 'Custom processing completed' };
         } catch (error) {
-          console.log('[DEBUG] Tool validation error, attempting manual execution:', error.message);
-          console.log('[DEBUG] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
-          console.log('[DEBUG] Error cause:', JSON.stringify(error.cause, Object.getOwnPropertyNames(error.cause), 2));
-
-          // Try to extract and manually execute tool calls from raw response
-          try {
-            // Parse responseBody from error.cause
-            let parsedResponse;
-            if (error.cause?.responseBody) {
-              parsedResponse = JSON.parse(error.cause.responseBody);
-            }
-            console.log('[DEBUG] Parsed response:', JSON.stringify(parsedResponse?.message));
-
-            const toolCalls = parsedResponse?.message?.tool_calls;
-            if (toolCalls && toolCalls.length > 0) {
-              const toolCall = toolCalls[0];
-              const functionName = toolCall.function?.name;
-              const args = toolCall.function?.arguments;
-
-              console.log('[DEBUG] Extracted tool call:', { functionName, args });
-
-              if (functionName === 'updateBlinkoTool' && args) {
-                console.log('[DEBUG] Manually executing updateBlinkoTool...');
-                const { updateBlinkoTool } = await import('./tools/updateBlinko');
-                await updateBlinkoTool.execute({
-                  context: args,
-                  runtimeContext
-                });
-                console.log('[DEBUG] Manual tool execution successful');
-                return { success: true, message: 'Custom processing completed (manual execution)' };
-              }
-            }
-          } catch (manualError) {
-            console.error('[DEBUG] Manual execution failed:', manualError);
-          }
-
-          // If manual execution fails, fall back to creating a comment
+          console.error('[DEBUG] Error in custom processing:', error);
           throw error;
         }
       }
