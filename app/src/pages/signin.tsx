@@ -14,6 +14,9 @@ import { signIn } from "@/components/Auth/auth-client";
 import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { saveBlinkoEndpoint, getSavedEndpoint, getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import { BlinkoStore } from "@/store/blinkoStore";
 
 type OAuthProvider = {
   id: string;
@@ -33,6 +36,11 @@ export default function Component() {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const blinko = RootStore.Get(BlinkoStore);
+
+  useEffect(() => {
+    blinko.config.call();
+  }, []);
 
   useEffect(() => {
     const checkTauriEnv = async () => {
@@ -234,6 +242,32 @@ export default function Component() {
                 {t('sign-up')}
               </Link>
             </p>
+          )}
+          {blinko.config.value?.signinFooterEnabled &&
+           blinko.config.value?.signinFooterText?.trim() && (
+            <div className="mt-2 text-center max-w-full">
+              <div className="text-xs text-default-400 break-words px-4">
+                <ReactMarkdown
+                  rehypePlugins={[rehypeRaw]}
+                  components={{
+                    p: ({node, ...props}) => <span {...props} />,
+                    a: ({node, ...props}) => (
+                      <a
+                        {...props}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-default-400 hover:text-default-600 underline"
+                      />
+                    ),
+                    strong: ({node, ...props}) => <strong {...props} />,
+                    em: ({node, ...props}) => <em {...props} />,
+                    br: ({node, ...props}) => <br {...props} />
+                  }}
+                >
+                  {blinko.config.value.signinFooterText}
+                </ReactMarkdown>
+              </div>
+            </div>
           )}
         </div>
       </div>

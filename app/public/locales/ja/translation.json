@@ -844,5 +844,9 @@
   "years-ago": "",
   "yesterday": "昨日",
   "your-azure-openai-instance-name": "Azure OpenAIインスタンス名",
-  "your-changes-have-been-saved": "変更が保存されました！"
+  "your-changes-have-been-saved": "変更が保存されました！",
+  "enable-signin-footer": "サインインフッターを有効にする",
+  "signin-footer-text": "サインインフッターの内容",
+  "signin-footer-desc": "HTMLをサポート: <a href='...'>リンク</a>, <strong>太字</strong>, <em>斜体</em>, <br/>",
+  "signin-footer-placeholder": "例: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. すべての権利を保有。"
 }

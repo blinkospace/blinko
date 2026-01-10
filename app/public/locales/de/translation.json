@@ -844,5 +844,9 @@
   "years-ago": "",
   "yesterday": "Gestern",
   "your-azure-openai-instance-name": "Der Name Ihrer Azure OpenAI-Instanz",
-  "your-changes-have-been-saved": "Änderungen wurden gespeichert!"
+  "your-changes-have-been-saved": "Änderungen wurden gespeichert!",
+  "enable-signin-footer": "Anmeldefußzeile aktivieren",
+  "signin-footer-text": "Inhalt der Anmeldefußzeile",
+  "signin-footer-desc": "Unterstützt HTML: <a href='...'>Link</a>, <strong>Fett</strong>, <em>Kursiv</em>, <br/>",
+  "signin-footer-placeholder": "z. B. <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Alle Rechte vorbehalten."
 }

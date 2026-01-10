@@ -101,6 +101,8 @@ export const ZConfigKey = z.union([
   z.literal('httpProxyPassword'),
   z.literal('aiSmartEditPrompt'),
   z.literal('globalPrompt'),
+  z.literal('signinFooterEnabled'),
+  z.literal('signinFooterText'),
   ZUserPerferConfigKey,
   z.any()
 ]);
@@ -187,7 +189,9 @@ export const ZConfigSchema = z.object({
   defaultHomePage: z.string().optional(),
   desktopHotkeys: z.any().optional(),
   systemTray: z.any().optional(),
-  fontStyle: z.string().optional()
+  fontStyle: z.string().optional(),
+  signinFooterEnabled: z.boolean().optional(),
+  signinFooterText: z.string().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

@@ -844,5 +844,9 @@
   "years-ago": "",
   "yesterday": "ontem",
   "your-azure-openai-instance-name": "O nome da sua instância do Azure OpenAI",
-  "your-changes-have-been-saved": "As suas alterações foram guardadas!"
+  "your-changes-have-been-saved": "As suas alterações foram guardadas!",
+  "enable-signin-footer": "Ativar rodapé de início de sessão",
+  "signin-footer-text": "Conteúdo do rodapé de início de sessão",
+  "signin-footer-desc": "Suporta HTML: <a href='...'>link</a>, <strong>negrito</strong>, <em>itálico</em>, <br/>",
+  "signin-footer-placeholder": "Ex: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Todos os direitos reservados."
 }

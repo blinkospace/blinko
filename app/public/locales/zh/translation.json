@@ -850,5 +850,9 @@
   "mcp-server-tools": "来自 {{serverName}} 的可用工具：",
   "view-tools": "{{serverName}} 的工具",
   "close": "关闭",
-  "add": "添加"
+  "add": "添加",
+  "enable-signin-footer": "启用登录页脚",
+  "signin-footer-text": "登录页脚内容",
+  "signin-footer-desc": "支持HTML: <a href='...'>链接</a>, <strong>粗体</strong>, <em>斜体</em>, <br/>",
+  "signin-footer-placeholder": "例如：<a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. 保留所有权利."
 }

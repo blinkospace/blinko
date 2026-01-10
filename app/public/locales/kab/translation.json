@@ -830,5 +830,9 @@
   "wysiwyg": "WYSIWYG",
   "yesterday": "Iḍelli",
   "your-azure-openai-instance-name": "",
-  "your-changes-have-been-saved": ""
+  "your-changes-have-been-saved": "",
+  "enable-signin-footer": "Rmed aqerru n unekcum",
+  "signin-footer-text": "Agbur n uqerru n unekcum",
+  "signin-footer-desc": "Yettwagmen HTML: <a href='...'>aseɣwen</a>, <strong>učči</strong>, <em>iri</em>, <br/>",
+  "signin-footer-placeholder": "Amedya: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Akk yiraten ttwaḥerzen."
 }

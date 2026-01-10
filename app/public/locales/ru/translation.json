@@ -844,5 +844,9 @@
   "years-ago": "",
   "yesterday": "Вчера",
   "your-azure-openai-instance-name": "Имя вашего экземпляра Azure OpenAI",
-  "your-changes-have-been-saved": "Ваши данные сохранены!"
+  "your-changes-have-been-saved": "Ваши данные сохранены!",
+  "enable-signin-footer": "Включить подвал входа",
+  "signin-footer-text": "Содержание подвала входа",
+  "signin-footer-desc": "Поддерживает HTML: <a href='...'>ссылка</a>, <strong>жирный</strong>, <em>курсив</em>, <br/>",
+  "signin-footer-placeholder": "Например: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Все права защищены."
 }
