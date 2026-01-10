@@ -28,7 +28,7 @@
 [中文](README.zh-CN.md)
 </div>
 
-> Live Demo: username:blinko password:blinko
+> Live Demo: username:admin password:admin
 
 
 
