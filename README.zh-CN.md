@@ -27,7 +27,7 @@
 [英文 Telegram](https://t.me/blinkoEnglish)
 </div>
 
-> 在线演示账号: username:admin password:admin
+> 在线演示账号: username:blinko password:blinko
 
 Blinko 是一个AI驱动的卡片笔记项目，专为那些想要快速捕捉和组织灵感的人设计。它允许用户在灵感闪现的瞬间无缝记录想法，确保不错过任何创意火花。
 
