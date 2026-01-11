@@ -470,7 +470,7 @@ export const userRouter = router({
         }
       })
     }),
-  generate2FASecret: authProcedure
+  generate2FASecret: authProcedure.use(demoAuthMiddleware)
     .input(z.object({
       name: z.string()
     }))
