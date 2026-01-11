@@ -415,7 +415,7 @@ export const userRouter = router({
     .meta({
       openapi: {
         method: 'POST', path: '/v1/user/upsert', summary: 'Update or create user',
-        description: 'Update or create user, need login', tags: ['User']
+        description: 'Update or create user, need login. Can only update own account.', tags: ['User']
       }
     })
     .input(z.object({
@@ -427,35 +427,83 @@ export const userRouter = router({
       image: z.string().optional()
     }))
     .output(z.union([z.boolean(), z.any()]))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       return prisma.$transaction(async () => {
         const { id, nickname, name, password, originalPassword, image } = input
+        const currentUserId = Number(ctx.id)
+
+        // Get current user to check permissions
+        const currentUser = await prisma.accounts.findFirst({
+          where: { id: currentUserId }
+        });
+
+        if (!currentUser) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Current user not found'
+          });
+        }
 
         const update: Prisma.accountsUpdateInput = {}
         if (id) {
-          if (name) update.name = name
+          const targetId = id;
+          
+          // Security fix: Ownership check - only allow updating own account unless superadmin
+          if (targetId !== currentUserId && currentUser.role !== 'superadmin') {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'You can only update your own account'
+            });
+          }
+
+          // Get target user
+          const targetUser = await prisma.accounts.findFirst({
+            where: { id: targetId }
+          });
+
+          if (!targetUser) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'User not found'
+            });
+          }
+
+          // Security fix: If updating password, originalPassword is required
           if (password) {
-            const passwordHash = await hashPassword(password)
-            update.password = passwordHash
-          }
-          if (nickname) update.nickname = nickname
-          if (image) update.image = image
-          if (originalPassword) {
-            const user = await prisma.accounts.findFirst({ where: { id } })
-            if (user && !(await verifyPassword(originalPassword, user?.password ?? ''))) {
-              throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Password is incorrect' });
+            if (!originalPassword) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: 'Original password is required when changing password'
+              });
             }
+
+            // Verify original password
+            if (!(await verifyPassword(originalPassword, targetUser.password ?? ''))) {
+              throw new TRPCError({
+                code: 'UNAUTHORIZED',
+                message: 'Original password is incorrect'
+              });
+            }
+
+            const passwordHash = await hashPassword(password);
+            update.password = passwordHash;
           }
-          await prisma.accounts.update({ where: { id }, data: update })
-          return true
+
+          if (name) update.name = name;
+          if (nickname) update.nickname = nickname;
+          if (image) update.image = image;
+
+          await prisma.accounts.update({ where: { id: targetId }, data: update });
+          return true;
         } else {
+          // Creating new user - only allow if no users exist or registration is allowed
           if (!password) {
             throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Password is required' });
           }
-          const passwordHash = await hashPassword(password!)
-          const res = await prisma.accounts.create({ data: { name, password: passwordHash, nickname: name, role: 'user' } })
-          await prisma.accounts.update({ where: { id: res.id }, data: { apiToken: await genToken({ id: res.id, name: name ?? '', role: 'user' }) } })
-          return true
+          const passwordHash = await hashPassword(password!);
+          const res = await prisma.accounts.create({ data: { name, password: passwordHash, nickname: name, role: 'user' } });
+          await prisma.accounts.update({ where: { id: res.id }, data: { apiToken: await genToken({ id: res.id, name: name ?? '', role: 'user' }) } });
+          return true;
         }
       })
     }),
