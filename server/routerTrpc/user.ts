@@ -42,35 +42,26 @@ export const userRouter = router({
     .meta({
       openapi: {
         method: 'GET', path: '/v1/user/public-user-list', summary: 'Find public user list',
-        description: 'Find public user list without admin permission', tags: ['User']
+        description: 'Find public user list without admin permission. Only returns non-sensitive information.', tags: ['User']
       }
     })
     .input(z.void())
     .output(z.array(z.object({
       id: z.number().int(),
-      name: z.string(),
       nickname: z.string(),
-      role: z.string(),
       image: z.string().nullable(),
-      loginType: z.string(),
-      createdAt: z.coerce.date(),
-      updatedAt: z.coerce.date(),
       description: z.string().nullable(),
-      linkAccountId: z.number().int().nullable()
     })))
     .query(async () => {
+      // Security fix: Only return non-sensitive public information
+      // Removed: name, role, loginType, createdAt, updatedAt, linkAccountId
       return await prisma.accounts.findMany({
         select: {
           id: true,
-          name: true,
           nickname: true,
-          role: true,
           image: true,
-          loginType: true,
-          createdAt: true,
-          updatedAt: true,
           description: true,
-          linkAccountId: true,
+          // Removed sensitive fields: name, role, loginType, createdAt, updatedAt, linkAccountId
         }
       })
     }),
