@@ -837,5 +837,9 @@
   "wysiwyg": "WYSIWYG რედაქტორი",
   "yesterday": "გუშინ",
   "your-azure-openai-instance-name": "თქვენი Azure OpenAI ეგზემპლარის სახელი",
-  "your-changes-have-been-saved": "თქვენი ცვლილებები შენახულია!"
+  "your-changes-have-been-saved": "თქვენი ცვლილებები შენახულია!",
+  "enable-signin-footer": "შესვლის ქვემოთის ჩართვა",
+  "signin-footer-text": "შესვლის ქვემოთის შინაარსი",
+  "signin-footer-desc": "მხარს უჭერს HTML: <a href='...'>ბმული</a>, <strong>სქელი</strong>, <em>დახრილი</em>, <br/>",
+  "signin-footer-placeholder": "მაგ: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. ყველა უფლება დაცულია."
 }

@@ -844,5 +844,9 @@
   "years-ago": "",
   "yesterday": "Hier",
   "your-azure-openai-instance-name": "Nom de votre instance Azure OpenAI",
-  "your-changes-have-been-saved": "Vos modifications ont été enregistrées !"
+  "your-changes-have-been-saved": "Vos modifications ont été enregistrées !",
+  "enable-signin-footer": "Activer le pied de page de connexion",
+  "signin-footer-text": "Contenu du pied de page de connexion",
+  "signin-footer-desc": "Prend en charge HTML: <a href='...'>lien</a>, <strong>gras</strong>, <em>italique</em>, <br/>",
+  "signin-footer-placeholder": "Exemple: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Tous droits réservés."
 }

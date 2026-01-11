@@ -844,5 +844,9 @@
   "years-ago": "",
   "yesterday": "dün",
   "your-azure-openai-instance-name": "Azure OpenAI örnek adınız",
-  "your-changes-have-been-saved": "Değişiklikleriniz kaydedildi!"
+  "your-changes-have-been-saved": "Değişiklikleriniz kaydedildi!",
+  "enable-signin-footer": "Giriş altbilgisini etkinleştir",
+  "signin-footer-text": "Giriş altbilgisi içeriği",
+  "signin-footer-desc": "HTML destekler: <a href='...'>bağlantı</a>, <strong>kalın</strong>, <em>italik</em>, <br/>",
+  "signin-footer-placeholder": "Örn: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Tüm hakları saklıdır."
 }

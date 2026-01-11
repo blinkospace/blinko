@@ -830,5 +830,9 @@
   "wysiwyg": "WYSIWYG",
   "yesterday": "Gisteren",
   "your-azure-openai-instance-name": "Je Azure OpenAI instantienaam",
-  "your-changes-have-been-saved": "Je wijzigingen zijn opgeslagen!"
+  "your-changes-have-been-saved": "Je wijzigingen zijn opgeslagen!",
+  "enable-signin-footer": "Aanmeldfooter inschakelen",
+  "signin-footer-text": "Inhoud van de aanmeldfooter",
+  "signin-footer-desc": "Ondersteunt HTML: <a href='...'>link</a>, <strong>vet</strong>, <em>cursief</em>, <br/>",
+  "signin-footer-placeholder": "Bijv.: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Alle rechten voorbehouden."
 }

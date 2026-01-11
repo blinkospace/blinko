@@ -833,5 +833,9 @@
   "mcp-server-tools": "Tools available from {{serverName}}:",
   "view-tools": "Tools from {{serverName}}",
   "close": "Close",
-  "add": "Add"
+  "add": "Add",
+  "enable-signin-footer": "Enable Signin Footer",
+  "signin-footer-text": "Signin Footer Content",
+  "signin-footer-desc": "Supports HTML: <a href='...'>link</a>, <strong>bold</strong>, <em>italic</em>, <br/>",
+  "signin-footer-placeholder": "e.g., <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. All rights reserved."
 }
