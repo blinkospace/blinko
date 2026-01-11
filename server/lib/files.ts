@@ -1,6 +1,6 @@
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client, CopyObjectCommand } from "@aws-sdk/client-s3";
 import { getGlobalConfig } from "../routerTrpc/config";
-import { UPLOAD_FILE_PATH } from "@shared/lib/pathConstant";
+import { UPLOAD_FILE_PATH, TEMP_PATH } from "@shared/lib/pathConstant";
 import fs, { unlink, writeFile } from 'fs/promises';
 import path from 'path';
 import { cache } from "@shared/lib/cache";
@@ -9,8 +9,93 @@ import { Readable } from 'stream';
 import { Upload } from "@aws-sdk/lib-storage";
 import { PassThrough } from 'stream';
 import { createWriteStream } from "fs";
+import pathIsInside from 'path-is-inside';
+import sanitizeFilename from 'sanitize-filename';
 
 export class FileService {
+  /**
+   * Validates and sanitizes a file path to prevent path traversal attacks
+   * @param inputPath - The input path to validate (relative path from API endpoint)
+   * @param baseDir - The base directory that the path must be within (default: UPLOAD_FILE_PATH)
+   * @param allowTemp - Whether to allow paths in the temp directory
+   * @returns The validated and sanitized absolute file path
+   * @throws Error if the path is invalid or outside the allowed directory
+   */
+  public static validateAndResolvePath(
+    inputPath: string,
+    baseDir: string = UPLOAD_FILE_PATH,
+    allowTemp: boolean = false
+  ): string {
+    // Check for path traversal attempts
+    if (inputPath.includes('..') || inputPath.includes('\\..') || inputPath.includes('/..')) {
+      throw new Error('Invalid path: path traversal detected');
+    }
+
+    // Sanitize each path component (filename) separately
+    const pathParts = inputPath.split(/[/\\]/);
+    const sanitizedParts = pathParts.map(part => {
+      if (part === '' || part === '.') return part;
+      return sanitizeFilename(part, { replacement: '_' });
+    });
+    const sanitizedPath = sanitizedParts.join('/');
+    
+    // Check if sanitization changed the path (indicates dangerous characters)
+    if (sanitizedPath !== inputPath.replace(/\\/g, '/')) {
+      throw new Error('Invalid path: contains dangerous characters');
+    }
+
+    // Remove leading slashes and normalize
+    const cleanedPath = sanitizedPath.replace(/^[./\\]+/, '');
+    const resolvedBaseDir = path.resolve(baseDir);
+    const resolvedFilePath = path.resolve(baseDir, cleanedPath);
+
+    // Validate path is within allowed directory
+    if (!pathIsInside(resolvedFilePath, resolvedBaseDir)) {
+      throw new Error('Invalid path: outside allowed directory');
+    }
+
+    // For temp/ paths, ensure they are within the temp directory
+    if (cleanedPath.includes('temp/') || cleanedPath.startsWith('temp/')) {
+      if (!allowTemp) {
+        throw new Error('Invalid path: temp directory access not allowed');
+      }
+      const resolvedTempDir = path.resolve(TEMP_PATH);
+      if (!pathIsInside(resolvedFilePath, resolvedTempDir)) {
+        throw new Error('Invalid path: temp path outside temp directory');
+      }
+    }
+
+    return resolvedFilePath;
+  }
+
+  /**
+   * Extracts and validates file path from API path
+   * @param apiPath - API path like '/api/file/path/to/file.jpg' or '/api/s3file/path/to/file.jpg'
+   * @param baseDir - Base directory for validation
+   * @param allowTemp - Whether to allow temp directory access
+   * @returns The validated absolute file path
+   */
+  public static extractAndValidatePath(
+    apiPath: string,
+    baseDir: string = UPLOAD_FILE_PATH,
+    allowTemp: boolean = false
+  ): string {
+    let filePath = apiPath;
+    if (apiPath.includes('/api/file/')) {
+      filePath = apiPath.replace('/api/file/', '');
+    } else if (apiPath.includes('/api/s3file/')) {
+      // For S3 files, we only validate the path structure, not the actual file location
+      filePath = apiPath.replace('/api/s3file/', '');
+      // Basic validation for S3 paths
+      if (filePath.includes('..') || filePath.includes('\\..') || filePath.includes('/..')) {
+        throw new Error('Invalid S3 path: path traversal detected');
+      }
+      return filePath; // Return relative path for S3
+    }
+
+    return this.validateAndResolvePath(filePath, baseDir, allowTemp);
+  }
+  
   public static async getS3Client() {
     const config = await getGlobalConfig({ useAdmin: true });
     return cache.wrap(`${config.s3Endpoint}-${config.s3Region}-${config.s3Bucket}-${config.s3AccessKeyId}-${config.s3AccessKeySecret}`, async () => {
@@ -59,11 +144,13 @@ export class FileService {
     }
 
     try {
-      const filePath = path.join(`${UPLOAD_FILE_PATH}${customPath}` + filename);
+      const relativePath = `${customPath}${filename}`.replace(/^\//, '');
+      const filePath = this.validateAndResolvePath(relativePath);
       await fs.access(filePath);
       return this.writeFileSafe(baseName, extension, buffer, attempt + 1);
     } catch (error) {
-      const filePath = path.join(`${UPLOAD_FILE_PATH}${customPath}` + filename);
+      const relativePath = `${customPath}${filename}`.replace(/^\//, '');
+      const filePath = this.validateAndResolvePath(relativePath);
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       try {
         //@ts-ignore
@@ -72,7 +159,7 @@ export class FileService {
         console.error('Error writing file:', error);
         throw error;
       }
-      return `${customPath}${filename}`.replace(/^\//, '');
+      return relativePath;
     }
   }
 
@@ -140,7 +227,7 @@ export class FileService {
     const config = await getGlobalConfig({ useAdmin: true });
     if (api_attachment_path.includes('/api/s3file/')) {
       const { s3ClientInstance } = await this.getS3Client();
-      const fileName = api_attachment_path.replace('/api/s3file/', "");
+      const fileName = this.extractAndValidatePath(api_attachment_path);
       const command = new DeleteObjectCommand({
         Bucket: config.s3Bucket,
         Key: fileName,
@@ -151,7 +238,7 @@ export class FileService {
         await prisma.attachments.delete({ where: { id: attachmentPath.id } })
       }
     } else {
-      const filepath = path.join(UPLOAD_FILE_PATH, api_attachment_path.replace('/api/file/', ""));
+      const filepath = this.extractAndValidatePath(api_attachment_path);
       const attachmentPath = await prisma.attachments.findFirst({ where: { path: api_attachment_path } })
       if (attachmentPath) {
         await prisma.attachments.delete({ where: { id: attachmentPath.id } })
@@ -166,10 +253,10 @@ export class FileService {
    */
   static async getFileBuffer(filePath: string): Promise<Buffer> {
     const config = await getGlobalConfig({ useAdmin: true });
-    const fileName = filePath.replace('/api/file/', '').replace('/api/s3file/', '');
 
     if (config.objectStorage === 's3') {
       const { s3ClientInstance } = await this.getS3Client();
+      const fileName = this.extractAndValidatePath(filePath);
       const command = new GetObjectCommand({
         Bucket: config.s3Bucket,
         Key: fileName,
@@ -182,7 +269,7 @@ export class FileService {
       }
       return Buffer.concat(chunks);
     } else {
-      const localPath = path.join(UPLOAD_FILE_PATH, fileName);
+      const localPath = this.extractAndValidatePath(filePath);
       return await fs.readFile(localPath);
     }
   }
@@ -194,10 +281,11 @@ export class FileService {
    */
   static async getFile(filePath: string): Promise<{ path: string; isTemporary: boolean; cleanup?: () => Promise<void> }> {
     const config = await getGlobalConfig({ useAdmin: true });
-    const fileName = filePath.replace('/api/file/', '').replace('/api/s3file/', '');
 
     if (config.objectStorage === 's3') {
-      const tempPath = path.join(UPLOAD_FILE_PATH, 'temp', `${Date.now()}_${path.basename(fileName)}`);
+      const fileName = this.extractAndValidatePath(filePath);
+      const tempFileName = `${Date.now()}_${path.basename(fileName)}`;
+      const tempPath = this.validateAndResolvePath(`temp/${tempFileName}`, UPLOAD_FILE_PATH, true);
       await fs.mkdir(path.dirname(tempPath), { recursive: true });
 
       const buffer = await this.getFileBuffer(filePath);
@@ -222,7 +310,7 @@ export class FileService {
       };
     } else {
       return {
-        path: path.join(UPLOAD_FILE_PATH, fileName),
+        path: this.extractAndValidatePath(filePath),
         isTemporary: false
       };
     }
@@ -303,7 +391,8 @@ export class FileService {
           customPath = customPath.endsWith('/') ? customPath : customPath + '/';
         }
 
-        const fullPath = path.join(UPLOAD_FILE_PATH, customPath, timestampedFileName);
+        const relativePath = `${customPath}${timestampedFileName}`.replace(/^\//, '');
+        const fullPath = this.validateAndResolvePath(relativePath);
         await fs.mkdir(path.dirname(fullPath), { recursive: true });
 
         const writeStream = createWriteStream(fullPath);
@@ -333,8 +422,6 @@ export class FileService {
               reject(err);
             });
         });
-
-        const relativePath = `${customPath}${timestampedFileName}`.replace(/^\//, '');
         await FileService.createAttachment({
           path: `/api/file/${relativePath}`,
           name: timestampedFileName,
@@ -412,8 +499,19 @@ export class FileService {
           throw new Error(`Failed to rename file in S3: ${error.message}`);
         }
       } else {
-        const oldFilePath = path.join(UPLOAD_FILE_PATH, oldPath.replace('/api/file/', ''));
-        const newFilePath = path.join(path.dirname(oldFilePath), newName);
+        const oldFilePath = this.extractAndValidatePath(oldPath);
+        const sanitizedNewName = sanitizeFilename(newName, { replacement: '_' });
+        if (sanitizedNewName !== newName) {
+          throw new Error('Invalid new filename: contains dangerous characters');
+        }
+        const newFilePath = path.join(path.dirname(oldFilePath), sanitizedNewName);
+        
+        // Validate the new path is still within allowed directory
+        const resolvedBaseDir = path.resolve(UPLOAD_FILE_PATH);
+        const resolvedNewPath = path.resolve(newFilePath);
+        if (!pathIsInside(resolvedNewPath, resolvedBaseDir)) {
+          throw new Error('Invalid new path: outside allowed directory');
+        }
 
         await fs.rename(oldFilePath, newFilePath);
       }
@@ -458,8 +556,8 @@ export class FileService {
         throw new Error(`Failed to move file in S3: ${error.message}`);
       }
     } else {
-      const oldFilePath = path.join(UPLOAD_FILE_PATH, oldPath.replace('/api/file/', ''));
-      const newFilePath = path.join(UPLOAD_FILE_PATH, newPath.replace('/api/file/', ''));
+      const oldFilePath = this.extractAndValidatePath(oldPath);
+      const newFilePath = this.extractAndValidatePath(newPath);
 
       await fs.mkdir(path.dirname(newFilePath), { recursive: true });
       await fs.rename(oldFilePath, newFilePath);
