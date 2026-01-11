@@ -153,7 +153,7 @@ export const userRouter = router({
     .meta({
       openapi: {
         method: 'GET', path: '/v1/user/detail', summary: 'Find user detail from user id',
-        description: 'Find user detail from user id, need login', tags: ['User']
+        description: 'Find user detail from user id, need login. Can only view own info unless superadmin.', tags: ['User']
       }
     })
     .input(z.object({ id: z.number().optional() }))
@@ -168,20 +168,59 @@ export const userRouter = router({
       role: z.string()
     }))
     .query(async ({ input, ctx }) => {
-      const user = await prisma.accounts.findFirst({ where: { id: input.id ?? Number(ctx.id) } })
-      if (Number(user?.id) !== Number(ctx.id) && user?.role !== 'superadmin') {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'You are not allowed to access this user' })
+      const requestedId = input.id ?? Number(ctx.id);
+      const currentUserId = Number(ctx.id);
+
+      // Get current user to check permissions
+      const currentUser = await prisma.accounts.findFirst({
+        where: { id: currentUserId }
+      });
+
+      if (!currentUser) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Current user not found'
+        });
       }
-      const isLinked = await prisma.accounts.findFirst({ where: { linkAccountId: input.id } })
+
+      // Security fix: Only allow viewing own info unless current user is superadmin
+      if (requestedId !== currentUserId) {
+        if (currentUser.role !== 'superadmin') {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'You can only view your own information'
+          });
+        }
+      }
+
+      // Get requested user
+      const user = await prisma.accounts.findFirst({
+        where: { id: requestedId }
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      const isLinked = await prisma.accounts.findFirst({
+        where: { linkAccountId: requestedId }
+      });
+
+      // Security fix: Only return token when viewing own info
+      const token = requestedId === currentUserId ? (user.apiToken ?? '') : '';
+
       return {
-        id: input.id ?? Number(ctx.id),
-        name: user?.name ?? '',
-        nickName: user?.nickname ?? '',
-        token: user?.apiToken ?? '',
-        loginType: user?.loginType ?? '',
+        id: requestedId,
+        name: user.name ?? '',
+        nickName: user.nickname ?? '',
+        token: token,
+        loginType: user.loginType ?? '',
         isLinked: isLinked ? true : false,
-        image: user?.image ?? null,
-        role: user?.role ?? ''
+        image: user.image ?? null,
+        role: user.role ?? ''
       }
     }),
   canRegister: publicProcedure
