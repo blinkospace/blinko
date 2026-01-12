@@ -1,4 +1,5 @@
 import { router, authProcedure, publicProcedure } from '../middleware';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { commentsSchema, accountsSchema, NotificationType } from '@shared/lib/prismaZodType';
@@ -48,11 +49,64 @@ async function getNestedComments(commentIds: number[]): Promise<any[]> {
     orderBy: { createdAt: 'asc' }
   });
 
-  for (const comment of comments) {
+  for (const comment of comments as any[]) {
     comment.replies = await getNestedComments([comment.id]);
   }
 
   return comments;
+}
+
+// Security fix: Check if user has access to a note
+async function checkNoteAccess(noteId: number, ctx: any): Promise<boolean> {
+  const note = await prisma.notes.findFirst({
+    where: { id: noteId },
+    select: {
+      accountId: true,
+      isShare: true,
+      sharePassword: true,
+      shareExpiryDate: true
+    }
+  });
+
+  if (!note) {
+    return false;
+  }
+
+  // Check if note is publicly shared (no password, not expired)
+  const isPubliclyShared = note.isShare && 
+    note.sharePassword === '' && 
+    (note.shareExpiryDate === null || note.shareExpiryDate > new Date());
+
+  if (isPubliclyShared) {
+    return true;
+  }
+
+  // If user is not authenticated, deny access to private notes
+  if (!ctx.id) {
+    return false;
+  }
+
+  const userId = Number(ctx.id);
+
+  // Check if user is superadmin
+  if (ctx.role === 'superadmin') {
+    return true;
+  }
+
+  // Check if user is the note owner
+  if (note.accountId === userId) {
+    return true;
+  }
+
+  // Check if note is internally shared with the user
+  const internalShare = await prisma.noteInternalShare.findFirst({
+    where: {
+      noteId: noteId,
+      accountId: userId
+    }
+  });
+
+  return !!internalShare;
 }
 
 export const commentRouter = router({
@@ -68,6 +122,15 @@ export const commentRouter = router({
     .mutation(async function ({ input, ctx }) {
       let { content, noteId, parentId, guestName } = input;
 
+      // Security fix: Check if user has access to the note
+      const hasAccess = await checkNoteAccess(noteId, ctx);
+      if (!hasAccess) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to comment on this note'
+        });
+      }
+
       const note = await prisma.notes.findFirst({
         where: {
           id: noteId
@@ -78,7 +141,10 @@ export const commentRouter = router({
       });
 
       if (!note) {
-        throw new Error('Note not found or not shareable');
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Note not found'
+        });
       }
 
       if (parentId) {
@@ -155,8 +221,17 @@ export const commentRouter = router({
       total: z.number(),
       items: z.array(commentWithRelationsSchema)
     }))
-    .query(async function ({ input }) {
+    .query(async function ({ input, ctx }) {
       const { noteId, page, size, orderBy } = input;
+
+      // Security fix: Check if user has access to the note
+      const hasAccess = await checkNoteAccess(noteId, ctx);
+      if (!hasAccess) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to view comments for this note'
+        });
+      }
 
       const [total, comments] = await Promise.all([
         prisma.comments.count({
@@ -196,7 +271,7 @@ export const commentRouter = router({
       ]);
 
       // Load nested replies recursively
-      for (const comment of comments) {
+      for (const comment of comments as any[]) {
         comment.replies = await getNestedComments([comment.id]);
       }
 
