@@ -8,13 +8,25 @@
 }
 
 .vditor-content {
-  min-height: 20px;
+  min-height: 150px !important;
 }
 
 @media screen and (max-width: 520px) {
   .vditor-toolbar__item {
     padding: 0 !important;
   }
+}
+
+/* Ensure vditor has proper height */
+.vditor {
+  border: none;
+  min-height: 120px !important;
+}
+
+.vditor .vditor-ir,
+.vditor .vditor-sv,
+.vditor .vditor-wysiwyg {
+  min-height: 80px !important;
 }
 
 .vditor a {
@@ -61,7 +73,7 @@
   background-color: transparent;
   color: var(--foreground);
   max-height: 70vh;
-  min-height: var(--min-editor-height);
+  min-height: var(--min-editor-height, 80px) !important;
   padding-top: 5px;
   padding-bottom: 5px;
 }

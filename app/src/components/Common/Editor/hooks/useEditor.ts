@@ -380,7 +380,9 @@ export const useEditorInit = (
     // This is key: load CSS before vditor initialization to ensure styles are available when code highlighting renders
     updateHighlightCSS(theme, cdn);
     
-    const vditor = new Vditor("vditor" + "-" + mode, {
+    let vditor: Vditor | null = null;
+    try {
+      vditor = new Vditor("vditor" + "-" + mode, {
       width: '100%',
       "toolbar": isPc ? ToolbarPC : ToolbarMobile,
       mode: store.viewMode === 'raw' ? 'sv' : store.viewMode,
@@ -406,7 +408,7 @@ export const useEditorInit = (
         if (store.viewMode !== 'raw') {
           setTimeout(() => {
             const inputTheme = currentTheme || RootStore.Get(UserStore).theme || 'light';
-            renderAllVditorContent(null, mode, inputTheme, vditor);
+            renderAllVditorContent(null, mode, inputTheme, vditor!);
             // Apply theme class to editor for ABCJS and mindmap dark mode support
             applyThemeToEditor(mode, inputTheme);
           }, 100);
@@ -463,12 +465,12 @@ export const useEditorInit = (
         }
       },
       after: () => {
-        vditor.setValue(content);
+        vditor!.setValue(content);
         store.init({
           onChange,
           onSend,
           mode,
-          vditor
+          vditor: vditor!
         });
 
         // Handle raw markdown mode (hide preview)
@@ -482,13 +484,18 @@ export const useEditorInit = (
         // Render all supported content types in preview
         // Use currentTheme to ensure correct theme is used
         const finalTheme = currentTheme || theme;
-        renderAllVditorContent(null, mode, finalTheme, vditor);
+        renderAllVditorContent(null, mode, finalTheme, vditor!);
         // Apply theme class to editor for ABCJS and mindmap dark mode support
         applyThemeToEditor(mode, finalTheme);
 
         isPc ? store.focus() : FocusEditorFixMobile()
       },
     });
+    
+    } catch (error) {
+      console.error('[Vditor Error] Failed to initialize:', error);
+    }
+    
     // Clear the effect
     return () => {
       store.vditor?.destroy();

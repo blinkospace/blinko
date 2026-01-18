@@ -3,6 +3,14 @@ FROM oven/bun:1.2.8 AS builder
 
 # Add Build Arguments
 ARG USE_MIRROR=false
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+
+# Set proxy environment variables
+ENV http_proxy=${HTTP_PROXY}
+ENV https_proxy=${HTTPS_PROXY}
+ENV HTTP_PROXY=${HTTP_PROXY}
+ENV HTTPS_PROXY=${HTTPS_PROXY}
 
 WORKDIR /app
 
@@ -36,7 +44,7 @@ RUN if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then \
     fi
 
 # Install Dependencies and Build App
-RUN bun install --unsafe-perm
+RUN bun install --ignore-scripts
 RUN bunx prisma generate
 RUN bun run build:web
 RUN bun run build:seed
@@ -45,13 +53,13 @@ RUN printf '#!/bin/sh\necho "Current Environment: $NODE_ENV"\nnpx prisma migrate
     chmod +x start.sh
 
 
-FROM node:20-alpine as init-downloader
+FROM node:20-alpine AS init-downloader
 
 WORKDIR /app
 
-RUN wget -qO /app/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_$(uname -m) && \
-    chmod +x /app/dumb-init && \
-    rm -rf /var/cache/apk/*
+RUN apk add --no-cache dumb-init && \
+    cp /usr/bin/dumb-init /app/dumb-init && \
+    chmod +x /app/dumb-init
 
 
 # Runtime Stage - Using Alpine as required

@@ -71,7 +71,8 @@ html,
 body {
   scroll-behavior: smooth;
   overflow-y: hidden!important;
-  height: var(--doc-height);
+  height: var(--doc-height, 100vh);
+  min-height: 500px;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
   background-color: var(--secondbackground);
@@ -79,7 +80,8 @@ body {
 }
 
 .h-mobile-full {
-  height: var(--doc-height);
+  height: var(--doc-height, 100vh);
+  min-height: 500px;
 }
 
 /* menu  tree list  */
