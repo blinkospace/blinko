@@ -4,6 +4,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { FileService } from "../../lib/files";
 import sharp from "sharp";
 import mime from "mime-types";
+import { getTokenFromRequest } from "../../lib/helper";
+import { prisma } from "../../prisma";
 
 const router = express.Router();
 
@@ -113,9 +115,60 @@ async function generateThumbnail(s3ClientInstance: any, config: any, fullPath: s
 //@ts-ignore
 router.get(/.*/, async (req: Request, res: Response) => {
   try {
+    const token = await getTokenFromRequest(req);
     const { s3ClientInstance, config } = await FileService.getS3Client();
     const fullPath = decodeURIComponent(req.path.substring(1));
     const needThumbnail = req.query.thumbnail === 'true';
+
+    // Security fix: Validate S3 file path and check user permissions
+    // Check if the file exists in attachments and user has access
+    if (!fullPath.includes('temp/')) {
+      try {
+        const myFile = await prisma.attachments.findFirst({
+          where: {
+            path: '/api/s3file/' + fullPath
+          },
+          include: {
+            note: {
+              select: {
+                isShare: true,
+                accountId: true
+              }
+            }
+          }
+        });
+
+        // Security fix: If file is not in database, deny access (prevent access to unregistered files)
+        if (!myFile) {
+          return res.status(404).json({ error: "File not found" });
+        }
+
+        if (!token) {
+          if (myFile.note?.isShare) {
+            // Public shared file, allow access
+          } else {
+            return res.status(401).json({ error: "Unauthorized" });
+          }
+        } else {
+          // Check if user owns the file or the note containing the file
+          const isOwner = myFile.accountId === Number(token.id) || 
+                          myFile.note?.accountId === Number(token.id) ||
+                          token.role === 'superadmin';
+          
+          if (!myFile.note?.isShare && !isOwner) {
+            return res.status(401).json({ error: "Unauthorized" });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking S3 file permissions:', error);
+        return res.status(500).json({ error: "Error checking file permissions" });
+      }
+    } else {
+      // For temp files, require authentication
+      if (!token) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+    }
 
     if (isImage(fullPath) && needThumbnail) {
       try {

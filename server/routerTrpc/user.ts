@@ -42,35 +42,26 @@ export const userRouter = router({
     .meta({
       openapi: {
         method: 'GET', path: '/v1/user/public-user-list', summary: 'Find public user list',
-        description: 'Find public user list without admin permission', tags: ['User']
+        description: 'Find public user list without admin permission. Only returns non-sensitive information.', tags: ['User']
       }
     })
     .input(z.void())
     .output(z.array(z.object({
       id: z.number().int(),
-      name: z.string(),
       nickname: z.string(),
-      role: z.string(),
       image: z.string().nullable(),
-      loginType: z.string(),
-      createdAt: z.coerce.date(),
-      updatedAt: z.coerce.date(),
       description: z.string().nullable(),
-      linkAccountId: z.number().int().nullable()
     })))
     .query(async () => {
+      // Security fix: Only return non-sensitive public information
+      // Removed: name, role, loginType, createdAt, updatedAt, linkAccountId
       return await prisma.accounts.findMany({
         select: {
           id: true,
-          name: true,
           nickname: true,
-          role: true,
           image: true,
-          loginType: true,
-          createdAt: true,
-          updatedAt: true,
           description: true,
-          linkAccountId: true,
+          // Removed sensitive fields: name, role, loginType, createdAt, updatedAt, linkAccountId
         }
       })
     }),
@@ -153,7 +144,7 @@ export const userRouter = router({
     .meta({
       openapi: {
         method: 'GET', path: '/v1/user/detail', summary: 'Find user detail from user id',
-        description: 'Find user detail from user id, need login', tags: ['User']
+        description: 'Find user detail from user id, need login. Can only view own info unless superadmin.', tags: ['User']
       }
     })
     .input(z.object({ id: z.number().optional() }))
@@ -168,20 +159,59 @@ export const userRouter = router({
       role: z.string()
     }))
     .query(async ({ input, ctx }) => {
-      const user = await prisma.accounts.findFirst({ where: { id: input.id ?? Number(ctx.id) } })
-      if (Number(user?.id) !== Number(ctx.id) && user?.role !== 'superadmin') {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'You are not allowed to access this user' })
+      const requestedId = input.id ?? Number(ctx.id);
+      const currentUserId = Number(ctx.id);
+
+      // Get current user to check permissions
+      const currentUser = await prisma.accounts.findFirst({
+        where: { id: currentUserId }
+      });
+
+      if (!currentUser) {
+        throw new TRPCError({
+          code: 'UNAUTHORIZED',
+          message: 'Current user not found'
+        });
       }
-      const isLinked = await prisma.accounts.findFirst({ where: { linkAccountId: input.id } })
+
+      // Security fix: Only allow viewing own info unless current user is superadmin
+      if (requestedId !== currentUserId) {
+        if (currentUser.role !== 'superadmin') {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'You can only view your own information'
+          });
+        }
+      }
+
+      // Get requested user
+      const user = await prisma.accounts.findFirst({
+        where: { id: requestedId }
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'User not found'
+        });
+      }
+
+      const isLinked = await prisma.accounts.findFirst({
+        where: { linkAccountId: requestedId }
+      });
+
+      // Security fix: Only return token when viewing own info
+      const token = requestedId === currentUserId ? (user.apiToken ?? '') : '';
+
       return {
-        id: input.id ?? Number(ctx.id),
-        name: user?.name ?? '',
-        nickName: user?.nickname ?? '',
-        token: user?.apiToken ?? '',
-        loginType: user?.loginType ?? '',
+        id: requestedId,
+        name: user.name ?? '',
+        nickName: user.nickname ?? '',
+        token: token,
+        loginType: user.loginType ?? '',
         isLinked: isLinked ? true : false,
-        image: user?.image ?? null,
-        role: user?.role ?? ''
+        image: user.image ?? null,
+        role: user.role ?? ''
       }
     }),
   canRegister: publicProcedure
@@ -376,7 +406,7 @@ export const userRouter = router({
     .meta({
       openapi: {
         method: 'POST', path: '/v1/user/upsert', summary: 'Update or create user',
-        description: 'Update or create user, need login', tags: ['User']
+        description: 'Update or create user, need login. Can only update own account.', tags: ['User']
       }
     })
     .input(z.object({
@@ -388,35 +418,83 @@ export const userRouter = router({
       image: z.string().optional()
     }))
     .output(z.union([z.boolean(), z.any()]))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       return prisma.$transaction(async () => {
         const { id, nickname, name, password, originalPassword, image } = input
+        const currentUserId = Number(ctx.id)
+
+        // Get current user to check permissions
+        const currentUser = await prisma.accounts.findFirst({
+          where: { id: currentUserId }
+        });
+
+        if (!currentUser) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Current user not found'
+          });
+        }
 
         const update: Prisma.accountsUpdateInput = {}
         if (id) {
-          if (name) update.name = name
+          const targetId = id;
+          
+          // Security fix: Ownership check - only allow updating own account unless superadmin
+          if (targetId !== currentUserId && currentUser.role !== 'superadmin') {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'You can only update your own account'
+            });
+          }
+
+          // Get target user
+          const targetUser = await prisma.accounts.findFirst({
+            where: { id: targetId }
+          });
+
+          if (!targetUser) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'User not found'
+            });
+          }
+
+          // Security fix: If updating password, originalPassword is required
           if (password) {
-            const passwordHash = await hashPassword(password)
-            update.password = passwordHash
-          }
-          if (nickname) update.nickname = nickname
-          if (image) update.image = image
-          if (originalPassword) {
-            const user = await prisma.accounts.findFirst({ where: { id } })
-            if (user && !(await verifyPassword(originalPassword, user?.password ?? ''))) {
-              throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Password is incorrect' });
+            if (!originalPassword) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: 'Original password is required when changing password'
+              });
             }
+
+            // Verify original password
+            if (!(await verifyPassword(originalPassword, targetUser.password ?? ''))) {
+              throw new TRPCError({
+                code: 'UNAUTHORIZED',
+                message: 'Original password is incorrect'
+              });
+            }
+
+            const passwordHash = await hashPassword(password);
+            update.password = passwordHash;
           }
-          await prisma.accounts.update({ where: { id }, data: update })
-          return true
+
+          if (name) update.name = name;
+          if (nickname) update.nickname = nickname;
+          if (image) update.image = image;
+
+          await prisma.accounts.update({ where: { id: targetId }, data: update });
+          return true;
         } else {
+          // Creating new user - only allow if no users exist or registration is allowed
           if (!password) {
             throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Password is required' });
           }
-          const passwordHash = await hashPassword(password!)
-          const res = await prisma.accounts.create({ data: { name, password: passwordHash, nickname: name, role: 'user' } })
-          await prisma.accounts.update({ where: { id: res.id }, data: { apiToken: await genToken({ id: res.id, name: name ?? '', role: 'user' }) } })
-          return true
+          const passwordHash = await hashPassword(password!);
+          const res = await prisma.accounts.create({ data: { name, password: passwordHash, nickname: name, role: 'user' } });
+          await prisma.accounts.update({ where: { id: res.id }, data: { apiToken: await genToken({ id: res.id, name: name ?? '', role: 'user' }) } });
+          return true;
         }
       })
     }),

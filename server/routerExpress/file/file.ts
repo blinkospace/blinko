@@ -3,11 +3,12 @@ import path from 'path';
 import { createReadStream, statSync } from 'fs';
 import { stat, readFile, mkdir } from 'fs/promises';
 import mime from 'mime-types';
-import { UPLOAD_FILE_PATH } from '../../../shared/lib/pathConstant';
+import { UPLOAD_FILE_PATH, TEMP_PATH } from '../../../shared/lib/pathConstant';
 import crypto from 'crypto';
 import sharp from 'sharp';
 import { prisma } from '../../prisma';
 import { getTokenFromRequest } from '../../lib/helper';
+import { FileService } from '../../lib/files';
 
 const router = express.Router();
 const STREAM_THRESHOLD = 5 * 1024 * 1024;
@@ -91,6 +92,34 @@ router.get(/.*/, async (req, res) => {
   const needThumbnail = req.query.thumbnail === 'true';
   const isDownload = req.query.download === 'true';
 
+  // Validate and resolve path using FileService's secure path validation
+  let filePath: string;
+  try {
+    const allowTemp = fullPath.includes('temp/');
+    filePath = FileService.validateAndResolvePath(fullPath, UPLOAD_FILE_PATH, allowTemp);
+    
+    // For temp/ paths, require authentication
+    if (allowTemp && !token) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+  } catch (error: any) {
+    // Handle path validation errors
+    if (error.message.includes('path traversal')) {
+      return res.status(400).json({ error: 'Invalid path' });
+    }
+    if (error.message.includes('dangerous characters')) {
+      return res.status(400).json({ error: 'Invalid path characters' });
+    }
+    if (error.message.includes('outside allowed directory') || error.message.includes('Access denied')) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    if (error.message.includes('temp directory access not allowed')) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    console.error('Path validation error:', error);
+    return res.status(400).json({ error: 'Invalid path' });
+  }
+
   if (!fullPath.includes('temp/') && !fullPath.endsWith('.bko')) {
     try {
       const myFile = await prisma.attachments.findFirst({
@@ -129,8 +158,7 @@ router.get(/.*/, async (req, res) => {
     return res.status(401).json({ error: "Only superadmin can access" });
   }
 
-  const sanitizedPath = fullPath.replace(/^[./\\]+/, '');
-  const filePath = path.join(UPLOAD_FILE_PATH, sanitizedPath);
+  // filePath is already validated and resolved by FileService.validateAndResolvePath
 
   try {
     try {

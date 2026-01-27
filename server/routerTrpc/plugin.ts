@@ -1,4 +1,5 @@
-import { router, authProcedure, publicProcedure } from '../middleware';
+import { router, authProcedure, publicProcedure, superAdminAuthMiddleware } from '../middleware';
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import fs from 'fs/promises';
@@ -11,6 +12,7 @@ import { pluginSchema } from '@shared/lib/prismaZodType';
 import { cache } from '@shared/lib/cache';
 import { existsSync } from 'fs';
 import { getHttpCacheKey, getWithProxy } from '@server/lib/proxy';
+import pathIsInside from 'path-is-inside';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache duration
 const MAX_RETRIES = 3;
@@ -187,6 +189,7 @@ export const pluginRouter = router({
 
   // Save additional files for dev plugin
   saveAdditionalDevFile: authProcedure
+    .use(superAdminAuthMiddleware)
     .input(
       z.object({
         filePath: z.string(),
@@ -196,15 +199,46 @@ export const pluginRouter = router({
     .output(z.any())
     .mutation(async function ({ input }) {
       try {
-        // Save file
-        const devPluginDir = getPluginDir('dev');
-        const fullPath = path.join(devPluginDir, input.filePath);
+        // Security fix: Validate file path to prevent path traversal
+        if (input.filePath.includes('..') || input.filePath.includes('\\..') || input.filePath.includes('/..')) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid file path: path traversal detected'
+          });
+        }
+
+        // Security fix: Prevent absolute paths
+        if (path.isAbsolute(input.filePath)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid file path: absolute paths are not allowed'
+          });
+        }
+
+        // Get plugin directory and resolve paths
+        const devPluginDir = path.resolve(getPluginDir('dev'));
+        const fullPath = path.resolve(devPluginDir, input.filePath);
+
+        // Security fix: Ensure the resolved path is within the plugin directory
+        if (!pathIsInside(fullPath, devPluginDir)) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Access denied: file path outside plugin directory'
+          });
+        }
+
         await writeFileWithDir(fullPath, input.content);
 
         return { success: true };
       } catch (error) {
         console.error(`Save additional dev file error: ${input.filePath}`, error);
-        throw error;
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Failed to save file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        });
       }
     }),
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../middleware';
+import { TRPCError } from '@trpc/server';
 import packageJson from '../../package.json';
 import { cache } from '@shared/lib/cache';
 import { unfurl } from 'unfurl.js';
@@ -12,6 +13,9 @@ import { getGlobalConfig } from './config';
 import { prisma } from '../prisma';
 import * as fs from 'fs';
 import { getWithProxy } from '@server/lib/proxy';
+import path from 'path';
+import pathIsInside from 'path-is-inside';
+import { FileService } from '@server/lib/files';
 
 const limit = pLimit(5);
 let refreshTicker = 0;
@@ -229,12 +233,33 @@ export const publicRouter = router({
         async () => {
           let metadata: any = null;
           if (input.filePath.includes('/api/file/')) {
-            const realFilePath = input.filePath.replace('/api/file', UPLOAD_FILE_PATH);
-            const fileBuffer = await fs.promises.readFile(realFilePath);
-            metadata = await mm.parseBuffer(new Uint8Array(fileBuffer), {
-              mimeType: 'audio/mpeg',
-              path: realFilePath,
-            });
+            // Security fix: Validate and resolve file path to prevent path traversal
+            try {
+              // Extract relative path from API path
+              const relativePath = input.filePath.replace('/api/file/', '');
+              
+              // Use FileService to validate and resolve the path
+              const realFilePath = FileService.validateAndResolvePath(relativePath, UPLOAD_FILE_PATH);
+              
+              const fileBuffer = await fs.promises.readFile(realFilePath);
+              metadata = await mm.parseBuffer(new Uint8Array(fileBuffer), {
+                mimeType: 'audio/mpeg',
+                path: realFilePath,
+              });
+            } catch (error: any) {
+              // Security fix: Don't leak file existence information through different error messages
+              // Return a generic error for both path traversal and file not found
+              if (error.message?.includes('path traversal') || 
+                  error.message?.includes('outside allowed directory') ||
+                  error.message?.includes('dangerous characters') ||
+                  error.code === 'ENOENT') {
+                throw new TRPCError({
+                  code: 'NOT_FOUND',
+                  message: 'File not found'
+                });
+              }
+              throw error;
+            }
           } else if (input.filePath.includes('s3file')) {
             try {
               const response = await fetch(input.filePath);
