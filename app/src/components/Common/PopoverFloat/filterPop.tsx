@@ -13,6 +13,7 @@ export default function FilterPop() {
   const { t } = useTranslation();
   const blinkoStore = RootStore.Get(BlinkoStore);
 
+  const [isOpen, setIsOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{
     start: any;
     end: any;
@@ -46,6 +47,7 @@ export default function FilterPop() {
       isArchived: null
     };
     blinkoStore.noteList.resetAndCall({});
+    setIsOpen(false);
   };
 
   const handleReset = () => {
@@ -70,7 +72,7 @@ export default function FilterPop() {
   };
 
   return (
-    <Popover placement="bottom-start" backdrop="blur">
+    <Popover placement="bottom-start" backdrop="blur" isOpen={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger>
         <Button isIconOnly size="sm" variant="light">
           <Icon className="cursor-pointer text-default-600" icon="tabler:filter-bolt" width="24" height="24" />
