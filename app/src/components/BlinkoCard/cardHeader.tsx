@@ -160,16 +160,9 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
               className={`opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-red-500 text-desc ${blinkoItem.isRecycle ? 'text-red-500 opacity-100' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                const currentPath = new URLSearchParams(window.location.search).get('path');
-                const newUrl = new URL(window.location.href);
-                if (blinkoItem.isRecycle) {
-                  if (currentPath === 'trash') {
-                    newUrl.searchParams.delete('path');
-                  }
-                } else {
-                  newUrl.searchParams.set('path', 'trash');
-                }
-                window.location.href = newUrl.toString();
+                PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
+                  blinko.updateTicker++;
+                });
               }}
             />
           </Tooltip>
