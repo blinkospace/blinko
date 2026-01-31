@@ -69,6 +69,7 @@ export default function FilterPop() {
       hasTodo: false
     };
     blinkoStore.noteList.resetAndCall({});
+    setIsOpen(false);
   };
 
   return (
