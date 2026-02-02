@@ -150,6 +150,24 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           />
         )}
 
+        {/* Trash/Recycle bin button */}
+        {!isShareMode && (
+          <Tooltip content={t('trash')} delay={1000}>
+            <Icon
+              icon="mingcute:delete-2-line"
+              width={iconSize}
+              height={iconSize}
+              className={`opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-red-500 text-desc ${blinkoItem.isRecycle ? 'text-red-500 opacity-100' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
+                  blinko.updateTicker++;
+                });
+              }}
+            />
+          </Tooltip>
+        )}
+
         {blinkoItem.isTop && (
           <Icon
             className={isIOSDevice ? 'ml-[10px] text-[#EFC646]' : "ml-auto group-hover/card:ml-2 text-[#EFC646]"}

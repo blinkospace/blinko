@@ -41,6 +41,23 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
     };
   }, [blinkoStore.searchText]);
 
+  // Check if there are any active filters
+  const hasActiveFilters = () => {
+    const config = blinkoStore.noteListFilterConfig;
+    return !!(
+      localSearchText ||
+      config.tagId !== null ||
+      config.withoutTag ||
+      config.withFile ||
+      config.withLink ||
+      config.isShare !== null ||
+      config.hasTodo ||
+      config.startDate !== null ||
+      config.endDate !== null ||
+      config.type !== 0
+    );
+  };
+
   const handleGlobalSearch = () => {
     // Emit an event that will be caught by the CommonLayout to open the global search
     eventBus.emit('open-global-search');
@@ -69,7 +86,7 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
         </motion.div>
       ) : (
         <div className="hidden md:flex items-center relative">
-          <Button size="sm" variant="light" onPress={() => setIsGlobalSearchOpen(true)} className={`${!localSearchText ? 'w-[170px]' : 'w-[120px]'} justify-center flex gap-1 px-3 border-2 border-desc`}>
+          <Button size="sm" variant="light" onPress={() => setIsGlobalSearchOpen(true)} className={`${!hasActiveFilters() ? 'w-[170px]' : 'w-auto min-w-[120px] max-w-[250px]'} justify-center flex gap-1 px-3 border-2 border-desc`}>
             <Icon className="text-default-500 mr-1" icon="lets-icons:search" width="16" height="16" />
             <span className={`${localSearchText.length > 0 ? 'text-primary-foreground bg-primary rounded-md px-2' : 'text-default-500'} truncate mr-auto`}>{localSearchText.length > 0 ? localSearchText : t('search')}</span>
             {localSearchText && <Icon icon="ph:x-bold" width="14" height="14" className="ml-1 p-0 hover:text-danger transition-colors" onClick={handleClearSearch} />}
