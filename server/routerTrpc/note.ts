@@ -1002,7 +1002,10 @@ export const noteRouter = router({
           : { id, accountId: Number(ctx.id) }; // Filter by ID and accountId for owners
 
         const note = await prisma.notes.update({ where: whereClause, data: update });
-        if (content == null) return;
+        if (content == null) {
+          SendWebhook({ ...note, attachments }, isRecycle ? 'delete' : 'update', ctx);
+          return note;
+        }
         const oldTagsInThisNote = await prisma.tagsToNote.findMany({ where: { noteId: note.id }, include: { tag: true } });
         await handleAddTags(tagTree, undefined, note.id);
         const oldTags = oldTagsInThisNote.map((i) => i.tag).filter((i) => !!i);
