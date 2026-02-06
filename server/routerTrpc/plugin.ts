@@ -160,6 +160,7 @@ export const pluginRouter = router({
     }),
 
   saveDevPlugin: authProcedure
+    .use(superAdminAuthMiddleware)
     .input(
       z.object({
         code: z.string(),
@@ -170,19 +171,46 @@ export const pluginRouter = router({
     .output(z.any())
     .mutation(async function ({ input }) {
       try {
+        // Security fix: Validate fileName to prevent path traversal
+        if (input.fileName.includes('..') || input.fileName.includes('\\..') || input.fileName.includes('/..')) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid file name: path traversal detected'
+          });
+        }
+
+        if (path.isAbsolute(input.fileName)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Invalid file name: absolute paths are not allowed'
+          });
+        }
+
         // Clean dev plugin directory
         await cleanPluginDir('dev');
 
         // Rebuild directory and save file
-        const devPluginDir = getPluginDir('dev');
+        const devPluginDir = path.resolve(getPluginDir('dev'));
         await ensureDirectoryExists(devPluginDir);
 
-        const fullFilePath = path.join(devPluginDir, input.fileName);
+        const fullFilePath = path.resolve(devPluginDir, input.fileName);
+
+        // Security fix: Ensure the resolved path is within the dev plugin directory
+        if (!pathIsInside(fullFilePath, devPluginDir)) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Access denied: file path outside plugin directory'
+          });
+        }
+
         await writeFileWithDir(fullFilePath, input.code);
 
         return { success: true };
       } catch (error) {
         console.error('Save dev plugin error:', error);
+        if (error instanceof TRPCError) {
+          throw error;
+        }
         throw error;
       }
     }),
