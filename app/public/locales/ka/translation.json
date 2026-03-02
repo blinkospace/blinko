@@ -841,5 +841,9 @@
   "enable-signin-footer": "შესვლის ქვემოთის ჩართვა",
   "signin-footer-text": "შესვლის ქვემოთის შინაარსი",
   "signin-footer-desc": "მხარს უჭერს HTML: <a href='...'>ბმული</a>, <strong>სქელი</strong>, <em>დახრილი</em>, <br/>",
-  "signin-footer-placeholder": "მაგ: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. ყველა უფლება დაცულია."
+  "signin-footer-placeholder": "მაგ: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. ყველა უფლება დაცულია.",
+  "custom-title": "მორგებული სათაური",
+  "custom-title-tip": "გამოიყენება ბრაუზერის ჩანართისთვის და შესვლის სათაურისთვის. დატოვეთ ცარიელი ნაგულისხმევი სათაურის გამოსაყენებლად.",
+  "custom-title-placeholder": "შეიყვანეთ სათაური (1-50 სიმბოლო)",
+  "login-with": "შესვლა {{title}}-ით"
 }

@@ -848,5 +848,9 @@
   "enable-signin-footer": "Activer le pied de page de connexion",
   "signin-footer-text": "Contenu du pied de page de connexion",
   "signin-footer-desc": "Prend en charge HTML: <a href='...'>lien</a>, <strong>gras</strong>, <em>italique</em>, <br/>",
-  "signin-footer-placeholder": "Exemple: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Tous droits réservés."
+  "signin-footer-placeholder": "Exemple: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Tous droits réservés.",
+  "custom-title": "Titre personnalisé",
+  "custom-title-tip": "Utilisé pour l'onglet du navigateur et le titre de connexion. Laissez vide pour utiliser le titre par défaut.",
+  "custom-title-placeholder": "Entrez un titre (1-50 caractères)",
+  "login-with": "Se connecter avec {{title}}"
 }

@@ -848,5 +848,9 @@
   "enable-signin-footer": "サインインフッターを有効にする",
   "signin-footer-text": "サインインフッターの内容",
   "signin-footer-desc": "HTMLをサポート: <a href='...'>リンク</a>, <strong>太字</strong>, <em>斜体</em>, <br/>",
-  "signin-footer-placeholder": "例: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. すべての権利を保有。"
+  "signin-footer-placeholder": "例: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. すべての権利を保有。",
+  "custom-title": "カスタムタイトル",
+  "custom-title-tip": "ブラウザタブとサインインタイトルに使用されます。空のままにするとデフォルトのタイトルが使用されます。",
+  "custom-title-placeholder": "タイトルを入力してください（1-50文字）",
+  "login-with": "{{title}}でログイン"
 }

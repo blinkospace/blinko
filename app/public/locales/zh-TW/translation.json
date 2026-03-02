@@ -848,5 +848,9 @@
   "enable-signin-footer": "啟用登入頁尾",
   "signin-footer-text": "登入頁尾內容",
   "signin-footer-desc": "支援HTML: <a href='...'>連結</a>, <strong>粗體</strong>, <em>斜體</em>, <br/>",
-  "signin-footer-placeholder": "例如：<a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. 版權所有."
+  "signin-footer-placeholder": "例如：<a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. 版權所有.",
+  "custom-title": "自訂標題",
+  "custom-title-tip": "用於瀏覽器分頁和登入頁標題，留空將使用預設標題。",
+  "custom-title-placeholder": "請輸入標題（1-50個字元）",
+  "login-with": "使用 {{title}} 登入"
 }

@@ -845,5 +845,9 @@
   "enable-signin-footer": "Włącz stopkę logowania",
   "signin-footer-text": "Treść stopki logowania",
   "signin-footer-desc": "Obsługuje HTML: <a href='...'>link</a>, <strong>pogrubienie</strong>, <em>kursywa</em>, <br/>",
-  "signin-footer-placeholder": "Np.: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Wszelkie prawa zastrzeżone."
+  "signin-footer-placeholder": "Np.: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Wszelkie prawa zastrzeżone.",
+  "custom-title": "Niestandardowy tytuł",
+  "custom-title-tip": "Używany dla karty przeglądarki i tytułu logowania. Pozostaw puste, aby użyć domyślnego tytułu.",
+  "custom-title-placeholder": "Wprowadź tytuł (1-50 znaków)",
+  "login-with": "Zaloguj się przez {{title}}"
 }

@@ -848,5 +848,9 @@
   "enable-signin-footer": "Ativar rodapé de início de sessão",
   "signin-footer-text": "Conteúdo do rodapé de início de sessão",
   "signin-footer-desc": "Suporta HTML: <a href='...'>link</a>, <strong>negrito</strong>, <em>itálico</em>, <br/>",
-  "signin-footer-placeholder": "Ex: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Todos os direitos reservados."
+  "signin-footer-placeholder": "Ex: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Todos os direitos reservados.",
+  "custom-title": "Título personalizado",
+  "custom-title-tip": "Usado para a aba do navegador e título de início de sessão. Deixe vazio para usar o título padrão.",
+  "custom-title-placeholder": "Digite um título (1-50 caracteres)",
+  "login-with": "Entrar com {{title}}"
 }

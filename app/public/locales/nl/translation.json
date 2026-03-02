@@ -834,5 +834,9 @@
   "enable-signin-footer": "Aanmeldfooter inschakelen",
   "signin-footer-text": "Inhoud van de aanmeldfooter",
   "signin-footer-desc": "Ondersteunt HTML: <a href='...'>link</a>, <strong>vet</strong>, <em>cursief</em>, <br/>",
-  "signin-footer-placeholder": "Bijv.: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Alle rechten voorbehouden."
+  "signin-footer-placeholder": "Bijv.: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Alle rechten voorbehouden.",
+  "custom-title": "Aangepaste titel",
+  "custom-title-tip": "Gebruikt voor browsertabblad en aanmeldtitel. Laat leeg om de standaardtitel te gebruiken.",
+  "custom-title-placeholder": "Voer een titel in (1-50 tekens)",
+  "login-with": "Inloggen met {{title}}"
 }

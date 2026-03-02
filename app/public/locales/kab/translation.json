@@ -834,5 +834,9 @@
   "enable-signin-footer": "Rmed aqerru n unekcum",
   "signin-footer-text": "Agbur n uqerru n unekcum",
   "signin-footer-desc": "Yettwagmen HTML: <a href='...'>aseɣwen</a>, <strong>učči</strong>, <em>iri</em>, <br/>",
-  "signin-footer-placeholder": "Amedya: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Akk yiraten ttwaḥerzen."
+  "signin-footer-placeholder": "Amedya: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Akk yiraten ttwaḥerzen.",
+  "custom-title": "Azwel udmawan",
+  "custom-title-tip": "Yettwaseqdec i yiccer n yiminig d uzwel n unekcum. Eǧǧ-it d ilem akken ad tesqedceḍ azwel amezwer.",
+  "custom-title-placeholder": "Sekcem azwel (1-50 isekkilen)",
+  "login-with": "Kcem s {{title}}"
 }
