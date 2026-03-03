@@ -280,6 +280,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "AI წერის სერვისთან კავშირი ვერ მოხერხდა",
   "every-day": "ყოველ დღე",
   "every-half-year": "ყოველ ნახევარ წელიწადში",
   "every-month": "ყოველ თვე",

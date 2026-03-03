@@ -277,6 +277,7 @@
   "error": "오류",
   "error-code": "오류 코드",
   "error-details": "오류 세부 정보",
+  "ai-writing-service-connection-failed": "AI 작성 서비스 연결 실패",
   "every-day": "매일",
   "every-half-year": "6개월마다",
   "every-month": "매월",

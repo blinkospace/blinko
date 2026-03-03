@@ -632,6 +632,7 @@
   "error": "错误",
   "error-code": "错误代码",
   "error-details": "错误详情",
+  "ai-writing-service-connection-failed": "AI写作服务连接失败",
   "check-proxy-settings-and-ensure-server-is-accessible": "请检查代理设置并确保服务器可访问",
   "do-not-include-http-or-https-prefix": "请勿包含 http:// 或 https:// 前缀",
   "to-search-tags": "搜索标签",

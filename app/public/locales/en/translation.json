@@ -626,6 +626,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "AI writing service connection failed",
   "check-proxy-settings-and-ensure-server-is-accessible": "Check your proxy settings and ensure the server is accessible",
   "do-not-include-http-or-https-prefix": "Do not include http:// or https:// prefix",
   "to-search-tags": "To search tags",

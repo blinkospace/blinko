@@ -326,7 +326,7 @@ export class AiStore implements Store {
       this.isLoading = false;
     } catch (error) {
       console.log('writeStream error', error);
-      RootStore.Get(ToastPlugin).error(error?.message || 'AI写作服务连接失败');
+      RootStore.Get(ToastPlugin).error(error?.message || i18n.t('ai-writing-service-connection-failed'));
       this.isLoading = false;
       this.isWriting = false;
     }

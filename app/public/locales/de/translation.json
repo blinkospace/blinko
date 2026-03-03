@@ -282,6 +282,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "Verbindung zum KI-Schreibdienst fehlgeschlagen",
   "every-day": "Jeden Tag",
   "every-half-year": "Jedes halbe Jahr",
   "every-month": "Jeden Monat",

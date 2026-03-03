@@ -277,6 +277,7 @@
   "error": "Fout",
   "error-code": "Foutcode",
   "error-details": "Foutdetails",
+  "ai-writing-service-connection-failed": "Verbinding met AI-schrijfservice mislukt",
   "every-day": "Elke dag",
   "every-half-year": "Elk half jaar",
   "every-month": "Elke maand",

@@ -282,6 +282,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "AI執筆サービスの接続に失敗しました",
   "every-day": "毎日",
   "every-half-year": "半年ごと",
   "every-month": "毎月",

@@ -282,6 +282,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "فشل الاتصال بخدمة الكتابة بالذكاء الاصطناعي",
   "every-day": "كل يوم",
   "every-half-year": "كل نصف عام",
   "every-month": "كل شهر",
