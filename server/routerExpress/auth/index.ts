@@ -3,7 +3,7 @@ import passport from './config';
 import { prisma } from '../../prisma';
 import { authenticator } from 'otplib';
 import { getGlobalConfig } from '../../routerTrpc/config';
-import { verifyToken, generateToken } from '../../lib/helper';
+import { verifyToken, generateToken, generateApiToken } from '../../lib/helper';
 
 const router = express.Router();
 
@@ -133,6 +133,11 @@ router.post('/verify-2fa', async (req: any, res) => {
     }
 
     const token = await generateToken(user, true);
+    const apiToken = await generateApiToken({ id: user.id, name: user.name ?? '', role: user.role });
+    await prisma.accounts.update({
+      where: { id: user.id },
+      data: { apiToken }
+    });
 
     console.log('2FA verification successful:', {
       user: user.id
