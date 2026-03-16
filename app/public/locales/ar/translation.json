@@ -282,6 +282,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "فشل الاتصال بخدمة الكتابة بالذكاء الاصطناعي",
   "every-day": "كل يوم",
   "every-half-year": "كل نصف عام",
   "every-month": "كل شهر",
@@ -848,5 +849,9 @@
   "enable-signin-footer": "تمكين تذييل تسجيل الدخول",
   "signin-footer-text": "محتوى تذييل تسجيل الدخول",
   "signin-footer-desc": "يدعم HTML: <a href='...'>رابط</a>, <strong>عريض</strong>, <em>مائل</em>, <br/>",
-  "signin-footer-placeholder": "<a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. جميع الحقوق محفوظة."
+  "signin-footer-placeholder": "<a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. جميع الحقوق محفوظة.",
+  "custom-title": "عنوان مخصص",
+  "custom-title-tip": "يُستخدم لعلامة تبويب المتصفح وعنوان تسجيل الدخول. اتركه فارغًا لاستخدام العنوان الافتراضي.",
+  "custom-title-placeholder": "أدخل عنوانًا (1-50 حرفًا)",
+  "login-with": "تسجيل الدخول باستخدام {{title}}"
 }

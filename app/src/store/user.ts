@@ -195,9 +195,17 @@ export class UserStore implements Store {
     document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')?.setAttribute('content', themeColor);
   }
 
+  updateAppTitle(customTitle?: string) {
+    const appTitle = customTitle?.trim() || 'Blinko';
+    document.title = appTitle;
+    document.querySelector('meta[name="application-name"]')?.setAttribute('content', appTitle);
+    document.querySelector('meta[name="apple-mobile-web-app-title"]')?.setAttribute('content', appTitle);
+  }
+
   async initializeSettings(setTheme: (theme: string) => void, i18n: any) {
     const base = RootStore.Get(BaseStore);
     const config = await this.blinko.config.call()
+    this.updateAppTitle(config?.customTitle);
     const handleFeatureRoute = (
       featureKey: 'hub' | 'ai',
       storageKey: string,
@@ -394,6 +402,10 @@ export class UserStore implements Store {
     useEffect(() => {
       this.initializeSettings(setTheme, i18n);
     }, []);
+
+    useEffect(() => {
+      this.updateAppTitle(this.blinko.config.value?.customTitle);
+    }, [this.blinko.config.value?.customTitle]);
 
     useEffect(() => {
       setTauriTheme(theme).catch(console.error);

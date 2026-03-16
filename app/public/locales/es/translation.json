@@ -282,6 +282,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "Error de conexión al servicio de escritura de IA",
   "every-day": "Todos los días",
   "every-half-year": "Cada semestre",
   "every-month": "Todos los meses",
@@ -848,5 +849,9 @@
   "enable-signin-footer": "Activar pie de página de inicio de sesión",
   "signin-footer-text": "Contenido del pie de página de inicio de sesión",
   "signin-footer-desc": "Soporta HTML: <a href='...'>enlace</a>, <strong>negrita</strong>, <em>cursiva</em>, <br/>",
-  "signin-footer-placeholder": "Ejemplo: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Todos los derechos reservados."
+  "signin-footer-placeholder": "Ejemplo: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Todos los derechos reservados.",
+  "custom-title": "Título personalizado",
+  "custom-title-tip": "Se utiliza para la pestaña del navegador y el título de inicio de sesión. Déjelo vacío para usar el título predeterminado.",
+  "custom-title-placeholder": "Ingrese un título (1-50 caracteres)",
+  "login-with": "Iniciar sesión con {{title}}"
 }
