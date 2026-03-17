@@ -26,6 +26,7 @@ export const PerferSetting = observer(() => {
   const [maxHomePageWidth, setMaxHomePageWidth] = useState(blinko.config.value?.maxHomePageWidth?.toString() || '0');
   const [customBackgroundUrl, setCustomBackgroundUrl] = useState(blinko.config.value?.customBackgroundUrl || '');
   const [signinFooterText, setSigninFooterText] = useState(blinko.config.value?.signinFooterText || '');
+  const [customTitle, setCustomTitle] = useState(blinko.config.value?.customTitle || '');
   const user = RootStore.Get(UserStore)
 
   useEffect(() => {
@@ -34,7 +35,8 @@ export const PerferSetting = observer(() => {
     setMaxHomePageWidth(blinko.config.value?.maxHomePageWidth?.toString() || '0');
     setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
     setSigninFooterText(blinko.config.value?.signinFooterText || '');
-  }, [blinko.config.value?.textFoldLength, blinko.config.value?.maxHomePageWidth, blinko.config.value?.signinFooterText]);
+    setCustomTitle(blinko.config.value?.customTitle || '');
+  }, [blinko.config.value?.textFoldLength, blinko.config.value?.maxHomePageWidth, blinko.config.value?.customBackgroundUrl, blinko.config.value?.signinFooterText, blinko.config.value?.customTitle]);
 
 
   return <CollapsibleCard
@@ -405,6 +407,35 @@ export const PerferSetting = observer(() => {
           />
         </Tooltip>
       } />
+
+    {
+      user.isSuperAdmin && (
+        <Item
+          type={isPc ? 'row' : 'col'}
+          leftContent={<div className="flex flex-col">
+            <div>{t('custom-title')}</div>
+            <div className="text-xs text-default-400">{t('custom-title-tip')}</div>
+          </div>}
+          rightContent={<Input
+            className="w-full md:w-[400px]"
+            placeholder={t('custom-title-placeholder')}
+            type="text"
+            maxLength={50}
+            value={customTitle}
+            onChange={e => {
+              setCustomTitle(e.target.value)
+            }}
+            onBlur={async () => {
+              const titleValue = customTitle.trim().slice(0, 50);
+              setCustomTitle(titleValue);
+              await PromiseCall(api.config.update.mutate({
+                key: 'customTitle',
+                value: titleValue
+              }));
+              blinko.config.call();
+            }} />} />
+      )
+    }
 
     {
       user.isSuperAdmin && (

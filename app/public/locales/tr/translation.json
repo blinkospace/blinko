@@ -282,6 +282,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "AI yazma hizmeti bağlantısı başarısız oldu",
   "every-day": "Her gün",
   "every-half-year": "Her altı ay",
   "every-month": "Her ay",
@@ -848,5 +849,9 @@
   "enable-signin-footer": "Giriş altbilgisini etkinleştir",
   "signin-footer-text": "Giriş altbilgisi içeriği",
   "signin-footer-desc": "HTML destekler: <a href='...'>bağlantı</a>, <strong>kalın</strong>, <em>italik</em>, <br/>",
-  "signin-footer-placeholder": "Örn: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Tüm hakları saklıdır."
+  "signin-footer-placeholder": "Örn: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Tüm hakları saklıdır.",
+  "custom-title": "Özel Başlık",
+  "custom-title-tip": "Tarayıcı sekmesi ve giriş başlığı için kullanılır. Varsayılan başlığı kullanmak için boş bırakın.",
+  "custom-title-placeholder": "Bir başlık girin (1-50 karakter)",
+  "login-with": "{{title}} ile Giriş Yap"
 }

@@ -239,7 +239,7 @@ export const ImportProgress = observer(({ force }: { force: boolean }) => {
             </div>
             {item.error as unknown as string && (
               <div className="mt-2 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg text-xs text-red-600 dark:text-red-400">
-                <div className="font-medium mb-1">错误详情:</div>
+                <div className="font-medium mb-1">{t('error-details')}:</div>
                 <div className="break-words">{String(item.error as unknown as string)}</div>
               </div>
             )}

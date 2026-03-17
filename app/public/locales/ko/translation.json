@@ -277,6 +277,7 @@
   "error": "오류",
   "error-code": "오류 코드",
   "error-details": "오류 세부 정보",
+  "ai-writing-service-connection-failed": "AI 작성 서비스 연결 실패",
   "every-day": "매일",
   "every-half-year": "6개월마다",
   "every-month": "매월",
@@ -834,5 +835,9 @@
   "enable-signin-footer": "로그인 푸터 활성화",
   "signin-footer-text": "로그인 푸터 내용",
   "signin-footer-desc": "HTML 지원: <a href='...'>링크</a>, <strong>굵게</strong>, <em>기울임꼴</em>, <br/>",
-  "signin-footer-placeholder": "예: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. 모든 권리 보유."
+  "signin-footer-placeholder": "예: <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. 모든 권리 보유.",
+  "custom-title": "사용자 정의 제목",
+  "custom-title-tip": "브라우저 탭 및 로그인 제목에 사용됩니다. 비워두면 기본 제목이 사용됩니다.",
+  "custom-title-placeholder": "제목을 입력하세요 (1-50자)",
+  "login-with": "{{title}}(으)로 로그인"
 }

@@ -139,6 +139,21 @@ export const getNextAuthSecret = async () => {
   return secret;
 }
 
+export const generateApiToken = async (user: { id: number, name: string, role: string }, permissions?: string[]) => {
+  const secret = await getNextAuthSecret();
+  return jwt.sign(
+    {
+      role: user.role,
+      name: user.name,
+      sub: user.id.toString(),
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 365 * 100),
+      iat: Math.floor(Date.now() / 1000),
+      permissions
+    },
+    secret
+  );
+};
+
 export const generateToken = async (user: any, twoFactorVerified = false) => {
   const secret = await getNextAuthSecret();
   return jwt.sign(

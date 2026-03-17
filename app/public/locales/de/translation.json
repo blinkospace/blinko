@@ -282,6 +282,7 @@
   "error": "Error",
   "error-code": "Error Code",
   "error-details": "Error Details",
+  "ai-writing-service-connection-failed": "Verbindung zum KI-Schreibdienst fehlgeschlagen",
   "every-day": "Jeden Tag",
   "every-half-year": "Jedes halbe Jahr",
   "every-month": "Jeden Monat",
@@ -690,7 +691,7 @@
   "show-more": "Mehr anzeigen",
   "show-navigation-bar-on-mobile": "Navigationsleiste auf dem Handy ausblenden",
   "sign-in": "Anmelden",
-  "sign-in-with-provider": "Melden Sie sich mit {{ Anbieter }} an.",
+  "sign-in-with-provider": "Melden Sie sich mit {{ provider }} an.",
   "sign-up": "Registrieren",
   "site-url": "Blinko-Website-URL",
   "small-device-card-columns": "Spalten für kleine Bildschirme",
@@ -848,5 +849,9 @@
   "enable-signin-footer": "Anmeldefußzeile aktivieren",
   "signin-footer-text": "Inhalt der Anmeldefußzeile",
   "signin-footer-desc": "Unterstützt HTML: <a href='...'>Link</a>, <strong>Fett</strong>, <em>Kursiv</em>, <br/>",
-  "signin-footer-placeholder": "z. B. <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Alle Rechte vorbehalten."
+  "signin-footer-placeholder": "z. B. <a href='https://blinko.space/'>Blinko</a> © 2026 Blinko. Alle Rechte vorbehalten.",
+  "custom-title": "Benutzerdefinierter Titel",
+  "custom-title-tip": "Wird für Browser-Tab und Anmeldetitel verwendet. Leer lassen, um den Standardtitel zu verwenden.",
+  "custom-title-placeholder": "Titel eingeben (1-50 Zeichen)",
+  "login-with": "Anmelden mit {{title}}"
 }
