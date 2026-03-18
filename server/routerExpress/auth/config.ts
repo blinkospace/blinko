@@ -15,12 +15,32 @@ import { cache } from '@shared/lib/cache';
 // Cache TTL in milliseconds (20 seconds)
 const CACHE_TTL = 20 * 1000;
 
+let oauthStrategiesInitialized = false;
+let oauthInitializationPromise: Promise<void> | null = null;
+
 export const configureSession = async (app: any) => {
   await initJwtStrategy();
   initLocalStrategy();
-  await initOAuthStrategies();
-  
+
   app.use(passport.initialize());
+};
+
+export const ensureOAuthStrategies = async () => {
+  if (oauthStrategiesInitialized) {
+    return;
+  }
+
+  if (!oauthInitializationPromise) {
+    oauthInitializationPromise = initOAuthStrategies()
+      .then(() => {
+        oauthStrategiesInitialized = true;
+      })
+      .finally(() => {
+        oauthInitializationPromise = null;
+      });
+  }
+
+  await oauthInitializationPromise;
 };
 
 async function handleOAuthCallback(accessToken: string, refreshToken: string, profile: any, done: any) {
@@ -435,9 +455,12 @@ export const reinitializeOAuthStrategies = async () => {
         // Strategy might not exist, continue
       }
     }
+
+    oauthStrategiesInitialized = false;
+    oauthInitializationPromise = null;
     
     // Re-initialize OAuth strategies
-    await initOAuthStrategies();
+    await ensureOAuthStrategies();
     return { success: true, message: 'OAuth strategies reinitialized' };
   } catch (error) {
     console.error('Failed to reinitialize OAuth strategies:', error);
@@ -445,4 +468,4 @@ export const reinitializeOAuthStrategies = async () => {
   }
 };
 
-export default passport; 
+export default passport;
