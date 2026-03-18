@@ -204,7 +204,8 @@ router.get('/profile', async (req: any, res) => {
   }
 });
 
-router.get('/:providerId', logOAuthRequest('Custom'), (req, res, next) => {
+router.get('/:providerId', logOAuthRequest('Custom'), async (req, res, next) => {
+    await ensureOAuthStrategiesInitialized();
   const providerId = req.params.providerId;
   console.log(`Custom OAuth provider ${providerId} authentication route accessed`);
   
