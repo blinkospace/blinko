@@ -1,5 +1,6 @@
 import express from 'express';
-import passport from './config';
+import passport, { ensureOAuthStrategiesInitialized } from './config';
+
 import { prisma } from '../../prisma';
 import { authenticator } from 'otplib';
 import { getGlobalConfig } from '../../routerTrpc/config';
@@ -33,12 +34,14 @@ const logOAuthRequest = (provider: string) => (req: any, res: any, next: any) =>
   next();
 };
 
-router.get('/github', logOAuthRequest('GitHub'), (req, res, next) => {
+router.get('/github', logOAuthRequest('GitHub'), async (req, res, next) => {
+  await ensureOAuthStrategiesInitialized();
   console.log('GitHub authentication route accessed');
   passport.authenticate('github', { scope: ['user:email'] })(req, res, next);
 });
 
-router.get('/callback/:providerId', (req, res, next) => {
+router.get('/callback/:providerId', async (req, res, next) => {
+  await ensureOAuthStrategiesInitialized();
   const providerId = req.params.providerId;
   console.log(`${providerId} callback route accessed`);
   passport.authenticate(providerId, (err, user, info) => {
@@ -46,7 +49,8 @@ router.get('/callback/:providerId', (req, res, next) => {
   })(req, res, next);
 });
 
-router.get('/google', logOAuthRequest('Google'), (req, res, next) => {
+router.get('/google', logOAuthRequest('Google'), async (req, res, next) => {
+  await ensureOAuthStrategiesInitialized();
   console.log('Google authentication route accessed');
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
