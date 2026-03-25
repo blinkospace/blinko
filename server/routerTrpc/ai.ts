@@ -694,6 +694,16 @@ export const aiRouter = router({
             break;
           }
 
+          case 'minimax': {
+            // Static list - MiniMax models with known capabilities
+            modelList = [
+              { id: 'MiniMax-M2.7', name: 'MiniMax M2.7', capabilities: inferModelCapabilities('MiniMax-M2.7') },
+              { id: 'MiniMax-M2.5', name: 'MiniMax M2.5', capabilities: inferModelCapabilities('MiniMax-M2.5') },
+              { id: 'MiniMax-M2.5-highspeed', name: 'MiniMax M2.5 Highspeed', capabilities: inferModelCapabilities('MiniMax-M2.5-highspeed') }
+            ];
+            break;
+          }
+
           default: {
             // Default: use OpenAI-compatible API format
             const endpoint = provider.baseURL;

@@ -136,5 +136,15 @@ export const PROVIDER_TEMPLATES = [
     docs: 'https://docs.voyageai.com',
     icon: 'voyageai',
     description: 'High-quality embedding models for retrieval and search'
+  },
+  {
+    value: 'minimax',
+    label: 'MiniMax',
+    defaultName: 'MiniMax',
+    defaultBaseURL: 'https://api.minimax.io/v1',
+    website: 'https://www.minimaxi.com',
+    docs: 'https://platform.minimaxi.com/document/introduction',
+    icon: 'minimax',
+    description: 'MiniMax M2.7, M2.5 and other MiniMax models'
   }
 ];
