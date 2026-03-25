@@ -9,6 +9,7 @@ import { observer } from 'mobx-react-lite';
 import { eventBus } from '@/lib/event';
 import { GlobalSearch } from './GlobalSearch';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { clearSearchState, getSearchWithClearedFilters } from '@/lib/searchFilters';
 
 interface BarSearchInputProps {
   isPc: boolean;
@@ -69,25 +70,13 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
 
   const handleClearSearch = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const nextSearchParams = new URLSearchParams(searchParams);
-    nextSearchParams.delete('searchText');
-    nextSearchParams.delete('tagId');
-    nextSearchParams.delete('withoutTag');
-    nextSearchParams.delete('withFile');
-    nextSearchParams.delete('withLink');
-    nextSearchParams.delete('hasTodo');
 
     setLocalSearchText('');
-    blinkoStore.searchText = '';
-    blinkoStore.noteListFilterConfig.tagId = null;
-    blinkoStore.noteListFilterConfig.withoutTag = false;
-    blinkoStore.noteListFilterConfig.withFile = false;
-    blinkoStore.noteListFilterConfig.withLink = false;
-    blinkoStore.noteListFilterConfig.hasTodo = false;
+    clearSearchState(blinkoStore);
 
     navigate({
       pathname: location.pathname,
-      search: nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : '',
+      search: getSearchWithClearedFilters(searchParams),
     });
 
     // Focus back on the search input after clearing

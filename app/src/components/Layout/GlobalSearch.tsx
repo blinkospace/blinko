@@ -19,6 +19,7 @@ import { helper } from '@/lib/helper';
 import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { downloadFromLink } from '@/lib/tauriHelper';
+import { clearSearchState, getSearchWithClearedFilters } from '@/lib/searchFilters';
 
 interface GlobalSearchProps {
   isOpen: boolean;
@@ -74,17 +75,9 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
   const navigate = useNavigate()
 
   const clearSearchFiltersFromUrl = () => {
-    const nextSearchParams = new URLSearchParams(searchParams);
-    nextSearchParams.delete('searchText');
-    nextSearchParams.delete('tagId');
-    nextSearchParams.delete('withoutTag');
-    nextSearchParams.delete('withFile');
-    nextSearchParams.delete('withLink');
-    nextSearchParams.delete('hasTodo');
-
     navigate({
       pathname: location.pathname,
-      search: nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : '',
+      search: getSearchWithClearedFilters(searchParams),
     });
   };
 
@@ -117,14 +110,7 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
         debouncedSearch.current(value);
       } else if (!value) {
         this.searchResults = { notes: [], resources: [], settings: [], tags: [] };
-        // Reset blinkoStore search text and reset list calls
-        blinkoStore.searchText = '';
-        blinkoStore.globalSearchTerm = '';
-        blinkoStore.noteListFilterConfig.tagId = null;
-        blinkoStore.noteListFilterConfig.withoutTag = false;
-        blinkoStore.noteListFilterConfig.withFile = false;
-        blinkoStore.noteListFilterConfig.withLink = false;
-        blinkoStore.noteListFilterConfig.hasTodo = false;
+        clearSearchState(blinkoStore);
         clearSearchFiltersFromUrl();
         blinkoStore.noteList.resetAndCall({ page: 1, size: 20 });
         blinkoStore.resourceList.resetAndCall({
