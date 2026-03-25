@@ -25,6 +25,8 @@ export function sanitizeUploadFileName(name: string): string {
     .replace(/[\x00-\x1f\x7f\x80-\x9f]/g, '')
     // Replace reserved filesystem characters
     .replace(/[<>:"/\\|?*]/g, '_')
+    // Collapse consecutive dots to single dot (prevents path traversal false positives)
+    .replace(/\.{2,}/g, '.')
     // Collapse multiple consecutive underscores
     .replace(/_+/g, '_')
     // Remove leading/trailing dots, spaces, and underscores

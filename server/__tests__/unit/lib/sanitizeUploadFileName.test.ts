@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { sanitizeUploadFileName } from '../lib/files';
+import { sanitizeUploadFileName } from '../../../lib/files';
 
 describe('sanitizeUploadFileName', () => {
   test('passes through simple ASCII filenames unchanged', () => {
@@ -39,6 +39,12 @@ describe('sanitizeUploadFileName', () => {
     expect(sanitizeUploadFileName('.hidden')).toBe('hidden');
     expect(sanitizeUploadFileName('...dots')).toBe('dots');
     expect(sanitizeUploadFileName('trailing.')).toBe('trailing');
+  });
+
+  test('collapses consecutive dots to prevent path traversal false positives', () => {
+    expect(sanitizeUploadFileName('file...name')).toBe('file.name');
+    expect(sanitizeUploadFileName('hello..world')).toBe('hello.world');
+    expect(sanitizeUploadFileName('test+..._end')).toBe('test+._end');
   });
 
   test('truncates filenames longer than 200 characters', () => {
