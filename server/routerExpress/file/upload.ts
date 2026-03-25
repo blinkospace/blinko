@@ -112,7 +112,16 @@ router.post('/', async (req, res) => {
       if (fieldname === 'file') {
         const passThrough = new PassThrough();
         let fileSize = 0;
-        const decodedFilename = Buffer.from(info.filename, 'binary').toString('utf-8');
+        let decodedFilename: string;
+        try {
+          decodedFilename = Buffer.from(info.filename, 'binary').toString('utf-8');
+        } catch {
+          decodedFilename = info.filename;
+        }
+        // Fallback if decoding produced an empty or invalid string
+        if (!decodedFilename || decodedFilename.trim() === '') {
+          decodedFilename = info.filename || `upload_${Date.now()}`;
+        }
         
         stream.on('data', (chunk) => {
           fileSize += chunk.length;
