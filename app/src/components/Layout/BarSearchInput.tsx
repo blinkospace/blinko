@@ -8,6 +8,7 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { observer } from 'mobx-react-lite';
 import { eventBus } from '@/lib/event';
 import { GlobalSearch } from './GlobalSearch';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 interface BarSearchInputProps {
   isPc: boolean;
@@ -16,6 +17,9 @@ interface BarSearchInputProps {
 export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
   const { t } = useTranslation();
   const blinkoStore = RootStore.Get(BlinkoStore);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [localSearchText, setLocalSearchText] = useState('');
@@ -64,15 +68,32 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
   };
 
   const handleClearSearch = (e: React.MouseEvent) => {
-    console.log(e);
     e.stopPropagation();
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('searchText');
+    nextSearchParams.delete('tagId');
+    nextSearchParams.delete('withoutTag');
+    nextSearchParams.delete('withFile');
+    nextSearchParams.delete('withLink');
+    nextSearchParams.delete('hasTodo');
+
     setLocalSearchText('');
     blinkoStore.searchText = '';
+    blinkoStore.noteListFilterConfig.tagId = null;
+    blinkoStore.noteListFilterConfig.withoutTag = false;
+    blinkoStore.noteListFilterConfig.withFile = false;
+    blinkoStore.noteListFilterConfig.withLink = false;
+    blinkoStore.noteListFilterConfig.hasTodo = false;
+
+    navigate({
+      pathname: location.pathname,
+      search: nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : '',
+    });
+
     // Focus back on the search input after clearing
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    blinkoStore.forceQuery++
   };
 
   return (

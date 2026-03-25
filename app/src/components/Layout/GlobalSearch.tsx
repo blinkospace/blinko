@@ -72,6 +72,22 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate()
+
+  const clearSearchFiltersFromUrl = () => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    nextSearchParams.delete('searchText');
+    nextSearchParams.delete('tagId');
+    nextSearchParams.delete('withoutTag');
+    nextSearchParams.delete('withFile');
+    nextSearchParams.delete('withLink');
+    nextSearchParams.delete('hasTodo');
+
+    navigate({
+      pathname: location.pathname,
+      search: nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : '',
+    });
+  };
+
   // Move all state management to RootStore.Local
   const store = RootStore.Local(() => ({
     searchQuery: '',
@@ -104,6 +120,12 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
         // Reset blinkoStore search text and reset list calls
         blinkoStore.searchText = '';
         blinkoStore.globalSearchTerm = '';
+        blinkoStore.noteListFilterConfig.tagId = null;
+        blinkoStore.noteListFilterConfig.withoutTag = false;
+        blinkoStore.noteListFilterConfig.withFile = false;
+        blinkoStore.noteListFilterConfig.withLink = false;
+        blinkoStore.noteListFilterConfig.hasTodo = false;
+        clearSearchFiltersFromUrl();
         blinkoStore.noteList.resetAndCall({ page: 1, size: 20 });
         blinkoStore.resourceList.resetAndCall({
           page: 1,
