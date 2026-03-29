@@ -24,6 +24,7 @@ import { useLocation } from "react-router-dom";
 import { ShowCommentDialog } from "../BlinkoCard/commentButton";
 import { useMediaQuery } from "usehooks-ts";
 import { FocusEditorFixMobile } from "@/components/Common/Editor/editorUtils";
+import { buildAttachmentUrlsFromNote, copyNoteMarkdownToClipboard, copyNoteRichToClipboard } from '@/lib/noteClipboard';
 
 
 export const ShowEditTimeModel = (showExpired: boolean = false) => {
@@ -48,7 +49,7 @@ export const ShowEditTimeModel = (showExpired: boolean = false) => {
         if (showExpired) {
           // Handle expired date save
           const existingMetadata = blinko.curSelectedNote?.metadata || {};
-          
+
           blinko.upsertNote.call({
             id: blinko.curSelectedNote?.id,
             metadata: {
@@ -84,7 +85,7 @@ export const ShowEditTimeModel = (showExpired: boolean = false) => {
                 granularity="second"
                 hideTimeZone
               />
-              
+
               {/* Quick time selection buttons */}
               <div className="flex flex-col gap-2">
                 <div className="text-sm text-gray-600 font-medium">{i18n.t('quick-select') || 'Quick Select'}:</div>
@@ -330,7 +331,7 @@ const handleRelatedNotes = async () => {
         return (
           <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto">
             {relatedNotes.map((note: Note) => (
-              <BlinkoCard key={note.id} blinkoItem={note} withoutHoverAnimation/>
+              <BlinkoCard key={note.id} blinkoItem={note} withoutHoverAnimation />
             ))}
           </div>
         );
@@ -350,6 +351,28 @@ const handleComment = () => {
   }
 }
 
+const handleCopyRichNote = async () => {
+  const note = RootStore.Get(BlinkoStore).curSelectedNote;
+  if (!note) return;
+  try {
+    await copyNoteRichToClipboard(note.content ?? '', buildAttachmentUrlsFromNote(note.attachments));
+    RootStore.Get(ToastPlugin).success(i18n.t('copy-success'));
+  } catch {
+    RootStore.Get(ToastPlugin).error(i18n.t('operation-failed'));
+  }
+};
+
+const handleCopyMarkdownNote = async () => {
+  const note = RootStore.Get(BlinkoStore).curSelectedNote;
+  if (!note) return;
+  try {
+    await copyNoteMarkdownToClipboard(note.content ?? '', buildAttachmentUrlsFromNote(note.attachments));
+    RootStore.Get(ToastPlugin).success(i18n.t('copy-success'));
+  } catch {
+    RootStore.Get(ToastPlugin).error(i18n.t('operation-failed'));
+  }
+};
+
 export const EditItem = observer(() => {
   const { t } = useTranslation();
   return <div className="flex items-start gap-2">
@@ -357,6 +380,26 @@ export const EditItem = observer(() => {
     <div>{t('edit')}</div>
   </div>
 })
+
+export const CopyStandardContextItem = observer(() => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-2">
+      <Icon icon="si:copy-duotone" width="20" height="20" />
+      <div>{t('copy-standard')}</div>
+    </div>
+  );
+});
+
+export const CopyMarkdownContextItem = observer(() => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-start gap-2">
+      <Icon icon="mdi:language-markdown-outline" width="30" height="30" />
+      <div>{t('copy-markdown')}</div>
+    </div>
+  );
+});
 
 export const MutiSelectItem = observer(() => {
   const { t } = useTranslation();
@@ -474,7 +517,7 @@ export const EditTimeItem = observer(() => {
 export const BlinkoRightClickMenu = observer(() => {
   const [isDetailPage, setIsDetailPage] = useState(false)
   const location = useLocation()
-  
+
   const blinko = RootStore.Get(BlinkoStore)
   const pluginApi = RootStore.Get(PluginApiStore)
   const isPc = useMediaQuery('(min-width: 768px)')
@@ -486,6 +529,13 @@ export const BlinkoRightClickMenu = observer(() => {
   return <ContextMenu className='font-bold' id="blink-item-context-menu" hideOnLeave={false} animation="zoom">
     <ContextMenuItem onClick={() => handleEdit(isDetailPage)}>
       <EditItem />
+    </ContextMenuItem>
+
+    <ContextMenuItem onClick={() => void handleCopyRichNote()}>
+      <CopyStandardContextItem />
+    </ContextMenuItem>
+    <ContextMenuItem onClick={() => void handleCopyMarkdownNote()}>
+      <CopyMarkdownContextItem />
     </ContextMenuItem>
 
     {!isDetailPage ? (
@@ -517,8 +567,8 @@ export const BlinkoRightClickMenu = observer(() => {
 
     {!blinko.curSelectedNote?.isRecycle ? (
       <ContextMenuItem onClick={handlePublic}>
-      <PublicItem />
-    </ContextMenuItem>
+        <PublicItem />
+      </ContextMenuItem>
     ) : <></>}
 
     {!isPc ? (
@@ -601,8 +651,8 @@ export const LeftCickMenu = observer(({ onTrigger, className }: { onTrigger: () 
       </DropdownItem>
 
       {!blinko.curSelectedNote?.isRecycle ? (
-        <DropdownItem key="ShareItem" onPress={handlePublic}> 
-          <PublicItem />  
+        <DropdownItem key="ShareItem" onPress={handlePublic}>
+          <PublicItem />
         </DropdownItem>
       ) : <></>}
 

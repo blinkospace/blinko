@@ -361,36 +361,52 @@ export const ShowCommentDialog = async (noteId: number) => {
   }
 };
 
-export const CommentButton = observer(({ blinkoItem, alwaysShow = false }: { blinkoItem: Note, alwaysShow?: boolean }) => {
-  const { t } = useTranslation();
-  const isIOSDevice = useIsIOS();
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    RootStore.Get(DialogStore).setData({
-      isOpen: true,
-      size: 'lg',
-      title: `${i18n.t('comment')} ${blinkoItem._count?.comments ? `(${blinkoItem._count.comments})` : ''}`,
-      content: <CommentDialog blinkoItem={blinkoItem} />
-    });
-  };
+export const CommentButton = observer(
+  ({
+    blinkoItem,
+    alwaysShow = false,
+    toolbarGrouped = false,
+  }: {
+    blinkoItem: Note;
+    alwaysShow?: boolean;
+    /** Kart üst araç çubuğunda: üst sarmalayıcı hover/opacity ve gap kullanır, ml-2 kullanılmaz. */
+    toolbarGrouped?: boolean;
+  }) => {
+    const { t } = useTranslation();
+    const isIOSDevice = useIsIOS();
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      RootStore.Get(DialogStore).setData({
+        isOpen: true,
+        size: 'lg',
+        title: `${i18n.t('comment')} ${blinkoItem._count?.comments ? `(${blinkoItem._count.comments})` : ''}`,
+        content: <CommentDialog blinkoItem={blinkoItem} />,
+      });
+    };
 
-  return (
-    <Tooltip content={t('comment')} delay={1500}>
-      <div className="flex items-center gap-2">
-        <Icon
-          icon="akar-icons:comment"
-          width="15"
-          height="15"
-          className={`cursor-pointer ml-2 ${isIOSDevice
-            ? 'opacity-60'
-            : `${alwaysShow ? '!text-ignore' : '!text-desc opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'}`
-            }`}
-          onClick={handleClick}
-        />
-      </div>
-    </Tooltip>
-  );
-});
+    const visibilityClasses = toolbarGrouped
+      ? '!text-desc'
+      : isIOSDevice
+        ? 'opacity-60'
+        : alwaysShow
+          ? '!text-ignore'
+          : '!text-desc opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1';
+
+    return (
+      <Tooltip content={t('comment')} delay={1500}>
+        <div className="flex items-center gap-2">
+          <Icon
+            icon="akar-icons:comment"
+            width="15"
+            height="15"
+            className={`cursor-pointer ${toolbarGrouped ? '' : 'ml-2'} ${visibilityClasses}`}
+            onClick={handleClick}
+          />
+        </div>
+      </Tooltip>
+    );
+  }
+);
 
 export const CommentCount = observer(({ blinkoItem }: { blinkoItem: Note }) => {
   if (blinkoItem?._count?.comments == 0) return null;
