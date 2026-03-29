@@ -64,6 +64,7 @@
     "i18next-http-backend": "^3.0.2",
     "katex": "^0.16.25",
     "lodash": "^4.17.21",
+    "marked": "^17.0.5",
     "markmap-lib": "^0.18.11",
     "markmap-view": "^0.18.10",
     "mermaid": "^11.6.0",

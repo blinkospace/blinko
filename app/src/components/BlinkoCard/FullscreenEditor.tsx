@@ -14,6 +14,7 @@ import { MarkdownRender } from "@/components/Common/MarkdownRender";
 import { FilesAttachmentRender } from "../Common/AttachmentRender";
 import { ReferencesContent } from "./referencesContent";
 import { useTranslation } from "react-i18next";
+import { NoteCopyDropdown } from "@/components/Common/NoteCopyDropdown";
 
 interface FullscreenEditorProps {
   blinkoItem: BlinkoItem;
@@ -161,6 +162,9 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
   // Determine max width based on view mode
   const maxWidth = viewMode === 'sv' ? '1200px' : '1000px';
   const isLongText = (blinkoItem?.content?.length ?? 0) > 1000;
+  const noteForCopy = blinko.noteDetail.value ?? blinkoItem;
+  const copyAttachmentUrls =
+    noteForCopy.attachments?.map((i) => window.location.origin + i.path) ?? [];
 
   if (!isOpen) return null;
 
@@ -212,7 +216,13 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
               >
                 <Icon icon="tabler:arrow-left" width={20} height={20} />
               </Button>
-              <div className="flex-1 flex justify-end ml-2 gap-2">
+              <div className="flex-1 flex justify-end ml-2 gap-2 items-center">
+                <NoteCopyDropdown
+                  size={18}
+                  className="flex-shrink-0"
+                  noteMarkdown={noteForCopy.content ?? ''}
+                  attachmentAbsoluteUrls={copyAttachmentUrls}
+                />
                 {editorMode === 'preview' ? (
                   <Tooltip content={t('edit')}>
                     <Button
@@ -293,7 +303,13 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
               >
                 <Icon icon="tabler:arrow-left" width={20} height={20} />
               </Button>
-              <div className="flex-1 flex justify-end ml-2 gap-2">
+              <div className="flex-1 flex justify-end ml-2 gap-2 items-center">
+                <NoteCopyDropdown
+                  size={18}
+                  className="flex-shrink-0"
+                  noteMarkdown={noteForCopy.content ?? ''}
+                  attachmentAbsoluteUrls={copyAttachmentUrls}
+                />
                 {editorMode === 'preview' ? (
                   <Tooltip content={t('edit')}>
                     <Button
