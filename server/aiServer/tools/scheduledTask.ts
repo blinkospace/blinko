@@ -40,9 +40,13 @@ The prompt is what the AI will execute when the task runs. For example:
       if (!user) {
         return { success: false, error: 'Authentication failed' };
       }
-      userId = Number(user.id);
+      userId = Number((user as any).id ?? (user as any).sub);
     } else {
       return { success: false, error: 'No authentication provided' };
+    }
+
+    if (!Number.isFinite(userId)) {
+      return { success: false, error: 'Invalid user id in token' };
     }
 
     try {
