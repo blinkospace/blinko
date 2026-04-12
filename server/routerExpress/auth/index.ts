@@ -58,8 +58,7 @@ router.get('/google', logOAuthRequest('Google'), async (req, res, next) => {
 router.get('/facebook', logOAuthRequest('Facebook'), async (req, res, next) => {
   await ensureOAuthStrategies();
   console.log('facebook authentication route accessed');
-   passport.authenticate('facebook', { scope: ['email'] })(req, res, next);
-
+  passport.authenticate('facebook', { scope: ['email'] })(req, res, next);
 });
 
 router.get('/twitter', logOAuthRequest('Twitter'), async (req, res, next) => {
@@ -70,7 +69,7 @@ router.get('/twitter', logOAuthRequest('Twitter'), async (req, res, next) => {
 
 router.get('/discord', logOAuthRequest('Discord'), async (req, res, next) => {
   await ensureOAuthStrategies();
-  console.log('twitter authentication route accessed');
+  console.log('discord authentication route accessed');
   passport.authenticate('discord', { scope: ['identify', 'email'] })(req, res, next);
 });
 
@@ -218,7 +217,7 @@ router.get('/profile', async (req: any, res) => {
 });
 
 router.get('/:providerId', logOAuthRequest('Custom'), async (req, res, next) => {
-    await ensureOAuthStrategies();
+  await ensureOAuthStrategies();
   const providerId = req.params.providerId;
   console.log(`Custom OAuth provider ${providerId} authentication route accessed`);
   
