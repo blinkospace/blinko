@@ -35,6 +35,9 @@ export const AiConversactionList = observer(() => {
     await PromiseCall(api.conversation.delete.mutate({
       id: item.id
     }))
+    if (aiStore.currentConversationId === item.id) {
+      aiStore.newChat()
+    }
     aiStore.conversactionList.resetAndCall({})
   }
   return <div className="px-2 pb-6">
