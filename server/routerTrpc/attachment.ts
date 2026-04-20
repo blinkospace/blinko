@@ -297,7 +297,10 @@ export const attachmentsRouter = router({
                 `${baseUrl}${newName.split(',').join('/')}`
               );
 
-              await FileService.moveFile(oldPath, newPath);
+              // Skip file system operation for folder placeholder entries
+              if (attachment.name !== '.folder' && attachment.type !== 'folder') {
+                await FileService.moveFile(oldPath, newPath);
+              }
 
               await tx.attachments.update({
                 where: { id: attachment.id },
@@ -411,24 +414,35 @@ export const attachmentsRouter = router({
         if (isFolder && folderPath) {
           const attachments = await tx.attachments.findMany({
             where: {
-              note: {
-                accountId: Number(ctx.id)
-              },
+              OR: [
+                {
+                  note: {
+                    accountId: Number(ctx.id)
+                  }
+                },
+                {
+                  accountId: Number(ctx.id)
+                }
+              ],
               perfixPath: {
                 startsWith: folderPath
               }
             }
           });
 
-          if (attachments.length === 0) {
-            return { success: true, message: 'Folder deleted successfully' };
-          }
-
           try {
             for (const attachment of attachments) {
-              await FileService.deleteFile(attachment.path);
+              // Skip file system deletion for folder placeholder entries
+              if (attachment.name !== '.folder' && attachment.type !== 'folder') {
+                await FileService.deleteFile(attachment.path);
+              }
             }
-            return { success: true, message: 'Folder and its contents deleted successfully' };
+            await tx.attachments.deleteMany({
+              where: {
+                id: { in: attachments.map(a => a.id) }
+              }
+            });
+            return { success: true, message: 'Folder deleted successfully' };
           } catch (error) {
             throw new Error(`Failed to delete folder: ${error.message}`);
           }
@@ -456,6 +470,9 @@ export const attachmentsRouter = router({
 
         try {
           await FileService.deleteFile(attachment.path);
+          await tx.attachments.delete({
+            where: { id: attachment.id }
+          });
           return {
             success: true,
             message: 'File deleted successfully'
