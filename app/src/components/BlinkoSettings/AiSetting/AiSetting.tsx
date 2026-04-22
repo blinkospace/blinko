@@ -23,11 +23,29 @@ import { MarkdownRender } from '../../Common/MarkdownRender';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 
 
+type McpTransportExample = 'streamable-http' | 'sse'
+
 export default observer(function AiSetting() {
   const { t } = useTranslation();
   const aiStore = RootStore.Get(AiSettingStore);
   const blinko = RootStore.Get(BlinkoStore);
   const user = RootStore.Get(UserStore);
+  const [selectedTransport, setSelectedTransport] = useState<McpTransportExample>('streamable-http');
+  const streamableHttpEndpoint = getBlinkoEndpoint('/mcp');
+  const sseEndpoint = getBlinkoEndpoint('/sse');
+  const selectedEndpoint = selectedTransport === 'streamable-http'
+    ? streamableHttpEndpoint
+    : sseEndpoint;
+  const mcpClientConfig = JSON.stringify({
+    mcpServers: {
+      blinko: {
+        url: selectedEndpoint,
+        headers: {
+          Authorization: `Bearer ${user.userInfo.value?.token || ''}`,
+        },
+      },
+    },
+  }, null, 2);
 
   useEffect(() => {
     blinko.config.call();
@@ -84,13 +102,29 @@ export default observer(function AiSetting() {
 
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-default-700">Endpoint URL</label>
+              <label className="text-sm font-medium text-default-700">Streamable HTTP Endpoint URL</label>
               <Input
-                value={`${getBlinkoEndpoint() ?? window.location.origin}sse`}
+                value={streamableHttpEndpoint}
                 readOnly
                 className="mt-1"
-                endContent={<Copy size={20} content={`${getBlinkoEndpoint() ?? window.location.origin}sse`} />}
+                endContent={<Copy size={20} content={streamableHttpEndpoint} />}
               />
+              <p className="mt-1 text-xs text-success-600">
+                {t('mcp-streamable-http-recommended', 'Recommended for modern MCP clients.')}
+              </p>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-default-700">Legacy SSE Endpoint URL</label>
+              <Input
+                value={sseEndpoint}
+                readOnly
+                className="mt-1"
+                endContent={<Copy size={20} content={sseEndpoint} />}
+              />
+              <p className="mt-1 text-xs text-default-500">
+                {t('mcp-sse-legacy-desc', 'Use this only if your MCP client does not support Streamable HTTP yet.')}
+              </p>
             </div>
 
             <div>
@@ -105,29 +139,26 @@ export default observer(function AiSetting() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-default-700 mb-2 block">MCP Client Configuration</label>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <label className="text-sm font-medium text-default-700">MCP Client Configuration</label>
+                <Select
+                  aria-label={t('transport-type')}
+                  selectedKeys={[selectedTransport]}
+                  onChange={(e) => setSelectedTransport(e.target.value as McpTransportExample)}
+                  size="sm"
+                  className="w-full sm:max-w-xs"
+                  classNames={{
+                    trigger: 'min-h-10 h-10',
+                  }}
+                >
+                  <SelectItem key="streamable-http">Streamable HTTP (Recommended)</SelectItem>
+                  <SelectItem key="sse">SSE (Legacy)</SelectItem>
+                </Select>
+              </div>
               <div className="relative">
-                <Copy size={20} content={`{
-  "mcpServers": {
-    "blinko": {
-      "url": "${getBlinkoEndpoint() ?? window.location.origin}sse",
-      "headers": {
-        "Authorization": "Bearer ${user.userInfo.value?.token || ''}"
-      }
-    }
-  }
-}`} className="absolute top-4 right-2 z-10" />
+                <Copy size={20} content={mcpClientConfig} className="absolute top-4 right-2 z-10" />
                 <MarkdownRender content={`\`\`\`json
-{
-  "mcpServers": {
-    "blinko": {
-      "url": "${getBlinkoEndpoint() ?? window.location.origin}sse",
-      "headers": {
-        "Authorization": "Bearer ${user.userInfo.value?.token || ''}"
-      }
-    }
-  }
-}
+${mcpClientConfig}
 \`\`\``} />
               </div>
             </div>
