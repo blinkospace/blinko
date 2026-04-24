@@ -35,7 +35,8 @@ export const tagRouter = router({
               tagsToNote: {
                 where: {
                   note: {
-                    isRecycle: false
+                    isRecycle: false,
+                    isArchived: false
                   }
                 }
               }

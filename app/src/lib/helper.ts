@@ -98,10 +98,10 @@ export const helper = {
         }
       }
     });
-    roots.sort((a, b) => a.sortOrder - b.sortOrder);
+    roots.sort((a, b) => (b.metadata.noteCount ?? 0) - (a.metadata.noteCount ?? 0));
     const sortChildren = (node: TagTreeDBNode) => {
       if (node.children && node.children.length > 0) {
-        node.children.sort((a, b) => a.sortOrder - b.sortOrder);
+        node.children.sort((a, b) => (b.metadata.noteCount ?? 0) - (a.metadata.noteCount ?? 0));
         node.children.forEach(sortChildren);
       }
     };
