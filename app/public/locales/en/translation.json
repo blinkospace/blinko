@@ -218,6 +218,7 @@
   "select-block-type": "Select Block Type",
   "block-type-select-placeholder": "Block Type",
   "trash": "Recycle Bin",
+  "confirm-trash-note": "Are you sure you want to move this note to Recycle Bin?",
   "light-mode": "Light Mode",
   "dark-mode": "Dark Mode",
   "follow-system": "Follow System",

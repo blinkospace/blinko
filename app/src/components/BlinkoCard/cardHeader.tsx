@@ -16,6 +16,8 @@ import { AvatarAccount, CommentButton, UserAvatar } from './commentButton';
 import { HistoryButton } from '../BlinkoNoteHistory/HistoryButton';
 import { api } from '@/lib/trpc';
 import { PromiseCall } from '@/store/standard/PromiseState';
+import { showTipsDialog } from '@/components/Common/TipsDialog';
+import { DialogStandaloneStore } from '@/store/module/DialogStandalone';
 
 interface CardHeaderProps {
   blinkoItem: Note;
@@ -163,8 +165,15 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
               } ml-2 cursor-pointer hover:text-red-500 text-desc ${blinkoItem.isRecycle ? 'text-red-500 opacity-100' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
-                  blinko.updateTicker++;
+                showTipsDialog({
+                  title: t('trash'),
+                  content: t('confirm-trash-note'),
+                  onConfirm: () => {
+                    RootStore.Get(DialogStandaloneStore).close();
+                    PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
+                      blinko.updateTicker++;
+                    });
+                  }
                 });
               }}
             />
