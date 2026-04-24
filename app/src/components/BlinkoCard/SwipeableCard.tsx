@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { useTranslation } from 'react-i18next';
 
@@ -14,12 +14,12 @@ const SWIPE_THRESHOLD = 80;
 const ACTION_WIDTH = 160;
 const SWIPE_DIRECTION_THRESHOLD = 1.5; // Horizontal movement must be 1.5x vertical movement
 
-export const SwipeableCard = ({ 
-  children, 
-  onPin, 
-  onDelete, 
+export const SwipeableCard = ({
+  children,
+  onPin,
+  onDelete,
   isPinned = false,
-  disabled = false 
+  disabled = false
 }: SwipeableCardProps) => {
   const { t } = useTranslation();
   const [translateX, setTranslateX] = useState(0);
@@ -31,7 +31,7 @@ export const SwipeableCard = ({
   const isHorizontalSwipeRef = useRef<boolean | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((e: TouchEvent) => {
     if (disabled) return;
     startXRef.current = e.touches[0].clientX;
     startYRef.current = e.touches[0].clientY;
@@ -40,14 +40,14 @@ export const SwipeableCard = ({
     setIsDragging(true);
   }, [translateX, disabled]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!isDragging || disabled) return;
-    
+
     const currentX = e.touches[0].clientX;
     const currentY = e.touches[0].clientY;
     const deltaX = Math.abs(startXRef.current - currentX);
     const deltaY = Math.abs(startYRef.current - currentY);
-    
+
     // Determine swipe direction if not already determined
     if (isHorizontalSwipeRef.current === null) {
       // Only allow horizontal swipe if horizontal movement is significantly greater than vertical
@@ -60,26 +60,31 @@ export const SwipeableCard = ({
         return;
       }
     }
-    
+
     // Only process horizontal movement if it's confirmed as horizontal swipe
     if (isHorizontalSwipeRef.current === false) {
       return;
     }
-    
+
+    // Prevent page scrolling during horizontal swipe (non-passive event listener)
+    if (isHorizontalSwipeRef.current === true) {
+      e.preventDefault();
+    }
+
     const diff = startXRef.current - currentX;
     let newTranslateX = currentXRef.current - diff;
-    
+
     // Limit the swipe range
     if (newTranslateX > 0) newTranslateX = 0;
     if (newTranslateX < -ACTION_WIDTH) newTranslateX = -ACTION_WIDTH;
-    
+
     setTranslateX(newTranslateX);
   }, [isDragging, disabled]);
 
   const handleTouchEnd = useCallback(() => {
     if (!isDragging || disabled) return;
     setIsDragging(false);
-    
+
     // Only snap if it was a horizontal swipe
     if (isHorizontalSwipeRef.current === false) {
       // Reset position if it was a vertical swipe
@@ -87,7 +92,7 @@ export const SwipeableCard = ({
       setIsOpen(false);
       return;
     }
-    
+
     // Snap to open or closed position
     if (translateX < -SWIPE_THRESHOLD) {
       setTranslateX(-ACTION_WIDTH);
@@ -97,6 +102,22 @@ export const SwipeableCard = ({
       setIsOpen(false);
     }
   }, [translateX, isDragging, disabled]);
+
+  // Use non-passive event listener to allow preventDefault()
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || disabled) return;
+
+    card.addEventListener('touchstart', handleTouchStart, { passive: true });
+    card.addEventListener('touchmove', handleTouchMove, { passive: false });
+    card.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      card.removeEventListener('touchstart', handleTouchStart);
+      card.removeEventListener('touchmove', handleTouchMove);
+      card.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, disabled]);
 
   const handleClose = useCallback(() => {
     setTranslateX(0);
@@ -167,10 +188,8 @@ export const SwipeableCard = ({
         style={{
           transform: `translateX(${translateX}px)`,
           transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+          touchAction: 'pan-y', // Allow vertical scrolling by default
         }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         {children}
       </div>

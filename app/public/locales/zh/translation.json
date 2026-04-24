@@ -217,6 +217,7 @@
   "select-block-type": "选择区块类型",
   "block-type-select-placeholder": "区块类型",
   "trash": "回收站",
+  "confirm-trash-note": "确定要将此笔记移至回收站吗？",
   "custom-path": "自定义路径",
   "page-size": "每页加载数",
   "font-size": "字体大小",

@@ -296,13 +296,17 @@ const handleAITag = () => {
 
 const handleTrash = () => {
   const blinko = RootStore.Get(BlinkoStore)
-  PromiseCall(api.notes.trashMany.mutate({ ids: [blinko.curSelectedNote?.id!] }))
+  PromiseCall(api.notes.trashMany.mutate({ ids: [blinko.curSelectedNote?.id!] })).then(() => {
+    blinko.updateTicker++
+  })
 }
 
 const handleDelete = async () => {
   const blinko = RootStore.Get(BlinkoStore)
-  PromiseCall(api.notes.deleteMany.mutate({ ids: [blinko.curSelectedNote?.id!] }))
-  api.ai.embeddingDelete.mutate({ id: blinko.curSelectedNote?.id! })
+  PromiseCall(api.notes.deleteMany.mutate({ ids: [blinko.curSelectedNote?.id!] })).then(() => {
+    api.ai.embeddingDelete.mutate({ id: blinko.curSelectedNote?.id! })
+    blinko.updateTicker++
+  })
 }
 
 const handleRelatedNotes = async () => {

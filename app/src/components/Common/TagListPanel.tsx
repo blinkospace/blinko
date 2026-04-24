@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import TreeView, { flattenTree } from "react-accessible-treeview";
 import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
@@ -18,6 +18,7 @@ import { eventBus } from "@/lib/event";
 import { DialogStore } from "@/store/module/Dialog";
 import { AiStore } from "@/store/aiStore";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { helper } from "@/lib/helper";
 
 const Emoji = ({ icon }: { icon: string }) => {
   return <>
@@ -89,6 +90,14 @@ export const TagListPanel = observer(() => {
     return blinko.noteListFilterConfig.tagId == id && searchParams.get('path') == 'all'
   }
   useEffect(() => { }, [blinko.noteListFilterConfig.tagId])
+
+  // Filter tags with zero note count (memoized for performance)
+  const filteredTags = useMemo(() => {
+    return blinko.tagList.value?.listTags
+      ? helper.filterEmptyTags(blinko.tagList.value.listTags)
+      : [];
+  }, [blinko.tagList.value?.listTags]);
+
   return (
     <>
       <div className="ml-2 my-2 text-xs font-bold text-primary">{t('total-tags')}</div>
@@ -96,7 +105,7 @@ export const TagListPanel = observer(() => {
         className="mb-4"
         data={flattenTree({
           name: "",
-          children: blinko.tagList.value?.listTags,
+          children: filteredTags,
         })}
         aria-label="directory tree"
         togglableSelect
@@ -148,6 +157,10 @@ export const TagListPanel = observer(() => {
                   <span className="ml-1 text-xs opacity-60">({element.children.length})</span>
                 )}
               </div>
+              {/* Show note count for each tag */}
+              {element.metadata?.noteCount > 0 && (
+                <span className="ml-1 text-xs opacity-60">{element.metadata.noteCount}</span>
+              )}
               <Dropdown>
                 <DropdownTrigger>
                   <div className="ml-auto group-hover:opacity-100 opacity-0 !transition-all group-hover:translate-x-0 translate-x-2">

@@ -17,7 +17,7 @@ export interface TagTreeNode {
   name: string;
   children?: TagTreeNode[];
 }
-export type TagTreeDBNode = Tag & { children?: TagTreeDBNode[]; metadata: { icon: string, path: string } }
+export type TagTreeDBNode = Tag & { children?: TagTreeDBNode[]; metadata: { icon: string, path: string, noteCount?: number } }
 export const helper = {
   regex: {
     isEndsWithHashTag: /#[/\w\p{L}\p{N}]*$/u,
@@ -76,7 +76,7 @@ export const helper = {
     const map: Record<number, TagTreeDBNode> = {};
     const roots: TagTreeDBNode[] = [];
     tags.forEach(tag => {
-      map[tag.id] = { ...tag, children: [], metadata: { icon: tag.icon, path: '' } };
+      map[tag.id] = { ...tag, children: [], metadata: { icon: tag.icon, path: '', noteCount: tag._count?.tagsToNote ?? 0 } };
     });
     function buildPath(tagId: number): string {
       const tag = map[tagId];
@@ -98,15 +98,28 @@ export const helper = {
         }
       }
     });
-    roots.sort((a, b) => a.sortOrder - b.sortOrder);
+    roots.sort((a, b) => (b.metadata.noteCount ?? 0) - (a.metadata.noteCount ?? 0));
     const sortChildren = (node: TagTreeDBNode) => {
       if (node.children && node.children.length > 0) {
-        node.children.sort((a, b) => a.sortOrder - b.sortOrder);
+        node.children.sort((a, b) => (b.metadata.noteCount ?? 0) - (a.metadata.noteCount ?? 0));
         node.children.forEach(sortChildren);
       }
     };
     roots.forEach(sortChildren);
     return roots;
+  },
+  // Filter tags with zero note count (but keep parent tags if children have notes)
+  filterEmptyTags(nodes: TagTreeDBNode[]): TagTreeDBNode[] {
+    return nodes.filter(node => {
+      // Filter children first
+      if (node.children && node.children.length > 0) {
+        node.children = this.filterEmptyTags(node.children);
+      }
+      // Keep node if it has notes or has children with notes
+      const hasNotes = (node.metadata.noteCount ?? 0) > 0;
+      const hasChildrenWithNotes = node.children && node.children.length > 0;
+      return hasNotes || hasChildrenWithNotes;
+    });
   },
   generateTagPaths(node: TagTreeDBNode, parentPath: string = ''): string[] {
     const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;
