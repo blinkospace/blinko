@@ -255,10 +255,7 @@ export class AiService {
   }) {
     try {
       console.log('completions');
-      conversations.push({
-        role: 'user',
-        content: question,
-      });
+    
       conversations.push({
         role: 'system',
         content: `Current user name: ${ctx.name}\n`,
@@ -278,6 +275,10 @@ export class AiService {
           content: `This is the note content ${ragNote.map((i) => i.content).join('\n')} ${aiContext}`,
         });
       }
+      conversations.push({
+        role: 'user',
+        content: question,
+      });
       console.log(conversations, 'conversations');
       const runtimeContext = new RuntimeContext();
       runtimeContext.set('accountId', Number(ctx.id));

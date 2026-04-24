@@ -101,6 +101,7 @@ export class BaseStore implements Store {
     { value: 'pt', label: 'Português' },
     { value: 'pl', label: 'Polish' },
     { value: 'ru', label: 'Русский' },
+    { value: 'uk', label: 'Українська' },
     { value: 'ko', label: '한국어' },
     { value: 'ja', label: '日本語' },
     { value: 'nl', label: 'Nederlands' },

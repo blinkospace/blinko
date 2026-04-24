@@ -8,6 +8,8 @@ import { BlinkoStore } from '@/store/blinkoStore';
 import { observer } from 'mobx-react-lite';
 import { eventBus } from '@/lib/event';
 import { GlobalSearch } from './GlobalSearch';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { clearSearchState, getSearchWithClearedFilters } from '@/lib/searchFilters';
 
 interface BarSearchInputProps {
   isPc: boolean;
@@ -16,6 +18,9 @@ interface BarSearchInputProps {
 export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
   const { t } = useTranslation();
   const blinkoStore = RootStore.Get(BlinkoStore);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [showSearchInput, setShowSearchInput] = useState(false);
   const [isGlobalSearchOpen, setIsGlobalSearchOpen] = useState(false);
   const [localSearchText, setLocalSearchText] = useState('');
@@ -64,15 +69,20 @@ export const BarSearchInput = observer(({ isPc }: BarSearchInputProps) => {
   };
 
   const handleClearSearch = (e: React.MouseEvent) => {
-    console.log(e);
     e.stopPropagation();
+
     setLocalSearchText('');
-    blinkoStore.searchText = '';
+    clearSearchState(blinkoStore);
+
+    navigate({
+      pathname: location.pathname,
+      search: getSearchWithClearedFilters(searchParams),
+    });
+
     // Focus back on the search input after clearing
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    blinkoStore.forceQuery++
   };
 
   return (

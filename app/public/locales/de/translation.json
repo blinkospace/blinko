@@ -691,7 +691,7 @@
   "show-more": "Mehr anzeigen",
   "show-navigation-bar-on-mobile": "Navigationsleiste auf dem Handy ausblenden",
   "sign-in": "Anmelden",
-  "sign-in-with-provider": "Melden Sie sich mit {{ Anbieter }} an.",
+  "sign-in-with-provider": "Melden Sie sich mit {{ provider }} an.",
   "sign-up": "Registrieren",
   "site-url": "Blinko-Website-URL",
   "small-device-card-columns": "Spalten für kleine Bildschirme",
