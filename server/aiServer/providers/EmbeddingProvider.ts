@@ -44,7 +44,7 @@ export class EmbeddingProvider extends BaseProvider {
 
       case 'ollama':
         return createOllama({
-          baseURL: config.baseURL?.trim() || undefined,
+          baseURL: config.baseURL?.trim().replace(/\/api$/, '') + '/api' || undefined,
           fetch: this.proxiedFetch,
           headers: config.apiKey?.trim() ? { 'Authorization': `Bearer ${config.apiKey.trim()}`} : undefined
         }).textEmbeddingModel(config.modelKey);
