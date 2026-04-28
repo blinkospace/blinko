@@ -38,9 +38,7 @@ export function NoteCopyDropdown({
     >
       <Dropdown
         placement="bottom-end"
-        classNames={{
-          content: '!z-[10060]',
-        }}
+        className='!z-50'
       >
         <DropdownTrigger>
           <Button
@@ -49,7 +47,7 @@ export function NoteCopyDropdown({
             size="sm"
             radius="sm"
             className="min-w-0 h-7 w-auto min-h-7 gap-0 px-1 py-0 text-desc bg-transparent data-[hover=true]:bg-default-100"
-            aria-label={t('copy-standard')}
+            aria-label={t('copy-as-standard')}
           >
             <span className="inline-flex items-center gap-0">
               <Icon icon="si:copy-duotone" width={size} height={size} />
@@ -58,7 +56,7 @@ export function NoteCopyDropdown({
           </Button>
         </DropdownTrigger>
         <DropdownMenu
-          aria-label={t('copy-standard')}
+          aria-label={t('copy-as-standard')}
           onAction={(key) => {
             if (key === 'standard') {
               void runCopy(() => copyNoteRichToClipboard(noteMarkdown, attachmentAbsoluteUrls));
@@ -70,13 +68,13 @@ export function NoteCopyDropdown({
           <DropdownItem key="standard">
             <div className="flex items-start gap-2">
               <Icon icon="si:copy-duotone" width="20" height="20" />
-              <div>{t('copy-standard')}</div>
+              <div>{t('copy-as-standard')}</div>
             </div>
           </DropdownItem>
           <DropdownItem key="markdown">
             <div className="flex items-start gap-2">
               <Icon icon="mdi:language-markdown-outline" width="20" height="20" />
-              <div>{t('copy-markdown')}</div>
+              <div>{t('copy-as-markdown')}</div>
             </div>
           </DropdownItem>
         </DropdownMenu>

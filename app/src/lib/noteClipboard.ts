@@ -1,4 +1,17 @@
-let markedOptionsApplied = false;
+import DOMPurify from 'isomorphic-dompurify';
+
+type VditorStaticApi = {
+  md2html: (markdown: string, options?: { markdown?: { gfmAutoLink?: boolean } }) => Promise<string>;
+};
+
+let vditorModulePromise: Promise<VditorStaticApi> | null = null;
+
+async function getVditorStaticApi(): Promise<VditorStaticApi> {
+  if (!vditorModulePromise) {
+    vditorModulePromise = import('vditor').then((module) => module.default as VditorStaticApi);
+  }
+  return vditorModulePromise;
+}
 
 function escapeHtmlAttribute(value: string): string {
   return value
@@ -12,24 +25,28 @@ function wrapClipboardHtml(innerBodyHtml: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${innerBodyHtml}</body></html>`;
 }
 
-async function markdownToHtmlFragment(markdown: string, attachmentAbsoluteUrls: string[]): Promise<string> {
-  const { marked } = await import('marked');
-  if (!markedOptionsApplied) {
-    marked.setOptions({ gfm: true });
-    markedOptionsApplied = true;
-  }
+export async function markdownToHtmlFragment(markdown: string, attachmentAbsoluteUrls: string[]): Promise<string> {
   const trimmed = markdown.trimEnd() || '';
-  const parsed = marked.parse(trimmed, { async: false }) as string;
+  const vditor = await getVditorStaticApi();
+  const parsed = await vditor.md2html(trimmed, {
+    markdown: {
+      gfmAutoLink: true,
+    },
+  });
   if (attachmentAbsoluteUrls.length === 0) {
-    return parsed;
+    return sanitizeClipboardHtmlFragment(parsed);
   }
   const links = attachmentAbsoluteUrls
     .map((url) => `<a href="${escapeHtmlAttribute(url)}">${escapeHtmlAttribute(url)}</a>`)
     .join('<br/>');
-  return `${parsed}<hr/><p>${links}</p>`;
+  return sanitizeClipboardHtmlFragment(`${parsed}<hr/><p>${links}</p>`);
 }
 
-function buildFullPlainTextForNote(markdown: string, attachmentAbsoluteUrls: string[]): string {
+export function sanitizeClipboardHtmlFragment(htmlFragment: string): string {
+  return DOMPurify.sanitize(htmlFragment);
+}
+
+export function buildFullPlainTextForNote(markdown: string, attachmentAbsoluteUrls: string[]): string {
   if (attachmentAbsoluteUrls.length === 0) {
     return markdown;
   }
@@ -69,7 +86,6 @@ export async function writePlainMarkdownToClipboard(plainText: string): Promise<
   }
 }
 
-/** Zengin (HTML + düz metin) not kopyası; `marked` ilk kullanımda dinamik yüklenir. */
 export async function copyNoteRichToClipboard(
   markdown: string,
   attachmentAbsoluteUrls: string[]
@@ -79,7 +95,6 @@ export async function copyNoteRichToClipboard(
   await writeRichAndPlainToClipboard(plain, wrapClipboardHtml(fragment));
 }
 
-/** Yalnızca ham markdown (+ ek URL satırları). */
 export async function copyNoteMarkdownToClipboard(
   markdown: string,
   attachmentAbsoluteUrls: string[]

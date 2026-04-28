@@ -386,7 +386,7 @@ export const CopyStandardContextItem = observer(() => {
   return (
     <div className="flex items-start gap-2">
       <Icon icon="si:copy-duotone" width="20" height="20" />
-      <div>{t('copy-standard')}</div>
+      <div>{t('copy-as-standard')}</div>
     </div>
   );
 });
@@ -396,7 +396,7 @@ export const CopyMarkdownContextItem = observer(() => {
   return (
     <div className="flex items-start gap-2">
       <Icon icon="mdi:language-markdown-outline" width="30" height="30" />
-      <div>{t('copy-markdown')}</div>
+      <div>{t('copy-as-markdown')}</div>
     </div>
   );
 });

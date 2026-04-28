@@ -369,7 +369,6 @@ export const CommentButton = observer(
   }: {
     blinkoItem: Note;
     alwaysShow?: boolean;
-    /** Kart üst araç çubuğunda: üst sarmalayıcı hover/opacity ve gap kullanır, ml-2 kullanılmaz. */
     toolbarGrouped?: boolean;
   }) => {
     const { t } = useTranslation();
