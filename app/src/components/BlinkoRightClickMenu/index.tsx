@@ -302,7 +302,7 @@ const handleTrash = () => {
 const handleDelete = async () => {
   const blinko = RootStore.Get(BlinkoStore)
   PromiseCall(api.notes.deleteMany.mutate({ ids: [blinko.curSelectedNote?.id!] }))
-  api.ai.embeddingDelete.mutate({ id: blinko.curSelectedNote?.id! })
+  PromiseCall(api.ai.embeddingDelete.mutate({ id: blinko.curSelectedNote?.id! }))
 }
 
 const handleRelatedNotes = async () => {
