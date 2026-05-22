@@ -49,6 +49,13 @@ export class EmbeddingProvider extends BaseProvider {
           headers: config.apiKey?.trim() ? { 'Authorization': `Bearer ${config.apiKey.trim()}`} : undefined
         }).textEmbeddingModel(config.modelKey);
 
+      case 'litellm':
+        return createOpenAI({
+          apiKey: config.apiKey,
+          baseURL: config.baseURL || 'http://localhost:4000/v1',
+          fetch: this.proxiedFetch
+        }).textEmbeddingModel(config.modelKey);
+
       case 'custom':
       default:
         // Default to OpenAI-compatible API
