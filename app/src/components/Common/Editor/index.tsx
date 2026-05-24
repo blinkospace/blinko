@@ -50,7 +50,7 @@ type IProps = {
   showTopToolbar?: boolean
 }
 
-const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false }: IProps) => {
+const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles, originReference = [], mode, onHeightChange, hiddenToolbar = false, withoutOutline = false, initialData, showTopToolbar = false, bottomSlot }: IProps) => {
   const cardRef = React.useRef(null)
   const isPc = useMediaQuery('(min-width: 768px)')
   const store = useLocalObservable(() => new EditorStore())
@@ -273,6 +273,12 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
             <div className='flex w-full items-center gap-1 mt-auto'>
               {renderToolbar()}
               {renderRightToolbar()}
+            </div>
+          )}
+
+          {bottomSlot && (
+            <div className='w-full mt-2'>
+              {bottomSlot}
             </div>
           )}
         </div>
