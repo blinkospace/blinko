@@ -474,6 +474,8 @@
   "unlink-account-tips": "您确认通过该账户可以访问所有关联的协会吗？",
   "login-type": "登录类型",
   "close-daily-review": "关闭每日回顾",
+  "show-pinned-separately": "单独显示置顶笔记",
+  "pinned": "已置顶",
   "max-home-page-width": "首页最大宽度",
   "max-home-page-width-tip": "如果设置为 0，则为最大宽度。",
   "no-comments-yet": "暂无评论",

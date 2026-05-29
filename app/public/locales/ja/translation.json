@@ -480,6 +480,8 @@
   "unlink-account-tips": "このアカウントのすべての連携を解除しますか？",
   "login-type": "ログイン方法",
   "close-daily-review": "デイリーレビューを閉じる",
+  "show-pinned-separately": "ピン留めを分けて表示",
+  "pinned": "ピン留め",
   "max-home-page-width": "ホームページの最大幅",
   "max-home-page-width-tip": "0に設定すると最大幅になります",
   "reply-to": "返信先",

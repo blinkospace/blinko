@@ -57,7 +57,7 @@ const Home = observer(() => {
   }, [isNotesView, isTodoView, isArchivedView, isTrashView, isAllView, blinko]);
 
   // Use drag card hook only for non-todo views
-  const { localNotes, sensors, setLocalNotes, handleDragStart, handleDragEnd, handleDragOver } = useDragCard({
+  const { localNotes: allNotes, sensors, setLocalNotes, handleDragStart, handleDragEnd, handleDragOver } = useDragCard({
     notes: isTodoView ? undefined : currentListState.value,
     activeId,
     setActiveId,
@@ -66,6 +66,40 @@ const Home = observer(() => {
     isDragForbidden,
     setIsDragForbidden
   });
+
+  const showPinnedSeparately = blinko.config.value?.showPinnedSeparately;
+  const pinnedGroup = useMemo(() =>
+    showPinnedSeparately ? (allNotes?.filter(n => n.isTop) ?? []) : [],
+  [allNotes, showPinnedSeparately]);
+
+  // If showPinnedSeparately is true, localNotes only includes the unpinned notes.
+  const localNotes = useMemo(() =>
+    showPinnedSeparately ? (allNotes?.filter(n => !n.isTop) ?? []) : (allNotes ?? []),
+  [allNotes, showPinnedSeparately]);
+
+  const renderMasonry = (notes) => (
+    <Masonry
+      breakpointCols={{
+        default: blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 2,
+        1280: blinko.config?.value?.mediumDeviceCardColumns ? Number(blinko.config?.value?.mediumDeviceCardColumns) : 2,
+        768: blinko.config?.value?.smallDeviceCardColumns ? Number(blinko.config?.value?.smallDeviceCardColumns) : 1
+      }}
+      className="card-masonry-grid"
+      columnClassName="card-masonry-grid_column">
+      {notes?.map(i => {
+        const showInsertLine = insertPosition === i.id && activeId !== i.id;
+        return (
+          <DraggableBlinkoCard
+            key={i.id}
+            blinkoItem={i}
+            showInsertLine={showInsertLine}
+            insertPosition="top"
+            isDragForbidden={isDragForbidden && showInsertLine}
+          />
+        );
+      })}
+    </Masonry>
+  );
 
   const store = RootStore.Local(() => ({
     editorHeight: 30,
@@ -191,34 +225,24 @@ const Home = observer(() => {
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
               >
-                <Masonry
-                  breakpointCols={{
-                    default: blinko.config?.value?.largeDeviceCardColumns ? Number(blinko.config?.value?.largeDeviceCardColumns) : 2,
-                    1280: blinko.config?.value?.mediumDeviceCardColumns ? Number(blinko.config?.value?.mediumDeviceCardColumns) : 2,
-                    768: blinko.config?.value?.smallDeviceCardColumns ? Number(blinko.config?.value?.smallDeviceCardColumns) : 1
-                  }}
-                  className="card-masonry-grid"
-                  columnClassName="card-masonry-grid_column">
-                  {
-                    localNotes?.map((i, index) => {
-                      const showInsertLine = insertPosition === i.id && activeId !== i.id;
-                      return (
-                        <DraggableBlinkoCard
-                          key={i.id}
-                          blinkoItem={i}
-                          showInsertLine={showInsertLine}
-                          insertPosition="top"
-                          isDragForbidden={isDragForbidden && showInsertLine}
-                        />
-                      );
-                    })
-                  }
-                </Masonry>
+                {pinnedGroup.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 mb-3 mt-1">
+                      <Icon icon="mdi:pin" width={16} height={16} className="text-ignore" />
+                      <span className="text-xs font-bold text-ignore uppercase tracking-wider">{t('pinned')}</span>
+                    </div>
+                    {renderMasonry(pinnedGroup)}
+                    {localNotes.length > 0 && (
+                      <div className="border-t border-border my-4" />
+                    )}
+                  </>
+                )}
+                {renderMasonry(localNotes)}
                 <DragOverlay>
                   {activeId ? (
                     <div className="rotate-3 scale-105 opacity-90 max-w-sm shadow-xl">
                       <BlinkoCard
-                        blinkoItem={localNotes.find(n => n.id === activeId)}
+                        blinkoItem={allNotes.find(n => n.id === activeId)}
                       />
                     </div>
                   ) : null}
