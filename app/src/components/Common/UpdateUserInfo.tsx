@@ -73,7 +73,7 @@ export const UpdateUserPassword = observer(() => {
       <PasswordInput placeholder={t('enter-your-password')} label={t('confirm-password')} value={passwordConfirm} onChange={e => setPasswordConfirm(e.target.value)} />
       <div className="flex w-full justify-end">
         <Button className="ml-auto" color='primary' onPress={async e => {
-          await PromiseCall(api.users.upsertUser.mutate({ id: Number(user.id), password }))
+          await PromiseCall(api.users.upsertUser.mutate({ id: Number(user.id), password, originalPassword }))
           RootStore.Get(DialogStore).close()
           eventBus.emit('user:signout')
           navigate('/signin')
