@@ -856,5 +856,18 @@
   "custom-title": "自定义标题",
   "custom-title-tip": "用于浏览器标签页和登录页标题，留空将使用默认标题。",
   "custom-title-placeholder": "请输入标题（1-50个字符）",
-  "login-with": "登录 {{title}}"
+  "login-with": "登录 {{title}}",
+  "background-color": "背景颜色",
+  "default": "默认",
+  "yellow": "黄色",
+  "blue": "蓝色",
+  "green": "绿色",
+  "pink": "粉色",
+  "purple": "紫色",
+  "red": "红色",
+  "orange": "橙色",
+  "teal": "青色",
+  "brown": "棕色",
+  "gray": "灰色",
+  "light-blue": "浅蓝色"
 }

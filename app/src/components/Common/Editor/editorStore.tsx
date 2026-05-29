@@ -3,6 +3,7 @@ import { PromiseState } from '@/store/standard/PromiseState';
 import { helper } from '@/lib/helper';
 import { FileType, OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
+import type { BackgroundColor } from '@/lib/backgroundColors';
 import { api } from '@/lib/trpc';
 import { AiStore } from '@/store/aiStore';
 import { getEditorElements, type ViewMode } from './editorUtils';
@@ -57,6 +58,7 @@ export class EditorStore {
   isFullscreen: boolean = false;
   noteType!: NoteType;
   currentTagLabel: string = ''
+  backgroundColor: BackgroundColor = null;
   metadata: any = {};
 
   get showIsEditText() {
@@ -378,7 +380,10 @@ export class EditorStore {
         files: this.files.map(i => ({ ...i, uploadPath: i.uploadPromise.value })),
         noteType: this.noteType,
         references: this.references,
-        metadata: this.metadata
+        metadata: {
+          ...this.metadata,
+          backgroundColor: this.backgroundColor ?? null
+        }
       });
       this.clearEditor();
       RootStore.Get(AiStore).isWriting = false;
@@ -393,6 +398,7 @@ export class EditorStore {
     this.files = [];
     this.references = []
     this.metadata = {};
+    this.backgroundColor = null;
   }
 
   constructor() {

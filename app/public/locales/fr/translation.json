@@ -856,5 +856,18 @@
   "custom-title": "Titre personnalisé",
   "custom-title-tip": "Utilisé pour l'onglet du navigateur et le titre de connexion. Laissez vide pour utiliser le titre par défaut.",
   "custom-title-placeholder": "Entrer un titre (1 à 50 caractères)",
-  "login-with": "Se connecter avec {{title}}"
+  "login-with": "Se connecter avec {{title}}",
+  "background-color": "Couleur de fond",
+  "default": "Par défaut",
+  "red": "Rouge",
+  "orange": "Orange",
+  "yellow": "Jaune",
+  "green": "Vert",
+  "teal": "Sarcelle",
+  "light-blue": "Bleu clair",
+  "blue": "Bleu",
+  "purple": "Violet",
+  "pink": "Rose",
+  "brown": "Marron",
+  "gray": "Gris"
 }

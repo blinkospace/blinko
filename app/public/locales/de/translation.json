@@ -853,5 +853,18 @@
   "custom-title": "Benutzerdefinierter Titel",
   "custom-title-tip": "Wird für Browser-Tab und Anmeldetitel verwendet. Leer lassen, um den Standardtitel zu verwenden.",
   "custom-title-placeholder": "Titel eingeben (1-50 Zeichen)",
-  "login-with": "Anmelden mit {{title}}"
+  "login-with": "Anmelden mit {{title}}",
+  "background-color": "Hintergrundfarbe",
+  "default": "Standard",
+  "red": "Rot",
+  "orange": "Orange",
+  "yellow": "Gelb",
+  "green": "Grün",
+  "teal": "Türkis",
+  "light-blue": "Hellblau",
+  "blue": "Blau",
+  "purple": "Violett",
+  "pink": "Pink",
+  "brown": "Braun",
+  "gray": "Grau"
 }

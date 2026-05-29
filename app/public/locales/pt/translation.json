@@ -853,5 +853,18 @@
   "custom-title": "Título personalizado",
   "custom-title-tip": "Usado para a aba do navegador e título de início de sessão. Deixe vazio para usar o título padrão.",
   "custom-title-placeholder": "Digite um título (1-50 caracteres)",
-  "login-with": "Entrar com {{title}}"
+  "login-with": "Entrar com {{title}}",
+  "background-color": "Cor de fundo",
+  "default": "Padrão",
+  "red": "Vermelho",
+  "orange": "Laranja",
+  "yellow": "Amarelo",
+  "green": "Verde",
+  "teal": "Turquesa",
+  "light-blue": "Azul claro",
+  "blue": "Azul",
+  "purple": "Roxo",
+  "pink": "Rosa",
+  "brown": "Marrom",
+  "gray": "Cinza"
 }
