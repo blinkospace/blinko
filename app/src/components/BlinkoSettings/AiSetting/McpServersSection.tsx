@@ -52,6 +52,9 @@ const McpServerDialogContent = observer(({ server, onClose }: { server?: McpServ
     return defaultFormData;
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const endpointPlaceholder = formData.type === 'sse'
+    ? 'https://mcp-server.example.com/sse'
+    : 'https://mcp-server.example.com/mcp';
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) return;
@@ -160,7 +163,7 @@ const McpServerDialogContent = observer(({ server, onClose }: { server?: McpServ
             label="URL"
             value={formData.url}
             onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-            placeholder="https://mcp-server.example.com/sse"
+            placeholder={endpointPlaceholder}
             description="The MCP server endpoint URL"
             isRequired
           />
@@ -613,4 +616,3 @@ export const McpServersSection = observer(() => {
     </CollapsibleCard>
   );
 });
-
