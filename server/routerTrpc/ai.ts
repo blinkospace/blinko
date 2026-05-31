@@ -163,11 +163,7 @@ export const aiRouter = router({
       const result = await agent.stream([
         {
           role: 'user',
-          content: question
-        },
-        {
-          role: 'system',
-          content: `This is the user's note content: ${content || ''}`
+          content: `${question}\n\nThis is the user's note content: ${content || ''}`
         }
       ]);
       for await (const chunk of result.fullStream) {
