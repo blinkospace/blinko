@@ -35,14 +35,14 @@ const logOAuthRequest = (provider: string) => (req: any, res: any, next: any) =>
 };
 
 router.get('/github', logOAuthRequest('GitHub'), async (req, res, next) => {
-  await ensureOAuthStrategies();
+  await ensureOAuthStrategies('github');
   console.log('GitHub authentication route accessed');
   passport.authenticate('github', { scope: ['user:email'] })(req, res, next);
 });
 
 router.get('/callback/:providerId', async (req, res, next) => {
-  await ensureOAuthStrategies();
   const providerId = req.params.providerId;
+  await ensureOAuthStrategies(providerId);
   console.log(`${providerId} callback route accessed`);
   passport.authenticate(providerId, (err, user, info) => {
     handleOAuthCallback(req, res, err, user, info);
@@ -50,25 +50,25 @@ router.get('/callback/:providerId', async (req, res, next) => {
 });
 
 router.get('/google', logOAuthRequest('Google'), async (req, res, next) => {
-  await ensureOAuthStrategies();
+  await ensureOAuthStrategies('google');
   console.log('Google authentication route accessed');
   passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
 });
 
 router.get('/facebook', logOAuthRequest('Facebook'), async (req, res, next) => {
-  await ensureOAuthStrategies();
+  await ensureOAuthStrategies('facebook');
   console.log('facebook authentication route accessed');
   passport.authenticate('facebook', { scope: ['email'] })(req, res, next);
 });
 
 router.get('/twitter', logOAuthRequest('Twitter'), async (req, res, next) => {
-  await ensureOAuthStrategies();
+  await ensureOAuthStrategies('twitter');
   console.log('twitter authentication route accessed');
   passport.authenticate('twitter')(req, res, next);
 });
 
 router.get('/discord', logOAuthRequest('Discord'), async (req, res, next) => {
-  await ensureOAuthStrategies();
+  await ensureOAuthStrategies('discord');
   console.log('discord authentication route accessed');
   passport.authenticate('discord', { scope: ['identify', 'email'] })(req, res, next);
 });
@@ -217,8 +217,8 @@ router.get('/profile', async (req: any, res) => {
 });
 
 router.get('/:providerId', logOAuthRequest('Custom'), async (req, res, next) => {
-  await ensureOAuthStrategies();
   const providerId = req.params.providerId;
+  await ensureOAuthStrategies(providerId);
   console.log(`Custom OAuth provider ${providerId} authentication route accessed`);
   
   const predefinedProviders = ['github', 'google', 'facebook', 'twitter', 'discord'];
