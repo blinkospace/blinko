@@ -15,12 +15,53 @@ import { cache } from '@shared/lib/cache';
 // Cache TTL in milliseconds (20 seconds)
 const CACHE_TTL = 20 * 1000;
 
+let oauthStrategiesInitialized = false;
+let oauthInitializationPromise: Promise<string[]> | null = null;
+const registeredOAuthProviderIds = new Set<string>();
+
+const hasOAuthStrategy = (providerId: string) => {
+  return Boolean((passport as any)._strategy(providerId));
+};
+
+const useOAuthStrategy = (providerId: string, strategy: any) => {
+  passport.use(providerId, strategy);
+  registeredOAuthProviderIds.add(providerId);
+};
+
 export const configureSession = async (app: any) => {
   await initJwtStrategy();
   initLocalStrategy();
-  await initOAuthStrategies();
-  
+
   app.use(passport.initialize());
+};
+
+export const ensureOAuthStrategies = async (providerId?: string) => {
+  if (providerId && hasOAuthStrategy(providerId)) {
+    return;
+  }
+
+  if (!providerId && oauthStrategiesInitialized) {
+    return;
+  }
+
+  if (!oauthInitializationPromise) {
+    oauthInitializationPromise = initOAuthStrategies()
+      .then((failedProviders) => {
+        oauthStrategiesInitialized = failedProviders.length === 0;
+        return failedProviders;
+      })
+      .finally(() => {
+        oauthInitializationPromise = null;
+      });
+  }
+
+  const failedProviders = await oauthInitializationPromise;
+
+  if (providerId && !hasOAuthStrategy(providerId)) {
+    oauthStrategiesInitialized = false;
+    const reason = failedProviders.includes(providerId) ? 'failed to initialize' : 'is not configured';
+    throw new Error(`OAuth strategy "${providerId}" ${reason}`);
+  }
 };
 
 async function handleOAuthCallback(accessToken: string, refreshToken: string, profile: any, done: any) {
@@ -221,11 +262,12 @@ const initOAuthStrategies = async () => {
   try {
     const config = await getGlobalConfig({ useAdmin: true });
     const providers = config.oauth2Providers || [];
+    const failedProviders: string[] = [];
     for (const provider of providers) {
       const callbackURL = `/api/auth/callback/${provider.id}`;
       switch (provider.id) {
         case 'github':
-          passport.use(new GitHubStrategy({
+          useOAuthStrategy(provider.id, new GitHubStrategy({
             clientID: provider.clientId,
             clientSecret: provider.clientSecret,
             callbackURL: callbackURL
@@ -233,7 +275,7 @@ const initOAuthStrategies = async () => {
           break;
 
         case 'google':
-          passport.use(new GoogleStrategy({
+          useOAuthStrategy(provider.id, new GoogleStrategy({
             clientID: provider.clientId,
             clientSecret: provider.clientSecret,
             callbackURL: callbackURL
@@ -241,7 +283,7 @@ const initOAuthStrategies = async () => {
           break;
 
         case 'facebook':
-          passport.use(new FacebookStrategy({
+          useOAuthStrategy(provider.id, new FacebookStrategy({
             clientID: provider.clientId,
             clientSecret: provider.clientSecret,
             callbackURL: callbackURL,
@@ -250,7 +292,7 @@ const initOAuthStrategies = async () => {
           break;
 
         case 'twitter':
-          passport.use(new TwitterStrategy({
+          useOAuthStrategy(provider.id, new TwitterStrategy({
             consumerKey: provider.clientId,
             consumerSecret: provider.clientSecret,
             callbackURL: callbackURL,
@@ -259,7 +301,7 @@ const initOAuthStrategies = async () => {
           break;
 
         case 'discord':
-          passport.use(new DiscordStrategy({
+          useOAuthStrategy(provider.id, new DiscordStrategy({
             clientID: provider.clientId,
             clientSecret: provider.clientSecret,
             callbackURL: callbackURL,
@@ -271,7 +313,7 @@ const initOAuthStrategies = async () => {
         case 'spotify':
           try {
             const SpotifyStrategy = require('passport-spotify').Strategy;
-            passport.use(new SpotifyStrategy({
+            useOAuthStrategy(provider.id, new SpotifyStrategy({
               clientID: provider.clientId,
               clientSecret: provider.clientSecret,
               callbackURL: callbackURL,
@@ -279,13 +321,14 @@ const initOAuthStrategies = async () => {
             }, handleOAuthCallback));
           } catch (error) {
             console.error('Spotify strategy requires passport-spotify package');
+            failedProviders.push(provider.id);
           }
           break;
 
         case 'apple':
           try {
             const AppleStrategy = require('passport-apple');
-            passport.use(new AppleStrategy({
+            useOAuthStrategy(provider.id, new AppleStrategy({
               clientID: provider.clientId,
               clientSecret: provider.clientSecret,
               callbackURL: callbackURL,
@@ -293,13 +336,14 @@ const initOAuthStrategies = async () => {
             }, handleOAuthCallback));
           } catch (error) {
             console.error('Apple strategy requires passport-apple package');
+            failedProviders.push(provider.id);
           }
           break;
 
         case 'slack':
           try {
             const SlackStrategy = require('passport-slack').Strategy;
-            passport.use(new SlackStrategy({
+            useOAuthStrategy(provider.id, new SlackStrategy({
               clientID: provider.clientId,
               clientSecret: provider.clientSecret,
               callbackURL: callbackURL,
@@ -307,13 +351,14 @@ const initOAuthStrategies = async () => {
             }, handleOAuthCallback));
           } catch (error) {
             console.error('Slack strategy requires passport-slack package');
+            failedProviders.push(provider.id);
           }
           break;
 
         case 'twitch':
           try {
             const TwitchStrategy = require('passport-twitch-new').Strategy;
-            passport.use(new TwitchStrategy({
+            useOAuthStrategy(provider.id, new TwitchStrategy({
               clientID: provider.clientId,
               clientSecret: provider.clientSecret,
               callbackURL: callbackURL,
@@ -321,13 +366,14 @@ const initOAuthStrategies = async () => {
             }, handleOAuthCallback));
           } catch (error) {
             console.error('Twitch strategy requires passport-twitch-new package');
+            failedProviders.push(provider.id);
           }
           break;
 
         case 'line':
           try {
             const LineStrategy = require('passport-line').Strategy;
-            passport.use(new LineStrategy({
+            useOAuthStrategy(provider.id, new LineStrategy({
               channelID: provider.clientId,
               channelSecret: provider.clientSecret,
               callbackURL: callbackURL,
@@ -335,6 +381,7 @@ const initOAuthStrategies = async () => {
             }, handleOAuthCallback));
           } catch (error) {
             console.error('Line strategy requires passport-line package');
+            failedProviders.push(provider.id);
           }
           break;
 
@@ -373,7 +420,7 @@ const initOAuthStrategies = async () => {
                 };
               }
 
-              passport.use(provider.id, new OAuth2Strategy(oauthConfig,
+              useOAuthStrategy(provider.id, new OAuth2Strategy(oauthConfig,
                 async (req, accessToken, refreshToken, profile, done) => {
                   try {
                     if (provider.wellKnown) {
@@ -411,13 +458,16 @@ const initOAuthStrategies = async () => {
               ));
             } catch (error) {
               console.error(`Failed to initialize custom OAuth provider: ${provider.id}`, error);
+              failedProviders.push(provider.id);
             }
           }
           break;
       }
     }
+    return failedProviders;
   } catch (error) {
     console.error('Failed to initialize OAuth strategies:', error);
+    throw error;
   }
 };
 
@@ -428,21 +478,24 @@ export const reinitializeOAuthStrategies = async () => {
     const providers = config.oauth2Providers || [];
     
     // Unregister existing OAuth strategies
-    for (const provider of providers) {
+    const providerIds = new Set([...providers.map(provider => provider.id), ...registeredOAuthProviderIds]);
+    for (const providerId of providerIds) {
       try {
-        passport.unuse(provider.id);
+        passport.unuse(providerId);
       } catch (error) {
         // Strategy might not exist, continue
       }
     }
+    registeredOAuthProviderIds.clear();
+
+    oauthStrategiesInitialized = false;
+    oauthInitializationPromise = null;
     
-    // Re-initialize OAuth strategies
-    await initOAuthStrategies();
-    return { success: true, message: 'OAuth strategies reinitialized' };
+    return { success: true, message: 'OAuth strategies reset' };
   } catch (error) {
     console.error('Failed to reinitialize OAuth strategies:', error);
     return { success: false, error: error.message };
   }
 };
 
-export default passport; 
+export default passport;
