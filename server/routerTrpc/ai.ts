@@ -693,9 +693,8 @@ export const aiRouter = router({
           case 'minimax': {
             // Static list - MiniMax models with known capabilities
             modelList = [
-              { id: 'MiniMax-M2.7', name: 'MiniMax M2.7', capabilities: inferModelCapabilities('MiniMax-M2.7') },
-              { id: 'MiniMax-M2.5', name: 'MiniMax M2.5', capabilities: inferModelCapabilities('MiniMax-M2.5') },
-              { id: 'MiniMax-M2.5-highspeed', name: 'MiniMax M2.5 Highspeed', capabilities: inferModelCapabilities('MiniMax-M2.5-highspeed') }
+              { id: 'MiniMax-M3', name: 'MiniMax M3', capabilities: inferModelCapabilities('MiniMax-M3') },
+              { id: 'MiniMax-M2.7', name: 'MiniMax M2.7', capabilities: inferModelCapabilities('MiniMax-M2.7') }
             ];
             break;
           }
