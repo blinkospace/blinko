@@ -145,7 +145,7 @@ export const PROVIDER_TEMPLATES = [
     website: 'https://www.minimaxi.com',
     docs: 'https://platform.minimaxi.com/document/introduction',
     icon: 'minimax',
-    description: 'MiniMax M2.7, M2.5 and other MiniMax models'
+    description: 'MiniMax M3, M2.7 and other MiniMax models'
   },
   {
     value: 'litellm',
