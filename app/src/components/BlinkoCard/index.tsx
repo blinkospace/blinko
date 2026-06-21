@@ -63,6 +63,8 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
     return true;
   }) || '';
 
+  const backgroundColor = (blinkoItem.metadata as any)?.backgroundColor;
+  const useCustomBackground = backgroundColor && !glassEffect;
 
   const handleClick = () => {
     if (blinko.isMultiSelectMode) {
@@ -119,11 +121,13 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
             <Card
               onContextMenu={e => !isPc && e.stopPropagation()}
               shadow='none'
+              style={useCustomBackground ? { backgroundColor } : undefined}
               className={`
-                flex flex-col p-4 ${glassEffect ? 'bg-transparent' : 'bg-background'} !transition-all group/card
+                flex flex-col p-4 ${glassEffect ? 'bg-transparent' : (useCustomBackground ? '' : 'bg-background')} !transition-all group/card
                 ${isPc && !blinkoItem.isShare && !withoutHoverAnimation ? 'hover:translate-y-1' : ''}
                 ${blinkoItem.isBlog ? 'cursor-pointer' : ''}
                 ${blinko.curMultiSelectIds?.includes(blinkoItem.id!) ? 'border-2 border-primary' : ''}
+                ${useCustomBackground ? 'card-custom-bg' : ''}
                 ${className}
               `}
             >

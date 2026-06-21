@@ -853,5 +853,18 @@
 	"custom-title": "Özel Başlık",
 	"custom-title-tip": "Tarayıcı sekmesi ve giriş başlığı için kullanılır. Varsayılan başlığı kullanmak için boş bırakın.",
 	"custom-title-placeholder": "Bir başlık girin (1-50 karakter)",
-	"login-with": "{{title}} ile Giriş Yap"
+	"login-with": "{{title}} ile Giriş Yap",
+	"background-color": "Arka plan rengi",
+	"default": "Varsayılan",
+	"red": "Kırmızı",
+  	"orange": "Turuncu",
+  	"yellow": "Sarı",
+  	"green": "Yeşil",
+  	"teal": "Deniz yeşili",
+  	"light-blue": "Açık mavi",
+  	"blue": "Mavi",
+	"purple": "Mor",
+	"pink": "Pembe",
+	"brown": "Kahverengi",
+	"gray": "Gri"
 }

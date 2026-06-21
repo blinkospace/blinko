@@ -839,5 +839,18 @@
   "custom-title": "사용자 정의 제목",
   "custom-title-tip": "브라우저 탭 및 로그인 제목에 사용됩니다. 비워두면 기본 제목이 사용됩니다.",
   "custom-title-placeholder": "제목을 입력하세요 (1-50자)",
-  "login-with": "{{title}}(으)로 로그인"
+  "login-with": "{{title}}(으)로 로그인",
+  "background-color": "배경 색상",
+  "default": "기본",
+  "red": "빨간색",
+  "orange": "주황색",
+  "yellow": "노란색",
+  "green": "초록색",
+  "teal": "청록색",
+  "light-blue": "연한 파란색",
+  "blue": "파란색",
+  "purple": "보라색",
+  "pink": "분홍색",
+  "brown": "갈색",
+  "gray": "회색"
 }

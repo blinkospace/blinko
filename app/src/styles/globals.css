@@ -214,6 +214,7 @@ body {
     --md-editor-separator: #bcbcbe;
     --md-editor-border: #e5e7eb;
     --shadow: 1px 1px 7px 3px #b1b1b142;
+    --custom-bg-foreground: hsl(222.2 47.4% 11.2%);
   }
 
   .dark {
@@ -268,6 +269,32 @@ body {
     --md-editor-border: #27272a;
     --shadow: 0 0 1px 1px #303030;
   }
+}
+
+.card-custom-bg {
+  --foreground: var(--custom-bg-foreground);
+  --desc: var(--custom-bg-foreground);
+  --muted-foreground: var(--custom-bg-foreground);
+  --ignore: var(--custom-bg-foreground);
+  --fgColor-default: var(--custom-bg-foreground);
+  --fgColor-muted: var(--custom-bg-foreground);
+  --color-prettylights-syntax-comment: var(--custom-bg-foreground);
+  color: var(--custom-bg-foreground);
+}
+.card-custom-bg .blinko-tag {
+  color: var(--custom-bg-foreground) !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+.card-custom-bg .bg-secondbackground,
+.card-custom-bg .vditor-toolbar {
+  background: rgba(0, 0, 0, 0.05);
+}
+.card-custom-bg .vditor-toolbar__item .vditor-tooltipped:hover,
+.card-custom-bg .hover\:bg-hover:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.card-custom-bg .vditor--dark {
+  --second-color: rgba(88, 96, 105, 0.36);
 }
 
 .glass-effect {

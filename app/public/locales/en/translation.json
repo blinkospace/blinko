@@ -839,5 +839,18 @@
   "custom-title": "Custom Title",
   "custom-title-tip": "Used for browser tab and sign-in title. Leave empty to use the default title.",
   "custom-title-placeholder": "Enter a title (1-50 chars)",
-  "login-with": "Login With {{title}}"
+  "login-with": "Login With {{title}}",
+  "background-color": "Background Color",
+  "default": "Default",
+  "yellow": "Yellow",
+  "blue": "Blue",
+  "green": "Green",
+  "pink": "Pink",
+  "purple": "Purple",
+  "red": "Red",
+  "orange": "Orange",
+  "teal": "Teal",
+  "brown": "Brown",
+  "gray": "Gray",
+  "light-blue": "Light Blue"
 }

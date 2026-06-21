@@ -853,5 +853,18 @@
   "custom-title": "自訂標題",
   "custom-title-tip": "用於瀏覽器分頁和登入頁標題，留空將使用預設標題。",
   "custom-title-placeholder": "請輸入標題（1-50個字元）",
-  "login-with": "使用 {{title}} 登入"
+  "login-with": "使用 {{title}} 登入",
+  "background-color": "背景顏色",
+  "default": "預設",
+  "red": "紅色",
+  "orange": "橙色",
+  "yellow": "黃色",
+  "green": "綠色",
+  "teal": "青色",
+  "light-blue": "淺藍色",
+  "blue": "藍色",
+  "purple": "紫色",
+  "pink": "粉紅色",
+  "brown": "棕色",
+  "gray": "灰色"
 }
