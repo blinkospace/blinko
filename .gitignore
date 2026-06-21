@@ -33,3 +33,9 @@ dev-dist
 .claude/settings.local.json
 target
 server/public
+
+# Local IDE / planning artifacts
+.vs/
+.cursorrules
+PLANNING.md
+TASK.md

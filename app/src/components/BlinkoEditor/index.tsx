@@ -6,6 +6,8 @@ import dayjs from "@/lib/dayjs"
 import { useEffect, useRef } from "react"
 import { NoteType } from "@shared/lib/types"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import { useTranslation } from "react-i18next"
+import { getTextCountDisplay } from "@/lib/textStats"
 
 type IProps = {
   mode: 'create' | 'edit',
@@ -23,6 +25,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const location = useLocation()
 
@@ -115,6 +118,10 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
     }
   }, [mode])
 
+  const shouldShowTextCount = (blinko.config.value as any)?.isShowTextCount === true
+  const includePunctuation = (blinko.config.value as any)?.isCountPunctuation === true
+  const textCount = getTextCountDisplay(store.noteContent, { includePunctuation })
+
   // Use Tauri hotkey hook
 
 
@@ -144,8 +151,16 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       }}
       isSendLoading={blinko.upsertNote.loading.value}
       bottomSlot={
-        isCreateMode ? <div className='text-xs text-ignore ml-2'>Drop to upload files</div> :
-          blinko.curSelectedNote?.createdAt ? <div className='text-xs text-desc'>{dayjs(blinko.curSelectedNote.createdAt).format("YYYY-MM-DD hh:mm:ss")}</div> : null
+        <div className='flex items-center gap-3 ml-2 text-xs text-foreground/80'>
+          {isCreateMode ? (
+            <span>Drop to upload files</span>
+          ) : blinko.curSelectedNote?.createdAt ? (
+            <span className='text-desc'>{dayjs(blinko.curSelectedNote.createdAt).format("YYYY-MM-DD hh:mm:ss")}</span>
+          ) : null}
+          {shouldShowTextCount && (
+            <span>{t(textCount.labelKey)}: {textCount.count}</span>
+          )}
+        </div>
       }
       onSend={async ({ files, references, noteType, metadata }) => {
         if (isCreateMode) {

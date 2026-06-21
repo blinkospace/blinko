@@ -9,6 +9,7 @@ import { CommentCount } from './commentButton';
 import { BlinkoItem } from '.';
 import { RootStore } from '@/store';
 import dayjs from '@/lib/dayjs';
+import { getTextCountDisplay } from '@/lib/textStats';
 
 interface CardFooterProps {
   blinkoItem: BlinkoItem;
@@ -21,7 +22,7 @@ export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps)
   return (
     <div className="flex items-center">
       <ConvertTypeButton blinkoItem={blinkoItem} />
-      <RightContent blinkoItem={blinkoItem} t={t} />
+      <RightContent blinkoItem={blinkoItem} blinko={blinko} t={t} />
     </div>
   );
 };
@@ -171,9 +172,16 @@ export const ConvertTypeButton = ({
   );
 };
 
-const RightContent = ({ blinkoItem, t }: { blinkoItem: Note; t: any }) => {
+const RightContent = ({ blinkoItem, blinko, t }: { blinkoItem: Note; blinko: BlinkoStore; t: any }) => {
+  const shouldShowTextCount = (blinko.config.value as any)?.isShowTextCount === true
+  const includePunctuation = (blinko.config.value as any)?.isCountPunctuation === true
+  const textCount = getTextCountDisplay(blinkoItem?.content, { includePunctuation })
+
   return (
     <div className="ml-auto flex items-center gap-2">
+      {shouldShowTextCount && (
+        <div className="text-xs text-foreground/80 select-none">{t(textCount.labelKey)}: {textCount.count}</div>
+      )}
       {<CommentCount blinkoItem={blinkoItem} />}
       {blinkoItem?.metadata?.isIndexed && (
         <Tooltip content={'Indexed'} delay={1500}>
