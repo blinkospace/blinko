@@ -19,6 +19,7 @@ import { helper } from '@/lib/helper';
 import { useLocation, useSearchParams, useNavigate } from 'react-router-dom';
 import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { downloadFromLink } from '@/lib/tauriHelper';
+import { clearSearchState, getSearchWithClearedFilters } from '@/lib/searchFilters';
 
 interface GlobalSearchProps {
   isOpen: boolean;
@@ -72,6 +73,14 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate()
+
+  const clearSearchFiltersFromUrl = () => {
+    navigate({
+      pathname: location.pathname,
+      search: getSearchWithClearedFilters(searchParams),
+    });
+  };
+
   // Move all state management to RootStore.Local
   const store = RootStore.Local(() => ({
     searchQuery: '',
@@ -101,9 +110,8 @@ export const GlobalSearch = observer(({ isOpen, onOpenChange }: GlobalSearchProp
         debouncedSearch.current(value);
       } else if (!value) {
         this.searchResults = { notes: [], resources: [], settings: [], tags: [] };
-        // Reset blinkoStore search text and reset list calls
-        blinkoStore.searchText = '';
-        blinkoStore.globalSearchTerm = '';
+        clearSearchState(blinkoStore);
+        clearSearchFiltersFromUrl();
         blinkoStore.noteList.resetAndCall({ page: 1, size: 20 });
         blinkoStore.resourceList.resetAndCall({
           page: 1,

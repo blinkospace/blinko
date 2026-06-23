@@ -145,6 +145,16 @@ export const PROVIDER_TEMPLATES = [
     website: 'https://www.minimaxi.com',
     docs: 'https://platform.minimaxi.com/document/introduction',
     icon: 'minimax',
-    description: 'MiniMax M2.7, M2.5 and other MiniMax models'
+    description: 'MiniMax M3, M2.7 and other MiniMax models'
+  },
+  {
+    value: 'litellm',
+    label: 'LiteLLM',
+    defaultName: 'LiteLLM',
+    defaultBaseURL: 'http://localhost:4000/v1',
+    website: 'https://litellm.ai',
+    docs: 'https://docs.litellm.ai/docs',
+    icon: 'litellm',
+    description: 'AI gateway proxy - access 100+ LLM providers through a single endpoint'
   }
 ];

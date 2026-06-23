@@ -136,13 +136,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
     };
   }, [isOpen, onClose, editorMode]);
 
-  const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Close if clicking outside the editor container
-    if (editorContainerRef.current && !editorContainerRef.current.contains(e.target as Node)) {
-      handleClose();
-    }
-  };
-
   const handleEditorSended = async () => {
     // Refresh the note data after saving
     if (blinkoItem.id) {
@@ -171,7 +164,6 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
   const editorContent = (
     <div 
       className="fixed inset-0 z-[9999] bg-background overflow-hidden"
-      onClick={handleOutsideClick}
       onPointerDownCapture={(e) => {
         // Only stop propagation if event is not from editor container (to prevent drag on background)
         // Allow events from editor container to work normally
