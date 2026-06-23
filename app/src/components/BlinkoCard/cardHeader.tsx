@@ -1,6 +1,6 @@
 import { Icon } from '@/components/Common/Iconify/icons';
 import { Tooltip } from '@heroui/react';
-import { Copy } from "../Common/Copy";
+import { NoteCopyDropdown } from "../Common/NoteCopyDropdown";
 import { LeftCickMenu, ShowEditTimeModel } from "../BlinkoRightClickMenu";
 import { BlinkoStore } from '@/store/blinkoStore';
 import { Note, NoteType } from '@shared/lib/types';
@@ -12,6 +12,7 @@ import { useIsIOS } from '@/lib/hooks';
 import { DialogStore } from '@/store/module/Dialog';
 import { BlinkoShareDialog } from '../BlinkoShareDialog';
 import { observer } from 'mobx-react-lite';
+import { useMemo } from 'react';
 import { AvatarAccount, CommentButton, UserAvatar } from './commentButton';
 import { HistoryButton } from '../BlinkoNoteHistory/HistoryButton';
 import { api } from '@/lib/trpc';
@@ -29,6 +30,15 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
   const { t } = useTranslation();
   const iconSize = isExpanded ? '20' : '16';
   const isIOSDevice = useIsIOS();
+
+  const attachmentAbsoluteUrls = useMemo(
+    () => blinkoItem.attachments?.map((i) => window.location.origin + i.path) ?? [],
+    [blinkoItem.attachments]
+  );
+
+  const toolbarHoverClasses = isIOSDevice
+    ? 'opacity-100'
+    : 'translate-x-1 opacity-0 group-hover/card:translate-x-0 group-hover/card:opacity-100';
 
   const handleTodoToggle = async (e) => {
     e.stopPropagation();
@@ -102,7 +112,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         )}
 
         <Tooltip content={t('edit-time')} delay={1000}>
-          <div 
+          <div
             className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc cursor-pointer transition-colors`}
             onClick={(e) => {
               e.stopPropagation();
@@ -117,108 +127,129 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           </div>
         </Tooltip>
 
-        <Copy
-          size={16}
-          className={`ml-auto ${isIOSDevice
-            ? 'opacity-100'
-            : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
-            }`}
-          content={blinkoItem.content + `\n${blinkoItem.attachments?.map(i => window.location.origin + i.path).join('\n')}`}
-        />
-
-        <CommentButton blinkoItem={blinkoItem} />
-
-        {isShareMode && (
-          <Tooltip content="RSS" delay={1000}>
-            <div className="flex items-center gap-2">
-              <Icon onClick={e => {
-                window.open(window.location.origin + `/api/rss/${blinkoItem.accountId}/atom?row=20`)
-              }} icon="mingcute:rss-2-fill" className='opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-primary' width="16" height="16" />
-            </div>
-          </Tooltip>
-        )}
-
-        {!isShareMode && (
-          <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} />
-        )}
-
-        {/* History button for viewing note versions */}
-        {!isShareMode && !!blinkoItem._count?.histories && blinkoItem._count?.histories > 0 && (
-          <HistoryButton
-            noteId={blinkoItem.id!}
-            className={'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-primary text-desc mt-[1px]'}
+        <div
+          className={`ml-auto flex min-w-0 flex-shrink-0 items-center gap-2 ${toolbarHoverClasses}`}
+        >
+          <NoteCopyDropdown
+            size={16}
+            className="flex-shrink-0"
+            noteMarkdown={blinkoItem.content ?? ''}
+            attachmentAbsoluteUrls={attachmentAbsoluteUrls}
           />
-        )}
 
-        {/* Trash/Recycle bin button */}
-        {!isShareMode && (
-          <Tooltip content={t('trash')} delay={1000}>
-            <Icon
-              icon="mingcute:delete-2-line"
-              width={iconSize}
-              height={iconSize}
-              className={`opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 ml-2 cursor-pointer hover:text-red-500 text-desc ${blinkoItem.isRecycle ? 'text-red-500 opacity-100' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
-                  blinko.updateTicker++;
-                });
+          <CommentButton blinkoItem={blinkoItem} toolbarGrouped />
+
+          {isShareMode && (
+            <Tooltip content="RSS" delay={1000}>
+              <div className="flex items-center">
+                <Icon
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(window.location.origin + `/api/rss/${blinkoItem.accountId}/atom?row=20`);
+                  }}
+                  icon="mingcute:rss-2-fill"
+                  className="cursor-pointer text-desc hover:text-primary"
+                  width="16"
+                  height="16"
+                />
+              </div>
+            </Tooltip>
+          )}
+
+          {!isShareMode && <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} toolbarGrouped />}
+
+          {!isShareMode && !!blinkoItem._count?.histories && blinkoItem._count?.histories > 0 && (
+            <HistoryButton
+              noteId={blinkoItem.id!}
+              className="mt-[1px] cursor-pointer text-desc hover:text-primary"
+            />
+          )}
+
+          {!isShareMode && (
+            <Tooltip content={t('trash')} delay={1000}>
+              <Icon
+                icon="mingcute:delete-2-line"
+                width={iconSize}
+                height={iconSize}
+                className={`cursor-pointer text-desc hover:text-red-500 ${blinkoItem.isRecycle ? 'text-red-500' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  PromiseCall(api.notes.trashMany.mutate({ ids: [blinkoItem.id!] })).then(() => {
+                    blinko.updateTicker++;
+                  });
+                }}
+              />
+            </Tooltip>
+          )}
+
+          {blinkoItem.isTop && (
+            <Icon className="text-[#EFC646]" icon="solar:bookmark-bold" width={iconSize} height={iconSize} />
+          )}
+
+          {!isShareMode && (
+            <LeftCickMenu
+              className="flex-shrink-0 text-desc hover:scale-1.3 hover:text-primary"
+              onTrigger={() => {
+                blinko.curSelectedNote = _.cloneDeep(blinkoItem);
               }}
             />
-          </Tooltip>
-        )}
-
-        {blinkoItem.isTop && (
-          <Icon
-            className={isIOSDevice ? 'ml-[10px] text-[#EFC646]' : "ml-auto group-hover/card:ml-2 text-[#EFC646]"}
-            icon="solar:bookmark-bold"
-            width={iconSize}
-            height={iconSize}
-          />
-        )}
-
-        {!isShareMode && (
-          <LeftCickMenu
-            className={isIOSDevice ? 'ml-[10px]' : (blinkoItem.isTop ? "ml-[10px]" : 'ml-auto group-hover/card:ml-2')}
-            onTrigger={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem) }}
-          />
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 });
 
-const ShareButton = observer(({ blinkoItem, isIOSDevice }: { blinkoItem: Note, isIOSDevice: boolean }) => {
-  const { t } = useTranslation()
-  const blinko = RootStore.Get(BlinkoStore);
-  return (
-    <Tooltip content={t('share')} delay={1000}>
-      <div className="flex items-center gap-2">
-        <Icon
-          icon="tabler:share-2"
-          width="16"
-          height="16"
-          className={`cursor-pointer text-desc ml-2 ${isIOSDevice
-            ? 'opacity-100'
-            : 'opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0 translate-x-1'
-            }`}
-          onClick={async (e) => {
-            e.stopPropagation()
-            blinko.curSelectedNote = _.cloneDeep(blinkoItem)
-            RootStore.Get(DialogStore).setData({
-              isOpen: true,
-              size: 'md',
-              title: t('share'),
-              content: <BlinkoShareDialog defaultSettings={{
-                shareUrl: blinkoItem.shareEncryptedUrl ? window.location.origin + '/share/' + blinkoItem.shareEncryptedUrl : undefined,
-                expiryDate: blinkoItem.shareExpiryDate ?? undefined,
-                password: blinkoItem.sharePassword ?? '',
-                isShare: blinkoItem.isShare
-              }} />
-            })
-          }}
-        />
-      </div>
-    </Tooltip>
-  );
-})
+const ShareButton = observer(
+  ({
+    blinkoItem,
+    isIOSDevice,
+    toolbarGrouped = false,
+  }: {
+    blinkoItem: Note;
+    isIOSDevice: boolean;
+    toolbarGrouped?: boolean;
+  }) => {
+    const { t } = useTranslation();
+    const blinko = RootStore.Get(BlinkoStore);
+    const visibilityClasses = toolbarGrouped
+      ? ''
+      : isIOSDevice
+        ? 'opacity-100'
+        : 'translate-x-1 opacity-0 group-hover/card:translate-x-0 group-hover/card:opacity-100';
+
+    return (
+      <Tooltip content={t('share')} delay={1000}>
+        <div className="flex items-center gap-2">
+          <Icon
+            icon="tabler:share-2"
+            width="16"
+            height="16"
+            className={`cursor-pointer text-desc ${toolbarGrouped ? '' : 'ml-2'} ${visibilityClasses}`}
+            onClick={async (e) => {
+              e.stopPropagation();
+              blinko.curSelectedNote = _.cloneDeep(blinkoItem);
+              RootStore.Get(DialogStore).setData({
+                isOpen: true,
+                size: 'md',
+                title: t('share'),
+                content: (
+                  <BlinkoShareDialog
+                    defaultSettings={{
+                      shareUrl: blinkoItem.shareEncryptedUrl
+                        ? window.location.origin + '/share/' + blinkoItem.shareEncryptedUrl
+                        : undefined,
+                      expiryDate: blinkoItem.shareExpiryDate ?? undefined,
+                      password: blinkoItem.sharePassword ?? '',
+                      isShare: blinkoItem.isShare,
+                    }}
+                  />
+                ),
+              });
+            }}
+          />
+        </div>
+      </Tooltip>
+    );
+  }
+);
