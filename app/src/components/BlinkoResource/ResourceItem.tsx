@@ -133,7 +133,9 @@ const ResourceCard = observer(({ item, isSelected, onSelect, isDragging, isDragg
     item.name?.endsWith('.bmp') ||
     item.name?.endsWith('.tiff') ||
     item.name?.endsWith('.ico') ||
-    item.name?.endsWith('.webp');
+    item.name?.endsWith('.webp') ||
+    item.name?.endsWith('.heic') ||
+    item.name?.endsWith('.heif');
 
   const fileNameAndExt = useMemo(() => {
     const fileName = toJS(item.name);

@@ -134,7 +134,7 @@ export const helper = {
       if (mimeType?.startsWith('image')) return 'image'
     }
 
-    if ('jpeg/jpg/png/bmp/tiff/tif/webp/svg'.includes(extension?.toLowerCase() ?? null)) {
+    if ('jpeg/jpg/png/bmp/tiff/tif/webp/svg/heic/heif'.includes(extension?.toLowerCase() ?? null)) {
       return 'image'
     }
     if ('mp4/webm/ogg/mov/wmv'.includes(extension?.toLowerCase() ?? null)) {
