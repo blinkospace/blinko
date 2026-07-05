@@ -472,7 +472,7 @@ export const attachmentsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { ids } = input;
       // Security fix: Only allow deleting attachments owned by the user
-      await prisma.attachments.deleteMany({
+      const attachments = await prisma.attachments.findMany({
         where: {
           id: { in: ids },
           OR: [
@@ -487,6 +487,16 @@ export const attachmentsRouter = router({
           ]
         }
       });
+
+      // Delete each file from storage (FileService.deleteFile also removes the DB record)
+      for (const attachment of attachments) {
+        try {
+          await FileService.deleteFile(attachment.path);
+        } catch (error) {
+          console.error(`Failed to delete file ${attachment.path}:`, error);
+        }
+      }
+
       return { success: true, message: 'Files deleted successfully' };
     }),
 });
