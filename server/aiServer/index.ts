@@ -19,6 +19,7 @@ import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
 import { userCaller } from '../routerTrpc/_app';
 
 import { getAllPathTags } from '@server/lib/helper';
+import { commentWebhookInclude, sendCommentWebhook } from '@server/lib/commentWebhook';
 import { LibSQLVector } from '@mastra/libsql';
 import { RuntimeContext } from "@mastra/core/di";
 
@@ -331,17 +332,9 @@ export class AiService {
           guestIP: '',
           guestUA: '',
         },
-        include: {
-          account: {
-            select: {
-              id: true,
-              name: true,
-              nickname: true,
-              image: true,
-            },
-          },
-        },
+        include: commentWebhookInclude,
       });
+      sendCommentWebhook('comment.created', comment, {});
       await CreateNotification({
         accountId: note.accountId ?? 0,
         title: 'comment-notification',
@@ -462,7 +455,7 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
       // Handle based on the processing mode
       if (processingMode === 'comment' || processingMode === 'both') {
         // Add comment
-        await prisma.comments.create({
+        const comment = await prisma.comments.create({
           data: {
             content: aiResponse,
             noteId,
@@ -470,7 +463,9 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
             guestIP: '',
             guestUA: '',
           },
+          include: commentWebhookInclude,
         });
+        sendCommentWebhook('comment.created', comment, ctx);
 
         await CreateNotification({
           accountId: note.accountId ?? 0,
@@ -522,7 +517,7 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
           ], {
             runtimeContext
           });
-          await prisma.comments.create({
+          const comment = await prisma.comments.create({
             data: {
               content: result.text,
               noteId,
@@ -530,10 +525,12 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
               guestIP: '',
               guestUA: '',
             },
+            include: commentWebhookInclude,
           });
+          sendCommentWebhook('comment.created', comment, ctx);
         } catch (error) {
           console.error('Error during smart edit:', error);
-          await prisma.comments.create({
+          const comment = await prisma.comments.create({
             data: {
               content: `⚠️ **Smart Edit Error**\n\nI encountered an error while trying to edit this note. This may happen if the AI model doesn't support function calling or if there was an issue with the edit process.\n\nError details: ${error.message}`,
               noteId,
@@ -541,7 +538,9 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
               guestIP: '',
               guestUA: '',
             },
+            include: commentWebhookInclude,
           });
+          sendCommentWebhook('comment.created', comment, ctx);
         }
       }
 

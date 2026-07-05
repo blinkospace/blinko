@@ -8,11 +8,34 @@ import { User } from "@server/context";
 import { Request as ExpressRequest } from 'express';
 import { getGlobalConfig } from "@server/routerTrpc/config";
 
-export const SendWebhook = async (data: any, webhookType: string, ctx: any) => {
+type SendWebhookOptions = {
+  activityType?: string;
+  configUserId?: number | null;
+}
+
+export const getWebhookActivityType = (webhookType: string, activityType?: string) => {
+  if (activityType) {
+    return activityType;
+  }
+  return `blinko.note.${webhookType}`;
+}
+
+const getWebhookConfigContext = (ctx: any, configUserId?: number | null) => {
+  if (!configUserId) {
+    return ctx;
+  }
+  return {
+    ...ctx,
+    id: configUserId.toString(),
+    sub: configUserId.toString()
+  };
+}
+
+export const SendWebhook = async (data: any, webhookType: string, ctx: any, options: SendWebhookOptions = {}) => {
   try {
-    const globalConfig = await getGlobalConfig({ ctx })
+    const globalConfig = await getGlobalConfig({ ctx: getWebhookConfigContext(ctx, options.configUserId) })
     if (globalConfig.webhookEndpoint) {
-      await axios.post(globalConfig.webhookEndpoint, { data, webhookType, activityType: `blinko.note.${webhookType}` })
+      await axios.post(globalConfig.webhookEndpoint, { data, webhookType, activityType: getWebhookActivityType(webhookType, options.activityType) })
     }
   } catch (error) {
     console.log('request webhook error:', error)
