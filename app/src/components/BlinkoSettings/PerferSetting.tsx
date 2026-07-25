@@ -27,6 +27,7 @@ export const PerferSetting = observer(() => {
   const [customBackgroundUrl, setCustomBackgroundUrl] = useState(blinko.config.value?.customBackgroundUrl || '');
   const [signinFooterText, setSigninFooterText] = useState(blinko.config.value?.signinFooterText || '');
   const [customTitle, setCustomTitle] = useState(blinko.config.value?.customTitle || '');
+  const [customHubUrl, setCustomHubUrl] = useState(blinko.config.value?.customHubUrl || '');
   const user = RootStore.Get(UserStore)
 
   useEffect(() => {
@@ -36,7 +37,8 @@ export const PerferSetting = observer(() => {
     setCustomBackgroundUrl(blinko.config.value?.customBackgroundUrl || '');
     setSigninFooterText(blinko.config.value?.signinFooterText || '');
     setCustomTitle(blinko.config.value?.customTitle || '');
-  }, [blinko.config.value?.textFoldLength, blinko.config.value?.maxHomePageWidth, blinko.config.value?.customBackgroundUrl, blinko.config.value?.signinFooterText, blinko.config.value?.customTitle]);
+    setCustomHubUrl(blinko.config.value?.customHubUrl || '');
+  }, [blinko.config.value?.textFoldLength, blinko.config.value?.maxHomePageWidth, blinko.config.value?.customBackgroundUrl, blinko.config.value?.signinFooterText, blinko.config.value?.customTitle, blinko.config.value?.customHubUrl]);
 
 
   return <CollapsibleCard
@@ -431,6 +433,34 @@ export const PerferSetting = observer(() => {
               await PromiseCall(api.config.update.mutate({
                 key: 'customTitle',
                 value: titleValue
+              }));
+              blinko.config.call();
+            }} />} />
+      )
+    }
+
+    {
+      user.isSuperAdmin && (
+        <Item
+          type={isPc ? 'row' : 'col'}
+          leftContent={<div className="flex flex-col">
+            <div>{t('custom-hub-url')}</div>
+            <div className="text-xs text-default-400">{t('custom-hub-url-tip')}</div>
+          </div>}
+          rightContent={<Input
+            className="w-full md:w-[400px]"
+            placeholder={t('custom-hub-url-placeholder')}
+            type="text"
+            value={customHubUrl}
+            onChange={e => {
+              setCustomHubUrl(e.target.value)
+            }}
+            onBlur={async () => {
+              const urlValue = customHubUrl.trim();
+              setCustomHubUrl(urlValue);
+              await PromiseCall(api.config.update.mutate({
+                key: 'customHubUrl',
+                value: urlValue
               }));
               blinko.config.call();
             }} />} />
