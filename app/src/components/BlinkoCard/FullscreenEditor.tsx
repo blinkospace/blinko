@@ -14,14 +14,17 @@ import { MarkdownRender } from "@/components/Common/MarkdownRender";
 import { FilesAttachmentRender } from "../Common/AttachmentRender";
 import { ReferencesContent } from "./referencesContent";
 import { useTranslation } from "react-i18next";
+import { CardFooter } from "./cardFooter";
+import { SimpleCommentList } from "./commentButton";
 
 interface FullscreenEditorProps {
   blinkoItem: BlinkoItem;
   isOpen: boolean;
   onClose: () => void;
+  isShareMode?: boolean;
 }
 
-export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: FullscreenEditorProps) => {
+export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose, isShareMode = false }: FullscreenEditorProps) => {
   const isPc = useMediaQuery('(min-width: 768px)');
   const blinko = RootStore.Get(BlinkoStore);
   const { t } = useTranslation();
@@ -38,6 +41,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
 
   // Switch to edit mode
   const handleSwitchToEdit = () => {
+    if (isShareMode) return;
     setEditorMode('edit');
   };
 
@@ -74,20 +78,20 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
   // Set curSelectedNote when opening editor
   useEffect(() => {
     if (isOpen) {
-      // Load fresh note data from server
-      if (blinkoItem.id) {
+      if (!isShareMode && blinkoItem.id) {
+        // Load fresh note data from server for local notes
         blinko.noteDetail.call({ id: blinkoItem.id }).then(() => {
           if (blinko.noteDetail.value) {
             blinko.curSelectedNote = _.cloneDeep(blinko.noteDetail.value);
           }
         });
       } else {
-        // Fallback to prop data if no id
+        // Fallback to prop data if shared or remote note
         blinko.curSelectedNote = _.cloneDeep(blinkoItem);
         blinko.noteDetail.value = _.cloneDeep(blinkoItem);
       }
     }
-  }, [isOpen, blinkoItem.id]);
+  }, [isOpen, blinkoItem.id, isShareMode]);
 
   // Handle ESC key to close editor
   useEffect(() => {
@@ -205,30 +209,32 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                 <Icon icon="tabler:arrow-left" width={20} height={20} />
               </Button>
               <div className="flex-1 flex justify-end ml-2 gap-2">
-                {editorMode === 'preview' ? (
-                  <Tooltip content={t('edit')}>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={handleSwitchToEdit}
-                      className="text-foreground hover:bg-default-100"
-                    >
-                      <Icon icon="tabler:edit" width={20} height={20} />
-                    </Button>
-                  </Tooltip>
-                ) : (
-                  <Tooltip content={t('preview')}>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={handleSwitchToPreview}
-                      className="text-foreground hover:bg-default-100"
-                    >
-                      <Icon icon="tabler:eye" width={20} height={20} />
-                    </Button>
-                  </Tooltip>
+                {!isShareMode && (
+                  editorMode === 'preview' ? (
+                    <Tooltip content={t('edit')}>
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        size="sm"
+                        onPress={handleSwitchToEdit}
+                        className="text-foreground hover:bg-default-100"
+                      >
+                        <Icon icon="tabler:edit" width={20} height={20} />
+                      </Button>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip content={t('preview')}>
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        size="sm"
+                        onPress={handleSwitchToPreview}
+                        className="text-foreground hover:bg-default-100"
+                      >
+                        <Icon icon="tabler:eye" width={20} height={20} />
+                      </Button>
+                    </Tooltip>
+                  )
                 )}
                 {editorMode === 'edit' && (
                   <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
@@ -242,19 +248,30 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
             <div
               className="flex-1 overflow-y-auto min-h-0 py-4"
               style={{ height: isPc ? 'calc(100vh - 100px)' : 'calc(100vh - 80px)' }}
-              onDoubleClick={handleSwitchToEdit}
+              onDoubleClick={isShareMode ? undefined : handleSwitchToEdit}
             >
               <MarkdownRender
-                content={blinko.noteDetail.value?.content ?? blinkoItem.content}
+                content={isShareMode ? blinkoItem.content : (blinko.noteDetail.value?.content ?? blinkoItem.content)}
                 onChange={(newContent) => {
+                  if (isShareMode) return;
                   blinkoItem.content = newContent;
                   blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false });
                 }}
+                isShareMode={isShareMode}
                 largeSpacing={true}
               />
-              <ReferencesContent blinkoItem={blinko.noteDetail.value ?? blinkoItem} className="my-4" />
+              <ReferencesContent blinkoItem={isShareMode ? blinkoItem : (blinko.noteDetail.value ?? blinkoItem)} className="my-4" />
               <div className={blinkoItem.attachments?.length != 0 ? 'my-2' : ''}>
-                <FilesAttachmentRender files={blinko.noteDetail.value?.attachments ?? blinkoItem.attachments ?? []} preview />
+                <FilesAttachmentRender files={(isShareMode ? blinkoItem.attachments : blinko.noteDetail.value?.attachments) ?? blinkoItem.attachments ?? []} preview />
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-border">
+                <CardFooter blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} />
+                {!blinko.config.value?.isHideCommentInCard && (
+                  <div className="mt-2">
+                    <SimpleCommentList blinkoItem={blinkoItem} />
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -286,30 +303,32 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                 <Icon icon="tabler:arrow-left" width={20} height={20} />
               </Button>
               <div className="flex-1 flex justify-end ml-2 gap-2">
-                {editorMode === 'preview' ? (
-                  <Tooltip content={t('edit')}>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={handleSwitchToEdit}
-                      className="text-foreground hover:bg-default-100"
-                    >
-                      <Icon icon="tabler:edit" width={20} height={20} />
-                    </Button>
-                  </Tooltip>
-                ) : (
-                  <Tooltip content={t('preview')}>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={handleSwitchToPreview}
-                      className="text-foreground hover:bg-default-100"
-                    >
-                      <Icon icon="tabler:eye" width={20} height={20} />
-                    </Button>
-                  </Tooltip>
+                {!isShareMode && (
+                  editorMode === 'preview' ? (
+                    <Tooltip content={t('edit')}>
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        size="sm"
+                        onPress={handleSwitchToEdit}
+                        className="text-foreground hover:bg-default-100"
+                      >
+                        <Icon icon="tabler:edit" width={20} height={20} />
+                      </Button>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip content={t('preview')}>
+                      <Button
+                        isIconOnly
+                        variant="light"
+                        size="sm"
+                        onPress={handleSwitchToPreview}
+                        className="text-foreground hover:bg-default-100"
+                      >
+                        <Icon icon="tabler:eye" width={20} height={20} />
+                      </Button>
+                    </Tooltip>
+                  )
                 )}
                 {editorMode === 'edit' && (
                   <div id={`editor-top-toolbar-${blinkoItem.id}`} className="flex justify-end"></div>
