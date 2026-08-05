@@ -1,0 +1,164 @@
+# Flatpak manifest for Blinko (desktop / Tauri build).
+#
+# This repackages the .deb produced by `tauri-action` rather than rebuilding
+# from source: the Tauri build needs network access for cargo/bun, which is not
+# available inside a flatpak-builder sandbox. The .deb is a plain tarball
+# containing the binary, a .desktop file and icons, so unpacking it is cheap and
+# keeps the Flatpak byte-identical to the .deb we already ship.
+#
+# The important property of this build is that WebKitGTK comes from
+# org.gnome.Platform instead of being bundled. A bundled WebKitGTK is pinned to
+# the graphics stack of the machine that built it, which is why the AppImage
+# fails with "Could not create default EGL display: EGL_BAD_PARAMETER" on hosts
+# with a newer Mesa than the Ubuntu 22.04 builder. The runtime ships WebKitGTK
+# and its matching GL stack together, so that mismatch cannot occur.
+#
+# Build locally with: ./flatpak/build-local.sh
+
+app-id: space.blinko.Blinko
+runtime: org.gnome.Platform
+runtime-version: '50'
+sdk: org.gnome.Sdk
+command: Blinko
+
+finish-args:
+  # Display / GPU
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # Blinko is a client for a self-hosted server, so network is mandatory.
+  - --share=network
+  # Voice notes (recording and playback).
+  - --socket=pulseaudio
+  # System tray icon (StatusNotifierItem) and desktop notifications.
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.freedesktop.Notifications
+  # Attachment downloads and note exports. File pickers go through the portal,
+  # so no broader filesystem access is required.
+  - --filesystem=xdg-download
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/man
+  - /share/gtk-doc
+  - /share/vala
+  - '*.a'
+  - '*.la'
+
+modules:
+  # libdbusmenu still uses intltool, which the GNOME SDK does not ship. Built
+  # here as a build-time-only dependency and cleaned out of the final app.
+  - name: intltool
+    cleanup:
+      - '*'
+    sources:
+      - type: archive
+        url: https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz
+        sha256: 67c74d94196b153b774ab9f89b2fa6c6ba79352407037c8c14d5aeb334e959cd
+
+  # libdbusmenu -> libayatana-indicator -> libayatana-appindicator provide the
+  # system tray. Blinko dlopen()s libayatana-appindicator3.so.1 at startup; if
+  # it is absent the app still runs but silently loses its tray icon.
+  - name: libdbusmenu
+    buildsystem: autotools
+    build-options:
+      cflags: -Wno-error -Wno-deprecated-declarations
+    config-opts:
+      - --with-gtk=3
+      - --disable-dumper
+      - --disable-static
+      - --disable-tests
+      - --disable-gtk-doc
+      - --disable-vala
+      - --enable-introspection=no
+      # libdbusmenu 16.04 defines the HAVE_VALGRIND automake conditional inside
+      # its `AS_IF([test "x$enable_tests" != "xno"], ...)` block, so
+      # --disable-tests leaves it undefined and configure aborts with
+      # 'conditional "HAVE_VALGRIND" was never defined'. Supply it directly;
+      # '#' is automake's "condition is false" marker.
+      - 'HAVE_VALGRIND_TRUE=#'
+      - 'HAVE_VALGRIND_FALSE='
+    sources:
+      - type: archive
+        url: https://launchpad.net/libdbusmenu/16.04/16.04.0/+download/libdbusmenu-16.04.0.tar.gz
+        sha256: b9cc4a2acd74509435892823607d966d424bd9ad5d0b00938f27240a1bfa878a
+
+  - name: ayatana-ido
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_LIBDIR=lib
+      - -DENABLE_TESTS=OFF
+    sources:
+      - type: archive
+        url: https://github.com/AyatanaIndicators/ayatana-ido/archive/refs/tags/0.10.4.tar.gz
+        sha256: bd59abd5f1314e411d0d55ce3643e91cef633271f58126be529de5fb71c5ab38
+
+  - name: libayatana-indicator
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_LIBDIR=lib
+      - -DENABLE_TESTS=OFF
+      - -DFLAVOUR_GTK3=ON
+    sources:
+      - type: archive
+        url: https://github.com/AyatanaIndicators/libayatana-indicator/archive/refs/tags/0.9.5.tar.gz
+        sha256: 73d71c908b803f12e4a5ecd8392511b58afbdd0c82ad7909611a17bb7847c5c8
+
+  - name: libayatana-appindicator
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_LIBDIR=lib
+      - -DENABLE_TESTS=OFF
+      - -DENABLE_GTKDOC=OFF
+      - -DENABLE_BINDINGS_VALA=OFF
+      - -DENABLE_BINDINGS_MONO=OFF
+      - -DFLAVOUR_GTK3=ON
+    sources:
+      - type: archive
+        url: https://github.com/AyatanaIndicators/libayatana-appindicator/archive/refs/tags/0.6.0.tar.gz
+        sha256: 23be92ad8eb9625ce93b23b14f82f3cf88a4970c31d48581945ddfbac0441d06
+
+  # libxdo.so.3 is a hard DT_NEEDED of the Blinko binary (global shortcuts), and
+  # the GNOME runtime does not ship it. Pin the 3.x series: xdotool 4.x installs
+  # libxdo.so.4 and the binary would fail to start.
+  - name: xdotool
+    buildsystem: simple
+    build-commands:
+      - make PREFIX=/app LIBDIR=/app/lib install
+    sources:
+      - type: archive
+        url: https://github.com/jordansissel/xdotool/archive/refs/tags/v3.20211022.1.tar.gz
+        sha256: 82b15a944a5e82fee15e0f6116bd9f642bc3d0bb6989fc0ca5ad9dfe35de0847
+
+  - name: blinko
+    buildsystem: simple
+    build-commands:
+      # .deb is an ar archive wrapping data.tar.*
+      - ar x blinko.deb
+      - tar -xf data.tar.*
+      - install -Dm755 usr/bin/Blinko /app/bin/Blinko
+      - install -Dm644 space.blinko.Blinko.desktop /app/share/applications/space.blinko.Blinko.desktop
+      - install -Dm644 space.blinko.Blinko.metainfo.xml /app/share/metainfo/space.blinko.Blinko.metainfo.xml
+      # Icons must be renamed to the app-id for the desktop to resolve them.
+      - |
+        for size in 32x32 128x128 256x256@2; do
+          src="usr/share/icons/hicolor/$size/apps/Blinko.png"
+          [ -f "$src" ] && install -Dm644 "$src" \
+            "/app/share/icons/hicolor/$size/apps/space.blinko.Blinko.png"
+        done
+        exit 0
+    sources:
+      # Produced by the tauri-action build earlier in the release workflow and
+      # copied here as flatpak/blinko.deb. See build-local.sh to fetch a
+      # published .deb instead when building by hand.
+      - type: file
+        path: blinko.deb
+      - type: file
+        path: space.blinko.Blinko.desktop
+      - type: file
+        path: space.blinko.Blinko.metainfo.xml
