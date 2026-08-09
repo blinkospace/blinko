@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "cd app && bun run tauri dev",
+    "dev:all": "cd server && bun --env-file ../.env --watch index.ts",
     "build:web": "turbo run build:web",
     "test": "turbo run test",
     "start:server:production": "ncp dist/public server/public && cd server && bun run start",

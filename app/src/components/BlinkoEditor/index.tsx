@@ -152,11 +152,9 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       isSendLoading={blinko.upsertNote.loading.value}
       bottomSlot={
         <div className='flex items-center gap-3 ml-2 text-xs text-foreground/80'>
-          {isCreateMode ? (
-            <span>Drop to upload files</span>
-          ) : blinko.curSelectedNote?.createdAt ? (
+          {!isCreateMode && blinko.curSelectedNote?.createdAt && (
             <span className='text-desc'>{dayjs(blinko.curSelectedNote.createdAt).format("YYYY-MM-DD hh:mm:ss")}</span>
-          ) : null}
+          )}
           {shouldShowTextCount && (
             <span>{t(textCount.labelKey)}: {textCount.count}</span>
           )}
