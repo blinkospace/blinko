@@ -23,7 +23,7 @@ describe('MiniMax API Integration', () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'MiniMax-M2.5-highspeed',
+        model: 'MiniMax-M3',
         messages: [{ role: 'user', content: 'Reply with "ok"' }],
         max_tokens: 5,
         temperature: 0.1
@@ -36,7 +36,7 @@ describe('MiniMax API Integration', () => {
     expect(data.choices[0].message.content).toBeTruthy();
   }, TIMEOUT);
 
-  it('should complete a chat request with MiniMax-M2.5', async () => {
+  it('should complete a chat request with MiniMax-M3', async () => {
     if (skip) return;
 
     const response = await fetch(`${MINIMAX_BASE_URL}/chat/completions`, {
@@ -46,7 +46,7 @@ describe('MiniMax API Integration', () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'MiniMax-M2.5',
+        model: 'MiniMax-M3',
         messages: [{ role: 'user', content: 'Say "hello" and nothing else.' }],
         max_tokens: 10,
         temperature: 0.1
@@ -70,7 +70,7 @@ describe('MiniMax API Integration', () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'MiniMax-M2.5',
+        model: 'MiniMax-M3',
         messages: [{ role: 'user', content: 'Hi' }],
         max_tokens: 5,
         temperature: 0.1,

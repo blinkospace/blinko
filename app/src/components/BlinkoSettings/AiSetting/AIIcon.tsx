@@ -45,6 +45,7 @@ const PROVIDER_ICONS: Record<string, React.ComponentType<any>> = {
   siliconflow: SiliconCloud.Color,
   voyageai: Voyage.Color,
   voyage: Voyage.Color,
+  litellm: OpenRouter,
   custom: OpenAI,
 };
 

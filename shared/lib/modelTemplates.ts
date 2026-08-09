@@ -86,9 +86,8 @@ export const DEFAULT_MODEL_TEMPLATES: ModelTemplate[] = [
   { modelKey: 'qwen-vl-max', title: 'Qwen VL Max', capabilities: { inference: true, image: true } },
 
   // MiniMax Models
+  { modelKey: 'MiniMax-M3', title: 'MiniMax M3', capabilities: { inference: true, tools: true } },
   { modelKey: 'MiniMax-M2.7', title: 'MiniMax M2.7', capabilities: { inference: true, tools: true } },
-  { modelKey: 'MiniMax-M2.5', title: 'MiniMax M2.5', capabilities: { inference: true, tools: true } },
-  { modelKey: 'MiniMax-M2.5-highspeed', title: 'MiniMax M2.5 Highspeed', capabilities: { inference: true, tools: true } },
 
   // DeepSeek Models
   { modelKey: 'deepseek-chat', title: 'DeepSeek Chat', capabilities: { inference: true, tools: true } },

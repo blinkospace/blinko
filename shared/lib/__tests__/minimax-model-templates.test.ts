@@ -7,7 +7,15 @@ describe('MiniMax Model Templates', () => {
   );
 
   it('should include MiniMax models in DEFAULT_MODEL_TEMPLATES', () => {
-    expect(minimaxModels.length).toBeGreaterThanOrEqual(3);
+    expect(minimaxModels.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('should have MiniMax-M3 model', () => {
+    const model = DEFAULT_MODEL_TEMPLATES.find(t => t.modelKey === 'MiniMax-M3');
+    expect(model).toBeDefined();
+    expect(model!.title).toBe('MiniMax M3');
+    expect(model!.capabilities.inference).toBe(true);
+    expect(model!.capabilities.tools).toBe(true);
   });
 
   it('should have MiniMax-M2.7 model', () => {
@@ -18,24 +26,24 @@ describe('MiniMax Model Templates', () => {
     expect(model!.capabilities.tools).toBe(true);
   });
 
-  it('should have MiniMax-M2.5 model', () => {
-    const model = DEFAULT_MODEL_TEMPLATES.find(t => t.modelKey === 'MiniMax-M2.5');
-    expect(model).toBeDefined();
-    expect(model!.title).toBe('MiniMax M2.5');
-    expect(model!.capabilities.inference).toBe(true);
-    expect(model!.capabilities.tools).toBe(true);
+  it('should list MiniMax-M3 before MiniMax-M2.7', () => {
+    const keys = minimaxModels.map(m => m.modelKey);
+    const indexM3 = keys.indexOf('MiniMax-M3');
+    const indexM27 = keys.indexOf('MiniMax-M2.7');
+    expect(indexM3).toBeGreaterThanOrEqual(0);
+    expect(indexM27).toBeGreaterThanOrEqual(0);
+    expect(indexM3).toBeLessThan(indexM27);
   });
 
-  it('should have MiniMax-M2.5-highspeed model', () => {
-    const model = DEFAULT_MODEL_TEMPLATES.find(t => t.modelKey === 'MiniMax-M2.5-highspeed');
-    expect(model).toBeDefined();
-    expect(model!.title).toBe('MiniMax M2.5 Highspeed');
-    expect(model!.capabilities.inference).toBe(true);
-    expect(model!.capabilities.tools).toBe(true);
+  it('should not include deprecated MiniMax-M2.5 models', () => {
+    const m25 = DEFAULT_MODEL_TEMPLATES.find(t => t.modelKey === 'MiniMax-M2.5');
+    const m25hs = DEFAULT_MODEL_TEMPLATES.find(t => t.modelKey === 'MiniMax-M2.5-highspeed');
+    expect(m25).toBeUndefined();
+    expect(m25hs).toBeUndefined();
   });
 
   it('should infer MiniMax model capabilities correctly', () => {
-    const caps = inferModelCapabilities('MiniMax-M2.5');
+    const caps = inferModelCapabilities('MiniMax-M3');
     expect(caps.inference).toBe(true);
     expect(caps.tools).toBe(true);
     expect(caps.embedding).toBe(false);
@@ -48,8 +56,8 @@ describe('MiniMax Model Templates', () => {
     expect(caps.tools).toBe(true);
   });
 
-  it('should infer capabilities for MiniMax-M2.5-highspeed', () => {
-    const caps = inferModelCapabilities('MiniMax-M2.5-highspeed');
+  it('should infer capabilities for MiniMax-M3', () => {
+    const caps = inferModelCapabilities('MiniMax-M3');
     expect(caps.inference).toBe(true);
     expect(caps.tools).toBe(true);
   });

@@ -329,7 +329,7 @@ export class AiModelFactory {
       }
     };
   }
-  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean }) {
+  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true, extraInstructions }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean; extraInstructions?: string }) {
     const provider = await AiModelFactory.GetProvider();
     let tools: Record<string, any> = {};
     if (withTools) {
@@ -387,9 +387,12 @@ export class AiModelFactory {
       "Always respond in the user's language.\n" +
       'Maintain a friendly and professional conversational tone.';
 
+    const baseInstructions = `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` + globalConfig.globalPrompt || defaultInstructions;
+    const instructions = extraInstructions ? `${baseInstructions}\n\n${extraInstructions}` : baseInstructions;
+
     const BlinkoAgent = new Agent({
       name: 'Blinko Chat Agent',
-      instructions: `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` + globalConfig.globalPrompt || defaultInstructions,
+      instructions,
       model: provider?.LLM!,
       ...tools,
     });

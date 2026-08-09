@@ -4,8 +4,8 @@ import { z } from 'zod';
 import { prisma } from '../prisma';
 import { commentsSchema, accountsSchema, NotificationType } from '@shared/lib/prismaZodType';
 import * as crypto from 'crypto';
-import { AiService } from '@server/aiServer';
 import { CreateNotification } from './notification';
+import { buildCommentWebhookPayload, commentAccountSelect, commentWebhookInclude, sendCommentWebhook } from '@server/lib/commentWebhook';
 
 const accountSchema = accountsSchema.pick({
   id: true,
@@ -51,6 +51,40 @@ async function getNestedComments(commentIds: number[]): Promise<any[]> {
 
   for (const comment of comments as any[]) {
     comment.replies = await getNestedComments([comment.id]);
+  }
+
+  return comments;
+}
+
+async function getCommentDeleteSnapshots(rootComment: any): Promise<any[]> {
+  const comments = [rootComment];
+  const seenIds = new Set<number>([rootComment.id]);
+  let parentIds = [rootComment.id];
+
+  while (parentIds.length > 0) {
+    const replies = await prisma.comments.findMany({
+      where: {
+        parentId: {
+          in: parentIds
+        }
+      },
+      include: {
+        account: {
+          select: commentAccountSelect
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+    const nextReplies = replies.filter((comment) => !seenIds.has(comment.id));
+    if (nextReplies.length === 0) {
+      break;
+    }
+
+    for (const reply of nextReplies) {
+      seenIds.add(reply.id);
+    }
+    comments.push(...nextReplies);
+    parentIds = nextReplies.map((comment) => comment.id);
   }
 
   return comments;
@@ -170,10 +204,12 @@ export const commentRouter = router({
       }
 
       if (content.includes('@Blinko AI')) {
-        AiService.AIComment({ content, noteId })
+        import('@server/aiServer')
+          .then(({ AiService }) => AiService.AIComment({ content, noteId }))
+          .catch((error) => console.error('AI comment error:', error));
       }
 
-      await prisma.comments.create({
+      const comment = await prisma.comments.create({
         data: {
           content,
           noteId,
@@ -183,17 +219,9 @@ export const commentRouter = router({
           guestIP: ctx.ip?.toString(),
           guestUA: validGuestUA
         },
-        include: {
-          account: {
-            select: {
-              id: true,
-              name: true,
-              nickname: true,
-              image: true
-            }
-          }
-        }
+        include: commentWebhookInclude
       });
+      sendCommentWebhook('comment.created', comment, ctx);
       if (Number(ctx.id) !== note?.accountId || !ctx.id) {
         CreateNotification({
           type: NotificationType.COMMENT,
@@ -295,20 +323,27 @@ export const commentRouter = router({
             { accountId: Number(ctx.id) },
             { note: { accountId: Number(ctx.id) } }
           ]
-        }
+        },
+        include: commentWebhookInclude
       });
 
       if (!comment) {
         throw new Error('Comment not found or no permission');
       }
 
+      const deletedComments = await getCommentDeleteSnapshots(comment);
+      const deletedCommentIds = deletedComments.map((comment) => comment.id);
+
       await prisma.comments.deleteMany({
         where: {
-          OR: [
-            { id: input.id },
-            { parentId: input.id }
-          ]
+          id: {
+            in: deletedCommentIds
+          }
         }
+      });
+      sendCommentWebhook('comment.deleted', comment, ctx, {
+        deletedCommentIds,
+        deletedComments: deletedComments.map((comment) => buildCommentWebhookPayload('comment.deleted', comment).comment)
       });
 
       return { success: true };
@@ -328,26 +363,21 @@ export const commentRouter = router({
         where: {
           id,
           accountId: Number(ctx.id)
-        }
+        },
+        include: commentWebhookInclude
       });
 
       if (!comment) {
         throw new Error('Comment not found or no permission');
       }
 
-      return await prisma.comments.update({
+      const updatedComment = await prisma.comments.update({
         where: { id },
         data: { content },
-        include: {
-          account: {
-            select: {
-              id: true,
-              name: true,
-              nickname: true,
-              image: true
-            }
-          }
-        }
+        include: commentWebhookInclude
       });
+      sendCommentWebhook('comment.updated', updatedComment, ctx);
+
+      return updatedComment;
     })
 });

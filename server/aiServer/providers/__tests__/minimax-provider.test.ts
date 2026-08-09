@@ -6,7 +6,7 @@ mock.module('@server/lib/proxy', () => ({
 }));
 
 // Mock @ai-sdk/openai
-const mockLanguageModel = { modelId: 'MiniMax-M2.5' };
+const mockLanguageModel = { modelId: 'MiniMax-M3' };
 const mockCreateOpenAI = mock((config: any) => ({
   languageModel: mock((modelKey: string) => mockLanguageModel)
 }));
@@ -50,7 +50,7 @@ describe('MiniMax LLM Provider', () => {
     const result = await provider.getLanguageModel({
       provider: 'minimax',
       apiKey: 'test-api-key',
-      modelKey: 'MiniMax-M2.5'
+      modelKey: 'MiniMax-M3'
     });
 
     expect(result).toBeDefined();
@@ -87,7 +87,7 @@ describe('MiniMax LLM Provider', () => {
       provider: 'minimax',
       apiKey: 'test-key',
       baseURL: 'https://custom.minimax.io/v1',
-      modelKey: 'MiniMax-M2.5'
+      modelKey: 'MiniMax-M3'
     });
 
     expect(mockCreateOpenAI).toHaveBeenCalledWith(
@@ -104,7 +104,7 @@ describe('MiniMax LLM Provider', () => {
     await provider.getLanguageModel({
       provider: 'MiniMax',
       apiKey: 'test-key',
-      modelKey: 'MiniMax-M2.5'
+      modelKey: 'MiniMax-M3'
     });
 
     expect(mockCreateOpenAI).toHaveBeenCalledWith(
@@ -117,7 +117,7 @@ describe('MiniMax LLM Provider', () => {
   it('should support all MiniMax model keys', async () => {
     const { LLMProvider } = await import('../LLMProvider');
     const provider = new LLMProvider();
-    const models = ['MiniMax-M2.7', 'MiniMax-M2.5', 'MiniMax-M2.5-highspeed'];
+    const models = ['MiniMax-M3', 'MiniMax-M2.7'];
 
     for (const modelKey of models) {
       mockCreateOpenAI.mockClear();
@@ -137,7 +137,7 @@ describe('MiniMax LLM Provider', () => {
     await provider.getLanguageModel({
       provider: 'minimax',
       apiKey: 'test-key',
-      modelKey: 'MiniMax-M2.5'
+      modelKey: 'MiniMax-M3'
     });
 
     expect(mockCreateOpenAI).toHaveBeenCalledWith(
