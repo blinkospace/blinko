@@ -89,7 +89,7 @@ curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | 
 
 ## Star 历史
 
-[![Star History Chart](https://api.star-history.com/svg?repos=blinko-space/blinko&type=Date)](https://star-history.com/#blinko-space/blinko&Date) 
+[![Star History Chart](https://star-history.dera.page/svg?repos=blinko-space/blinko&type=Date)](https://star-history.dera.page/#blinko-space/blinko&Date) 
 
 
 <div align="center">
