@@ -75,7 +75,7 @@ If you find Blinko valuable, consider supporting us! Your contribution will enab
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=blinko-space/blinko&type=Date)](https://star-history.com/#blinko-space/blinko&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=blinko-space/blinko&type=Date)](https://star-history.dera.page/#blinko-space/blinko&Date)
 
 <div align="center">
     <a href="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats?repo_id=877230294" target="_blank" style="display: block" align="center">
