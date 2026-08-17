@@ -625,13 +625,16 @@ export const noteRouter = router({
               comments: z.number(),
               histories: z.number(),
             }),
+            isInternalShared: z.boolean().optional(),
+            isSharedNote: z.boolean().optional(),
+            canEdit: z.boolean().optional(),
           }),
         ),
       ]),
     )
     .mutation(async function ({ input, ctx }) {
       const { id } = input;
-      return await prisma.notes.findFirst({
+      const note = await prisma.notes.findFirst({
         where: {
           id,
           OR: [
@@ -671,8 +674,19 @@ export const noteRouter = router({
             },
           },
           _count: { select: { comments: true, histories: true } },
+          internalShares: true,
         },
       });
+      if (!note) return null;
+      const isOwner = note.accountId === Number(ctx.id);
+      const myShare = note.internalShares.find((s) => s.accountId === Number(ctx.id));
+      return {
+        ...note,
+        isInternalShared: note.internalShares.length > 0,
+        isSharedNote: !isOwner && !!myShare,
+        // Current user's edit permission: owners always can; shared users only if granted
+        canEdit: isOwner || (myShare ? myShare.canEdit : true),
+      };
     }),
   dailyReviewNoteList: authProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/note/daily-review-list', summary: 'Query daily review note list', protect: true, tags: ['Note'] } })
