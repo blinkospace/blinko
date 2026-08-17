@@ -256,7 +256,7 @@ export class BlinkoStore implements Store {
   })
 
   internalShareNote = new PromiseState({
-    function: async (params: { id: number, accountIds: number[], isCancel: boolean }) => {
+    function: async (params: { id: number, accountIds: number[], isCancel: boolean, canEdit?: boolean }) => {
       const res = await api.notes.internalShareNote.mutate(params)
       RootStore.Get(ToastPlugin).success(i18n.t("operation-success"))
       this.updateTicker++

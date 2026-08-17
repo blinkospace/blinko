@@ -10,19 +10,20 @@ interface NoteContentProps {
   blinko: BlinkoStore;
   isExpanded?: boolean;
   isShareMode?: boolean;
+  isReadOnly?: boolean;
 }
 
-export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMode }: NoteContentProps) => {
+export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMode, isReadOnly }: NoteContentProps) => {
   return (
     <>
       <MarkdownRender
         content={blinkoItem.content}
         onChange={(newContent) => {
-          if (isShareMode) return;
+          if (isShareMode || isReadOnly) return;
           blinkoItem.content = newContent
           blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false })
         }}
-        isShareMode={isShareMode}
+        isShareMode={isShareMode || isReadOnly}
         largeSpacing={isShareMode || isExpanded}
       />
       <ReferencesContent blinkoItem={blinkoItem} className={`${isExpanded ? 'my-4' : 'my-2'}`} />

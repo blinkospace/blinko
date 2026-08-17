@@ -64,28 +64,32 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   }) || '';
 
 
+  // Note shared to the current user with view-only permission (owners/editors have canEdit truthy)
+  const isReadOnly = blinkoItem.canEdit === false;
+
   const handleClick = () => {
     if (blinko.isMultiSelectMode) {
       blinko.onMultiSelectNote(blinkoItem.id!);
-    } else if (blinkoItem.isBlog && !isShareMode) {
+    } else if (blinkoItem.isBlog && !isShareMode && !isReadOnly) {
       setIsFullscreenEditorOpen(true);
       blinko.fullscreenEditorNoteId = blinkoItem.id!;
     }
   };
 
   const handleContextMenu = () => {
-    if (isShareMode) return;
+    if (isShareMode || isReadOnly) return;
     blinko.curSelectedNote = _.cloneDeep(blinkoItem);
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
-    if (isShareMode) return;
+    if (isShareMode || isReadOnly) return;
     blinko.curSelectedNote = _.cloneDeep(blinkoItem);
     ShowEditBlinkoModel();
     FocusEditorFixMobile()
   };
 
   const handleSwipePin = () => {
+    if (isReadOnly) return;
     blinko.upsertNote.call({
       id: blinkoItem.id,
       isTop: !blinkoItem.isTop
@@ -93,6 +97,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   };
 
   const handleSwipeDelete = () => {
+    if (isReadOnly) return;
     api.notes.trashMany.mutate({ ids: [blinkoItem.id!] }).then(() => {
       blinko.updateTicker++;
     });
@@ -110,7 +115,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
       {(() => {
         const cardContent = (
           <div
-            {...(!isShareMode && {
+            {...(!isShareMode && !isReadOnly && {
               onContextMenu: handleContextMenu,
               onDoubleClick: handleDoubleClick
             })}
@@ -128,13 +133,13 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
               `}
             >
               <div className="w-full">
-                <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isExpanded={defaultExpanded} account={account} />
+                <CardHeader blinkoItem={blinkoItem} blinko={blinko} isShareMode={isShareMode} isReadOnly={isReadOnly} isExpanded={defaultExpanded} account={account} />
 
                 {blinkoItem.isBlog && (
                   <CardBlogBox blinkoItem={blinkoItem} isExpanded={defaultExpanded} />
                 )}
 
-                {!blinkoItem.isBlog && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={defaultExpanded} isShareMode={isShareMode} />}
+                {!blinkoItem.isBlog && <NoteContent blinkoItem={blinkoItem} blinko={blinko} isExpanded={defaultExpanded} isShareMode={isShareMode} isReadOnly={isReadOnly} />}
 
                 {/* Custom Footer Slots */}
                 {pluginApi.customCardFooterSlots
@@ -169,14 +174,14 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
           </div>
         );
 
-        const wrappedContent = isShareMode ? cardContent : (
+        const wrappedContent = (isShareMode || isReadOnly) ? cardContent : (
           <ContextMenuTrigger id="blink-item-context-menu">
             {cardContent}
           </ContextMenuTrigger>
         );
 
         // On mobile, wrap with SwipeableCard for swipe actions
-        if (!isPc && !isShareMode) {
+        if (!isPc && !isShareMode && !isReadOnly) {
           return (
             <SwipeableCard
               onPin={handleSwipePin}

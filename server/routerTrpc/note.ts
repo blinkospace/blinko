@@ -248,10 +248,17 @@ export const noteRouter = router({
         },
       });
 
-      return notes.map((note) => ({
-        ...note,
-        isInternalShared: note.internalShares.length > 0,
-      }));
+      return notes.map((note) => {
+        const isOwner = note.accountId === Number(ctx.id);
+        const myShare = note.internalShares.find((s) => s.accountId === Number(ctx.id));
+        return {
+          ...note,
+          isInternalShared: note.internalShares.length > 0,
+          isSharedNote: !isOwner && !!myShare,
+          // Current user's edit permission: owners always can; shared users only if granted
+          canEdit: isOwner || (myShare ? myShare.canEdit : true),
+        };
+      });
     }),
   publicList: publicProcedure
     .meta({
@@ -1559,6 +1566,7 @@ export const noteRouter = router({
         id: z.number(),
         accountIds: z.array(z.number()),
         isCancel: z.boolean().default(false),
+        canEdit: z.boolean().default(false),
       }),
     )
     .output(z.object({
@@ -1566,7 +1574,7 @@ export const noteRouter = router({
       message: z.string().optional(),
     }))
     .mutation(async function ({ input, ctx }) {
-      const { id, accountIds, isCancel } = input;
+      const { id, accountIds, isCancel, canEdit } = input;
 
       const note = await prisma.notes.findFirst({
         where: {
@@ -1623,11 +1631,11 @@ export const noteRouter = router({
                 accountId: accountId
               }
             },
-            update: {}, // No need to update if exists
+            update: { canEdit }, // Update edit permission on re-share
             create: {
               noteId: id,
               accountId: accountId,
-              canEdit: true
+              canEdit
             }
           });
         }
