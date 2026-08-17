@@ -29,6 +29,7 @@
   "devDependencies": {
     "@types/lru-cache": "^7.10.10",
     "concurrently": "^9.1.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "turbo": "latest",
