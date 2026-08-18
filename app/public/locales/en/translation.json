@@ -447,6 +447,8 @@
   "share-link-expired-desc": "This share has expired please contact the administrator to re-share!",
   "shared": "Shared",
   "internal-shared": "Internal Shared",
+  "shared-with": "Shared with",
+  "shared-by": "Shared by",
   "edited": "Edited",
   "move-down": "Move Down",
   "provider-id": "Provider ID",

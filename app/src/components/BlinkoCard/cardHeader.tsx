@@ -1,5 +1,5 @@
 import { Icon } from '@/components/Common/Iconify/icons';
-import { Tooltip } from '@heroui/react';
+import { Tooltip, Avatar, AvatarGroup, Popover, PopoverTrigger, PopoverContent } from '@heroui/react';
 import { Copy } from "../Common/Copy";
 import { LeftCickMenu, ShowEditTimeModel } from "../BlinkoRightClickMenu";
 import { BlinkoStore } from '@/store/blinkoStore';
@@ -68,15 +68,41 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           </Tooltip>
         )}
 
-        {blinkoItem.isInternalShared && (
-          <Tooltip content={t('internal-shared')} delay={1000}>
-            <div className="flex items-center gap-2">
-              <Icon
-                className="cursor-pointer "
-                icon="prime:users"
-                width={iconSize}
-                height={iconSize}
-              />
+        {/* Owner view: who this note is shared with (click to open a scrollable list) */}
+        {blinkoItem.isInternalShared && !blinkoItem.isSharedNote && !!blinkoItem.internalShares?.length && (
+          <Popover placement="bottom-start" showArrow>
+            <PopoverTrigger>
+              <div className="flex items-center cursor-pointer" onClick={(e) => e.stopPropagation()}>
+                <AvatarGroup max={3} className="[&_span]:w-5 [&_span]:h-5 [&_span]:text-[9px]">
+                  {blinkoItem.internalShares!.map((s) => (
+                    <Avatar key={s.accountId} src={s.account?.image || undefined} name={s.account?.nickname || s.account?.name} />
+                  ))}
+                </AvatarGroup>
+              </div>
+            </PopoverTrigger>
+            <PopoverContent>
+              <div className="flex flex-col gap-1.5 py-2 w-[220px] max-h-[280px] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <span className="text-tiny opacity-60 px-1">{t('shared-with')} ({blinkoItem.internalShares!.length})</span>
+                {blinkoItem.internalShares!.map((s) => (
+                  <div key={s.accountId} className="flex items-center gap-2 px-1">
+                    <Avatar src={s.account?.image || undefined} name={s.account?.nickname || s.account?.name} className="w-6 h-6 text-tiny shrink-0" />
+                    <span className="text-xs truncate flex-1">{s.account?.nickname || s.account?.name}</span>
+                    {s.canEdit
+                      ? <Icon icon="material-symbols:edit-outline" className="text-primary shrink-0" width="14" height="14" />
+                      : <Icon icon="material-symbols:lock-outline" className="opacity-40 shrink-0" width="14" height="14" />}
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
+
+        {/* Recipient view: who shared this note with me */}
+        {blinkoItem.isSharedNote && blinkoItem.owner && (
+          <Tooltip content={`${t('shared-by')}: ${blinkoItem.owner.nickname || blinkoItem.owner.name}`} delay={300}>
+            <div className="flex items-center gap-1 cursor-pointer">
+              <Avatar src={blinkoItem.owner.image || undefined} name={blinkoItem.owner.nickname || blinkoItem.owner.name} className="w-5 h-5 text-tiny shrink-0" />
+              <span className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc truncate max-w-[100px]`}>{blinkoItem.owner.nickname || blinkoItem.owner.name}</span>
             </div>
           </Tooltip>
         )}

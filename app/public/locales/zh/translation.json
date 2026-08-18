@@ -441,6 +441,8 @@
   "share-link-expired-desc": "这份共享已过期，请联系管理员重新共享！",
   "shared": "共享",
   "internal-shared": "内部共享",
+  "shared-with": "分享给",
+  "shared-by": "分享自",
   "edited": "已编辑",
   "move-down": "向下移动",
   "provider-id": "提供者ID",

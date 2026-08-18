@@ -99,6 +99,16 @@ export const noteRouter = router({
             isSharedNote: z.boolean().optional(),
             canEdit: z.boolean().optional(),
             isInternalShared: z.boolean().optional(),
+            internalShares: z.array(z.object({
+              accountId: z.number().optional(),
+              canEdit: z.boolean().optional(),
+              account: z.object({
+                id: z.number(),
+                name: z.string(),
+                nickname: z.string(),
+                image: z.string(),
+              }).nullable().optional(),
+            })).optional(),
           }),
         ),
       ),
@@ -244,14 +254,28 @@ export const noteRouter = router({
               histories: true,
             },
           },
-          internalShares: true,
+          account: {
+            select: { id: true, name: true, nickname: true, image: true },
+          },
+          internalShares: {
+            include: {
+              account: {
+                select: { id: true, name: true, nickname: true, image: true },
+              },
+            },
+          },
         },
       });
 
-      return notes.map((note) => ({
-        ...note,
-        isInternalShared: note.internalShares.length > 0,
-      }));
+      return notes.map((note) => {
+        const isOwner = note.accountId === Number(ctx.id);
+        return {
+          ...note,
+          owner: note.account,               // note author (for recipient's "shared by" view)
+          isSharedNote: !isOwner,            // this note was shared TO the current user
+          isInternalShared: note.internalShares.length > 0,
+        };
+      });
     }),
   publicList: publicProcedure
     .meta({
@@ -618,13 +642,31 @@ export const noteRouter = router({
               comments: z.number(),
               histories: z.number(),
             }),
+            owner: z.object({
+              id: z.number(),
+              name: z.string(),
+              nickname: z.string(),
+              image: z.string(),
+            }).nullable().optional(),
+            isSharedNote: z.boolean().optional(),
+            isInternalShared: z.boolean().optional(),
+            internalShares: z.array(z.object({
+              accountId: z.number().optional(),
+              canEdit: z.boolean().optional(),
+              account: z.object({
+                id: z.number(),
+                name: z.string(),
+                nickname: z.string(),
+                image: z.string(),
+              }).nullable().optional(),
+            })).optional(),
           }),
         ),
       ]),
     )
     .mutation(async function ({ input, ctx }) {
       const { id } = input;
-      return await prisma.notes.findFirst({
+      const note = await prisma.notes.findFirst({
         where: {
           id,
           OR: [
@@ -664,8 +706,26 @@ export const noteRouter = router({
             },
           },
           _count: { select: { comments: true, histories: true } },
+          account: {
+            select: { id: true, name: true, nickname: true, image: true },
+          },
+          internalShares: {
+            include: {
+              account: {
+                select: { id: true, name: true, nickname: true, image: true },
+              },
+            },
+          },
         },
       });
+      if (!note) return null;
+      const isOwner = note.accountId === Number(ctx.id);
+      return {
+        ...note,
+        owner: note.account,
+        isSharedNote: !isOwner,
+        isInternalShared: note.internalShares.length > 0,
+      };
     }),
   dailyReviewNoteList: authProcedure
     .meta({ openapi: { method: 'GET', path: '/v1/note/daily-review-list', summary: 'Query daily review note list', protect: true, tags: ['Note'] } })
