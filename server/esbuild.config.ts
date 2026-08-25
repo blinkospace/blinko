@@ -35,6 +35,7 @@ async function build() {
         'sharp',
         'esbuild',
         'sqlite3',
+        'fsevents',
         '@libsql/linux-x64-musl',
         '@libsql/linux-x64-gnu',
         '@libsql/linux-arm64-musl',
@@ -77,4 +78,4 @@ async function build() {
   }
 }
 
-build(); 
+build();

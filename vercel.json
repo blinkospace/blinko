@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "bunVersion": "1.x",
+  "regions": ["iad1"],
+  "buildCommand": "bun run build:web && bunx ncp dist/public server/public",
+  "outputDirectory": "server/public",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{dist/index.js,server/public/**,server/lute.min.js,prisma/**}",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api"
+    }
+  ]
+}
