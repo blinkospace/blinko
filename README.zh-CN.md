@@ -31,11 +31,11 @@
 
 Blinko 是一个AI驱动的卡片笔记项目，专为那些想要快速捕捉和组织灵感的人设计。它允许用户在灵感闪现的瞬间无缝记录想法，确保不错过任何创意火花。
 
-<div align="center">
-
-[![Run on PikaPods](./app/public/run-on-pikapods.svg)](https://www.pikapods.com/pods?run=blinko)
-
-</div>
+<p align="center">
+  <a href="https://www.pikapods.com/pods?run=blinko"><img src="./app/public/run-on-pikapods.svg" alt="Run on PikaPods" height="68" /></a>
+  &nbsp;&nbsp;
+  <a href="https://www.zimaspace.com/zimaos?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=blinko_readme&amp;utm_content=zimaos_link"><img src="./app/public/run-on-zimaos.svg" alt="Run on ZimaOS" height="68" /></a>
+</p>
 
 ## 🚀主要特性
 - 🤖**AI 增强笔记检索**：通过 Blinko 的先进 AI 驱动的 RAG（检索增强生成）技术，你可以使用自然语言查询快速搜索和访问笔记，轻松找到所需内容。支持 OpenAI、Azure OpenAI 和 Ollama。
@@ -71,13 +71,6 @@ curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | 
 
 
 [![Contributors](https://contrib.rocks/image?repo=blinko-space/blinko)]([...](https://github.com/blinko-space/blinko/graphs/contributors))
-<!-- Copy-paste in your Readme.md file -->
-
-
-
-<!-- Made with [OSS Insight](https://ossinsight.io/) -->
-
-<!-- Made with [OSS Insight](https://ossinsight.io/) -->
 ## 赞助
 如果你觉得 Blinko 有价值，请考虑支持我们！你的贡献将使我们能够继续为所有人改进和维护这个项目。感谢你帮助我们成长，如果你想部署blinko,你也可以使用 PikaPods 来支持 Blinko,在pikapods上部署产生的费用有20%会贡献给Blinko。
 
@@ -87,25 +80,7 @@ curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | 
 
 [https://afdian.com/a/blinkospace/plan](https://afdian.com/a/blinkospace/plan)
 
-## Star 历史
+## 赞助商
 
-[![Star History Chart](https://api.star-history.com/svg?repos=blinko-space/blinko&type=Date)](https://star-history.com/#blinko-space/blinko&Date) 
-
-
-<div align="center">
-    <a href="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats?repo_id=877230294" target="_blank" style="display: block" align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=dark" width="655" height="auto">
-    <img alt="Performance Stats of blinkospace/blinko - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=light" width="655" height="auto">
-  </picture>
-    </a>
-</div>
-
-<div align="center">
-    <a href="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map?repo_id=877230294&activity=stars" target="_blank" style="display: block" align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map/thumbnail.png?repo_id=877230294&activity=stars&image_size=auto&color_scheme=dark" width="721" height="auto">
-    <img alt="Star Geographical Distribution of blinkospace/blinko" src="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map/thumbnail.png?repo_id=877230294&activity=stars&image_size=auto&color_scheme=light" width="721" height="auto">
-  </picture>
-    </a>
-</div>
+- [ZimaOS — 简洁、专注、开放的 NAS 操作系统](https://www.zimaspace.com/zimaos?utm_source=github&utm_medium=referral&utm_campaign=blinko_readme&utm_content=zimaos_link)
+- [PikaPods — 一键部署 Blinko](https://www.pikapods.com/pods?run=blinko)

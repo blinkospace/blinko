@@ -34,11 +34,11 @@
 
 Blinko is an AI-powered card note-taking project. Designed for individuals who want to quickly capture and organize their fleeting thoughts. Blinko allows users to seamlessly jot down ideas the moment they strike, ensuring that no spark of creativity is lost.
 
-<div align="center">
-
-[![Run on PikaPods](./app/public/run-on-pikapods.svg)](https://www.pikapods.com/pods?run=blinko)
-
-</div>
+<p align="center">
+  <a href="https://www.pikapods.com/pods?run=blinko"><img src="./app/public/run-on-pikapods.svg" alt="Run on PikaPods" height="68" /></a>
+  &nbsp;&nbsp;
+  <a href="https://www.zimaspace.com/zimaos?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=blinko_readme&amp;utm_content=zimaos_link"><img src="./app/public/run-on-zimaos.svg" alt="Run on ZimaOS" height="68" /></a>
+</p>
 
 ## 🚀Main Features
 - 🤖**AI-Enhanced Note Retrieval** ：With Blinko's advanced AI-powered RAG (Retrieval-Augmented Generation), you can quickly search and access your notes using natural language queries, making it effortless to find exactly what you need.
@@ -73,30 +73,12 @@ If you find Blinko valuable, consider supporting us! Your contribution will enab
 
 [https://afdian.com/a/blinkospace/plan](https://afdian.com/a/blinkospace/plan)
 
-## Star History
+## Sponsors
 
-[![Star History Chart](https://api.star-history.com/svg?repos=blinko-space/blinko&type=Date)](https://star-history.com/#blinko-space/blinko&Date)
-
-<div align="center">
-    <a href="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats?repo_id=877230294" target="_blank" style="display: block" align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=dark" width="655" height="auto">
-    <img alt="Performance Stats of blinkospace/blinko - Last 28 days" src="https://next.ossinsight.io/widgets/official/compose-last-28-days-stats/thumbnail.png?repo_id=877230294&image_size=auto&color_scheme=light" width="655" height="auto">
-  </picture>
-    </a>
-</div>
-
-<div align="center">
-    <a href="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map?repo_id=877230294&activity=stars" target="_blank" style="display: block" align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map/thumbnail.png?repo_id=877230294&activity=stars&image_size=auto&color_scheme=dark" width="721" height="auto">
-    <img alt="Star Geographical Distribution of blinkospace/blinko" src="https://next.ossinsight.io/widgets/official/analyze-repo-stars-map/thumbnail.png?repo_id=877230294&activity=stars&image_size=auto&color_scheme=light" width="721" height="auto">
-  </picture>
-    </a>
-</div>
+- [ZimaOS — A simplified, focused, and open NAS OS](https://www.zimaspace.com/zimaos?utm_source=github&utm_medium=referral&utm_campaign=blinko_readme&utm_content=zimaos_link)
+- [PikaPods — Deploy Blinko with one click](https://www.pikapods.com/pods?run=blinko)
 
 ## FAQ
 Q: Why does the MacOS device installation show as damaged?
 
 A: macOS adds an attribute called com.apple.quarantine to apps that are not notarized when downloading or installing them. This command is used to manually remove that attribute. Run sudo xattr -rd com.apple.quarantine /Applications/blinko.app
-

@@ -1,0 +1,19 @@
+<svg width="243" height="68" viewBox="0 0 243 68" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="background" x1="12" y1="4" x2="231" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101010" />
+      <stop offset="1" stop-color="#292929" />
+    </linearGradient>
+  </defs>
+
+  <rect width="243" height="68" rx="21" fill="url(#background)" />
+
+  <rect x="10" y="10" width="48" height="48" rx="12" fill="#F5F5F5" />
+  <text x="16" y="32" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="900">Z</text>
+  <text x="40" y="32" fill="#A3A3A3" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="900">I</text>
+  <text x="15" y="51" fill="#A3A3A3" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="900">M</text>
+  <text x="38" y="51" fill="#A3A3A3" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="900">A</text>
+
+  <text x="76" y="28" fill="#B8B8B8" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600" letter-spacing="0.4">Run on</text>
+  <text x="76" y="51" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" letter-spacing="0.5">ZIMAOS</text>
+</svg>
