@@ -37,7 +37,7 @@ Blinko is an AI-powered card note-taking project. Designed for individuals who w
 <p align="center">
   <a href="https://www.pikapods.com/pods?run=blinko"><img src="./app/public/run-on-pikapods.svg" alt="Run on PikaPods" height="68" /></a>
   &nbsp;&nbsp;
-  <a href="https://www.zimaspace.com/zimaos?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=blinko_readme&amp;utm_content=zimaos_link"><img src="./app/public/run-on-zimaos.svg" alt="Run on ZimaOS" height="68" /></a>
+  <a href="https://www.zimaspace.com/zimaos?utm_source=github&amp;utm_medium=referral&amp;utm_campaign=blinko_readme&amp;utm_content=zimaos_link"><img src="./app/public/run-on-zimaos-v2.svg" alt="Run on ZimaOS" height="68" /></a>
 </p>
 
 ## 🚀Main Features
