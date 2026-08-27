@@ -410,16 +410,20 @@ export const publicRouter = router({
         }),
       ),
     )
-    .query(async function ({ input }) {
+    .query(async function ({ input, ctx }) {
       if (input?.refresh) {
         refreshTicker++;
       }
+      const globalConfig = await getGlobalConfig({ ctx, useAdmin: true });
+      const hubUrl = globalConfig.customHubUrl && globalConfig.customHubUrl.trim() !== ''
+        ? globalConfig.customHubUrl.trim()
+        : 'https://raw.githubusercontent.com/blinko-space/blinko-hub/refs/heads/main/index.json';
+
       return await cache.wrap(
-        `hub-site-list-${refreshTicker}`,
+        `hub-site-list-${refreshTicker}-${hubUrl}`,
         async () => {
           try {
-            //raw.gitmirror.com
-            const response = await getWithProxy('https://raw.githubusercontent.com/blinko-space/blinko-hub/refs/heads/main/index.json', {
+            const response = await getWithProxy(hubUrl, {
               config: {
                 headers: {
                   Accept: 'application/vnd.github.v3.raw',
