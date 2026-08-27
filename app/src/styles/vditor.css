@@ -113,6 +113,20 @@
   overflow-x: hidden;
 }
 
+/*
+ * Split view (sv) and raw markdown modes render a single
+ * <pre class="vditor-sv vditor-reset"> that is both the container and the
+ * editable surface, so the ".vditor-sv .vditor-reset" descendant rule above
+ * never matches it and it is left with "overflow: hidden" from the group
+ * above, making it impossible to scroll (issue #1088). Let this combined
+ * element scroll itself instead of clipping.
+ */
+.vditor.fullscreen-editor .vditor-sv.vditor-reset {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* Long text mode - increased spacing */
 .editor-long-text .vditor-reset {
   padding-top: 12px;
