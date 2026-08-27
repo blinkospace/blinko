@@ -9,11 +9,11 @@
   <rect width="243" height="68" rx="21" fill="url(#background)" />
 
   <rect x="10" y="10" width="48" height="48" rx="12" fill="#F5F5F5" />
-  <path d="M14 15H32V19L21.5 28H32V32H14V28L24.5 19H14V15Z" fill="#050809" />
-  <path d="M36 15H54V19H49V28H54V32H36V28H41V19H36V15Z" fill="#050809" />
-  <path d="M14 36H19L23 40L27 36H32V54H27V43L23 47L19 43V54H14V36Z" fill="#050809" />
-  <path d="M36 54L42 39C42.5 38 42.5 37 42 36H48C47.5 37 47.5 38 48 39L54 54H49L45 44L41 54H36Z" fill="#050809" />
+  <path d="M14 15H32V19H26L17 28H32V32H14V28L23 19H14V15Z" fill="#050809" />
+  <path d="M36 15H54V19H49C48 19 47.5 19.5 47.5 21V27C47.5 28.5 48 29 49 29H54V32H36V29H41C42 29 42.5 28.5 42.5 27V21C42.5 19.5 42 19 41 19H36V15Z" fill="#050809" />
+  <path d="M14 36H20C20 38 20.5 39 21.5 40L23 41.5L24.5 40C25.5 39 26 38 26 36H32V54H27V43L23 47L19 43V54H14V36Z" fill="#050809" />
+  <path d="M36 54L42.5 39C43 38 43 37 42.5 36H48C47.5 37 47.5 38 48 39L54.5 54H49.5L45.25 44L41 54H36Z" fill="#050809" />
 
-  <text x="76" y="28" fill="#B8B8B8" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600" letter-spacing="0.4">Run on</text>
+  <text x="76" y="28" fill="#B8B8B8" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600" letter-spacing="0.2">Download on</text>
   <text x="76" y="51" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" letter-spacing="0.2">ZimaOS</text>
 </svg>
