@@ -9,11 +9,11 @@
   <rect width="243" height="68" rx="21" fill="url(#background)" />
 
   <rect x="10" y="10" width="48" height="48" rx="12" fill="#F5F5F5" />
-  <text x="16" y="32" fill="#111111" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="900">Z</text>
-  <text x="40" y="32" fill="#A3A3A3" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="900">I</text>
-  <text x="15" y="51" fill="#A3A3A3" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="900">M</text>
-  <text x="38" y="51" fill="#A3A3A3" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="900">A</text>
+  <path d="M14 15H32V19L21.5 28H32V32H14V28L24.5 19H14V15Z" fill="#050809" />
+  <path d="M36 15H54V19H49V28H54V32H36V28H41V19H36V15Z" fill="#050809" />
+  <path d="M14 36H19L23 40L27 36H32V54H27V43L23 47L19 43V54H14V36Z" fill="#050809" />
+  <path d="M36 54L42 39C42.5 38 42.5 37 42 36H48C47.5 37 47.5 38 48 39L54 54H49L45 44L41 54H36Z" fill="#050809" />
 
   <text x="76" y="28" fill="#B8B8B8" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="600" letter-spacing="0.4">Run on</text>
-  <text x="76" y="51" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" letter-spacing="0.5">ZIMAOS</text>
+  <text x="76" y="51" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" letter-spacing="0.2">ZimaOS</text>
 </svg>
