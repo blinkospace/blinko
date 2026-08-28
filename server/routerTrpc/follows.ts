@@ -32,9 +32,10 @@ export const followsRouter = router({
           value: true
         }
       })
-      const recommandList = res?.value?.[String(ctx.id)] as RecommandListType
-      // console.log(recommandList, 'recommand_list')
-      return recommandList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).filter(item => item.content.includes(searchText))
+      const recommandList = (res?.value?.[String(ctx.id)] as RecommandListType) || [];
+      return [...recommandList]
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+        .filter(item => item.content.includes(searchText))
     }),
   // i want to follow a site
   follow: authProcedure
@@ -161,7 +162,7 @@ export const followsRouter = router({
         CreateNotification({
           type: NotificationType.FOLLOW,
           title: 'follow-notification',
-          content: input.siteName + 'followed-you',
+          content: `${input.siteName} followed you`,
           accountId: input.mySiteAccountId,
         })
 
@@ -338,11 +339,18 @@ export const followsRouter = router({
     }))
     .query(async ({ ctx, input }) => {
       const followerId = ctx.id;
+      let originUrl = input.siteUrl;
+      try {
+        originUrl = new URL(input.siteUrl).origin;
+      } catch {
+        // use raw string if not a valid URL
+      }
 
       const follow = await prisma.follows.findFirst({
         where: {
-          siteUrl: input.siteUrl,
+          siteUrl: originUrl,
           accountId: Number(followerId),
+          followType: "following",
         },
         select: {
           id: true,

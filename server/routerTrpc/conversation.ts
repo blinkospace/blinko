@@ -19,7 +19,16 @@ export const conversationRouter = router({
     .input(z.object({
       id: z.number()
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          id: input.id,
+          accountId: Number(ctx.id)
+        }
+      });
+      if (!conversation) {
+        throw new Error('Conversation not found or access denied');
+      }
       await prisma.message.deleteMany({
         where: {
           conversationId: input.id
@@ -151,6 +160,15 @@ export const conversationRouter = router({
     }))
     .mutation(async ({ input, ctx }) => {
       return await prisma.$transaction(async (prisma) => {
+        const conversation = await prisma.conversation.findFirst({
+          where: {
+            id: input.id,
+            accountId: Number(ctx.id)
+          }
+        });
+        if (!conversation) {
+          throw new Error('Conversation not found or access denied');
+        }
         await prisma.message.deleteMany({
           where: {
             conversationId: input.id

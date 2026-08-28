@@ -79,7 +79,7 @@ export const taskRouter = router({
       return results;
     }),
   upsertTask: authProcedure.use(superAdminAuthMiddleware)
-    .meta({ openapi: { method: 'GET', path: '/v1/tasks/upsert', summary: 'Upsert Task', protect: true, tags: ['Task'] } })
+    .meta({ openapi: { method: 'POST', path: '/v1/tasks/upsert', summary: 'Upsert Task', protect: true, tags: ['Task'] } })
     .input(z.object({
       time: z.string().optional(),
       type: z.enum(['start', 'stop', 'update']),

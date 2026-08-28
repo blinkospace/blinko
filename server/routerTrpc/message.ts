@@ -11,6 +11,16 @@ export const messageRouter = router({
       metadata: z.any(),
     }))
     .mutation(async ({ input, ctx }) => {
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          id: input.conversationId,
+          accountId: Number(ctx.id),
+        },
+      });
+      if (!conversation) {
+        throw new Error('Conversation not found or access denied');
+      }
+
       return await prisma.message.create({
         data: {
           content: input.content,
@@ -28,6 +38,16 @@ export const messageRouter = router({
       size: z.number().default(20),
     }))
     .query(async ({ input, ctx }) => {
+      const conversation = await prisma.conversation.findFirst({
+        where: {
+          id: input.conversationId,
+          accountId: Number(ctx.id),
+        },
+      });
+      if (!conversation) {
+        throw new Error('Conversation not found or access denied');
+      }
+
       const skip = (input.page - 1) * input.size;
       const [total, messages] = await Promise.all([
         prisma.message.count({
@@ -53,6 +73,18 @@ export const messageRouter = router({
       content: z.string(),
     }))
     .mutation(async ({ input, ctx }) => {
+      const message = await prisma.message.findFirst({
+        where: {
+          id: input.id,
+          conversation: {
+            accountId: Number(ctx.id),
+          },
+        },
+      });
+      if (!message) {
+        throw new Error('Message not found or access denied');
+      }
+
       return await prisma.message.update({
         where: {
           id: input.id,
@@ -68,18 +100,22 @@ export const messageRouter = router({
       id: z.number()
     }))
     .mutation(async ({ input, ctx }) => {
-      const message = await prisma.message.findUnique({
+      const message = await prisma.message.findFirst({
         where: {
           id: input.id,
+          conversation: {
+            accountId: Number(ctx.id),
+          },
         },
         select: {
+          id: true,
           conversationId: true,
           createdAt: true,
         },
       });
 
       if (!message) {
-        throw new Error('Message not found');
+        throw new Error('Message not found or access denied');
       }
 
       return await prisma.$transaction(async (prisma) => {
@@ -105,18 +141,22 @@ export const messageRouter = router({
       id: z.number()
     }))
     .mutation(async ({ input, ctx }) => {
-      const message = await prisma.message.findUnique({
+      const message = await prisma.message.findFirst({
         where: {
           id: input.id,
+          conversation: {
+            accountId: Number(ctx.id),
+          },
         },
         select: {
+          id: true,
           conversationId: true,
           createdAt: true,
         },
       });
 
       if (!message) {
-        throw new Error('Message not found');
+        throw new Error('Message not found or access denied');
       }
 
       await prisma.message.deleteMany({
@@ -132,4 +172,5 @@ export const messageRouter = router({
         success: true
       }
     }),
-}); 
+});
+ 
