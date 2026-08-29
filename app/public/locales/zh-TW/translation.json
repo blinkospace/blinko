@@ -137,6 +137,8 @@
   "close": "关闭",
   "close-background-animation": "關閉背景動畫",
   "close-daily-review": "結束每日檢查",
+  "show-pinned-separately": "單獨顯示置頂筆記",
+  "pinned": "已置頂",
   "cloud-file": "雲端檔案",
   "code": "代码块",
   "code-theme": "代码块主题预览",

@@ -137,6 +137,8 @@
   "close": "Cerrar",
   "close-background-animation": "Cerrar Animación de Fondo",
   "close-daily-review": "Revisión Diaria Cercana",
+  "show-pinned-separately": "Mostrar notas fijadas por separado",
+  "pinned": "Fijado",
   "cloud-file": "Archivo en la nube",
   "code": "Bloque de código",
   "code-theme": "Vista previa del tema de bloque de código",

@@ -480,6 +480,8 @@
   "unlink-account-tips": "Do you confirm access to all associations with this account?",
   "login-type": "Login Type",
   "close-daily-review": "Close Daily Review",
+  "show-pinned-separately": "Show Pinned Notes Separately",
+  "pinned": "Pinned",
   "max-home-page-width": "Max Home Page Width",
   "max-home-page-width-tip": "If set to 0 it is the maximum width",
   "reply-to": "Reply To",

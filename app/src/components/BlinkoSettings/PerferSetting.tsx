@@ -239,6 +239,20 @@ export const PerferSetting = observer(() => {
       } />
 
     <Item
+      leftContent={<>{t('show-pinned-separately')}</>}
+      rightContent={
+        <Switch
+          isSelected={blinko.config.value?.showPinnedSeparately}
+          onChange={e => {
+            PromiseCall(api.config.update.mutate({
+              key: 'showPinnedSeparately',
+              value: e.target.checked
+            }))
+          }}
+        />
+      } />
+
+    <Item
       type={isPc ? 'row' : 'col'}
       leftContent={<ItemWithTooltip content={t('device-card-columns')} toolTipContent={<div className="w-[300px] flex flex-col gap-2">
         <div>{t('columns-for-different-devices')}</div>

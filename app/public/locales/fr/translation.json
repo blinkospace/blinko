@@ -474,6 +474,8 @@
   "unlink-account-tips": "Confirmez-vous la suppression de toutes les associations avec ce compte ?",
   "login-type": "Type de connexion",
   "close-daily-review": "Désactiver la révision quotidienne",
+  "show-pinned-separately": "Afficher les notes épinglées séparément",
+  "pinned": "Épinglé",
   "max-home-page-width": "Largeur maximale de la page d'accueil",
   "max-home-page-width-tip": "Si défini à 0, c'est la largeur maximale",
   "no-comments-yet": "Pas encore de commentaires",

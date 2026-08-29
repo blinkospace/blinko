@@ -135,6 +135,8 @@
   "close": "닫기",
   "close-background-animation": "배경 애니메이션 끄기",
   "close-daily-review": "일일 회고 닫기",
+  "show-pinned-separately": "고정 노트를 분리하여 표시",
+  "pinned": "고정됨",
   "cloud-file": "클라우드 파일",
   "code": "코드 블록",
   "code-theme": "코드 블록 테마 미리보기",
