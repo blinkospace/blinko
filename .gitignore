@@ -33,3 +33,9 @@ dev-dist
 .claude/settings.local.json
 target
 server/public
+
+# Local tooling / editor artifacts (not part of the project)
+.vs/
+.cursorrules
+PLANNING.md
+TASK.md
