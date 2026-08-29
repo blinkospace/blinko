@@ -45,6 +45,7 @@ export interface ShareSettings {
   shareUrl?: string;
   isShare?: boolean;
   internalShareUserIds?: number[];
+  canEdit?: boolean;
 }
 
 interface User {
@@ -86,6 +87,7 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
     teamMembers: [] as PublicUser[],
     selectedUserIds: defaultSettings.internalShareUserIds || [] as number[],
     isLoadingUsers: false,
+    canEdit: defaultSettings.canEdit ?? false,
 
     get selectedExpiryValue() {
       if (this.expiryType === "never") return t("permanent-valid");
@@ -135,6 +137,10 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
       this.isLoadingUsers = value;
     },
 
+    setCanEdit(value: boolean) {
+      this.canEdit = value;
+    },
+
     handleExpiryChange(type: string) {
       this.setExpiryType(type);
       if (type === "never") {
@@ -182,7 +188,8 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
         await RootStore.Get(BlinkoStore).internalShareNote.call({
           id: RootStore.Get(BlinkoStore).curSelectedNote!.id!,
           accountIds: this.selectedUserIds,
-          isCancel: false
+          isCancel: false,
+          canEdit: this.canEdit
         });
         this.setIsShare(true);
       }
@@ -220,6 +227,10 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
         console.log(sharedUsers, 'sharedUsers')
         if (sharedUsers) {
           this.setSelectedUserIds(sharedUsers.map(user => user.id));
+          // Reflect existing edit permission so re-sharing doesn't silently reset it
+          if (sharedUsers.length > 0) {
+            this.setCanEdit(sharedUsers.some(user => user.canEdit));
+          }
         }
       } catch (error) {
         this.setTeamMembers([]);
@@ -449,6 +460,16 @@ export const BlinkoShareDialog = observer(({ defaultSettings }: ShareDialogProps
                   ))
                 }
               </AvatarGroup>
+            </div>
+          )}
+
+          {store.selectedUserIds.length > 0 && (
+            <div className="flex items-center justify-between p-3 bg-default-50 dark:bg-default-100/10 rounded-md">
+              <div className="flex flex-col">
+                <span className="text-default-700 font-medium">{t("allow-edit")}</span>
+                <span className="text-xs text-default-400">{t("allow-edit-desc")}</span>
+              </div>
+              <Switch isSelected={store.canEdit} onValueChange={store.setCanEdit} />
             </div>
           )}
         </div>

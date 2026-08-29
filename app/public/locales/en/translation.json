@@ -180,6 +180,8 @@
   "tablet": "Tablet",
   "desktop": "Desktop",
   "chars": "Chars",
+  "word-count": "Words",
+  "char-count": "Characters",
   "text-fold-length": "Text Fold Length",
   "title-first-line-of-the-text": "Title (first line of text)",
   "content-rest-of-the-text-if-the-text-is-longer-than-the-length": "Content (rest of the text, if the text exceeds the specified length)",
@@ -655,6 +657,9 @@
   "internal-share": "Internal Share",
   "no-team-members-found": "No team members found",
   "selected-users": "Selected users",
+  "allow-edit": "Allow editing",
+  "allow-edit-desc": "Let shared users edit this note. Off means view-only.",
+  "read-only": "Read-only",
   "tags-prompt": "Tags Prompt",
   "ai-tag-prompt-default": "",
   "greater-than-prompt-used-for-auto-generating-tags-if-set-empty-the-default-prompt-will-be-used": "Prompt used for auto-generating tags.If set empty, the default prompt will be used.",
@@ -839,5 +844,9 @@
   "custom-title": "Custom Title",
   "custom-title-tip": "Used for browser tab and sign-in title. Leave empty to use the default title.",
   "custom-title-placeholder": "Enter a title (1-50 chars)",
+  "show-text-count": "Show text count",
+  "count-punctuation": "Include punctuation",
+  "word-count": "Words",
+  "char-count": "Characters",
   "login-with": "Login With {{title}}"
 }

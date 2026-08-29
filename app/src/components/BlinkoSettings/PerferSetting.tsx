@@ -149,6 +149,40 @@ export const PerferSetting = observer(() => {
       />} />
 
     <Item
+      leftContent={<>{t('show-text-count')}</>}
+      rightContent={<Switch
+        isSelected={(blinko.config.value as any)?.isShowTextCount === true}
+        onChange={async e => {
+          const checked = e.target.checked;
+          if (blinko.config.value) {
+            (blinko.config.value as any).isShowTextCount = checked;
+          }
+          await PromiseCall(api.config.update.mutate({
+            key: 'isShowTextCount',
+            value: checked
+          }))
+          await blinko.config.call()
+        }}
+      />} />
+
+    <Item
+      leftContent={<>{t('count-punctuation')}</>}
+      rightContent={<Switch
+        isSelected={(blinko.config.value as any)?.isCountPunctuation === true}
+        onChange={async e => {
+          const checked = e.target.checked;
+          if (blinko.config.value) {
+            (blinko.config.value as any).isCountPunctuation = checked;
+          }
+          await PromiseCall(api.config.update.mutate({
+            key: 'isCountPunctuation',
+            value: checked
+          }))
+          await blinko.config.call()
+        }}
+      />} />
+
+    <Item
       leftContent={<>{t('order-by-create-time')}</>}
       rightContent={<Switch
         isSelected={blinko.config.value?.isOrderByCreateTime}
@@ -455,7 +489,7 @@ export const PerferSetting = observer(() => {
             onChange={e => {
               setCustomBackgroundUrl(e.target.value)
             }}
-            onBlur={e => {
+            onBlur={() => {
               PromiseCall(api.config.update.mutate({
                 key: 'customBackgroundUrl',
                 value: customBackgroundUrl

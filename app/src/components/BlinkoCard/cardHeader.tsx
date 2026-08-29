@@ -21,11 +21,12 @@ interface CardHeaderProps {
   blinkoItem: Note;
   blinko: BlinkoStore;
   isShareMode: boolean;
+  isReadOnly?: boolean;
   isExpanded?: boolean;
   account?: AvatarAccount;
 }
 
-export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpanded, account }: CardHeaderProps) => {
+export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isReadOnly, isExpanded, account }: CardHeaderProps) => {
   const { t } = useTranslation();
   const iconSize = isExpanded ? '20' : '16';
   const isIOSDevice = useIsIOS();
@@ -81,11 +82,24 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           </Tooltip>
         )}
 
+        {isReadOnly && (
+          <Tooltip content={t('read-only')} delay={1000}>
+            <div className="flex items-center gap-1 text-desc">
+              <Icon
+                icon="material-symbols:lock-outline"
+                width={iconSize}
+                height={iconSize}
+              />
+              <span className={isExpanded ? 'text-sm' : 'text-xs'}>{t('read-only')}</span>
+            </div>
+          </Tooltip>
+        )}
+
         {isShareMode && account && (
           <UserAvatar account={account} blinkoItem={blinkoItem} />
         )}
 
-        {blinkoItem.type === NoteType.TODO && (
+        {blinkoItem.type === NoteType.TODO && !isReadOnly && (
           <Tooltip content={blinkoItem.isArchived ? t('restore') : t('complete')} delay={1000}>
             <div
               className="flex items-center cursor-pointer"
@@ -102,10 +116,11 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         )}
 
         <Tooltip content={t('edit-time')} delay={1000}>
-          <div 
-            className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc cursor-pointer transition-colors`}
+          <div
+            className={`${isExpanded ? 'text-sm' : 'text-xs'} text-desc transition-colors ${isReadOnly ? '' : 'cursor-pointer'}`}
             onClick={(e) => {
               e.stopPropagation();
+              if (isReadOnly) return;
               blinko.curSelectedNote = _.cloneDeep(blinkoItem);
               ShowEditTimeModel();
             }}
@@ -138,7 +153,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           </Tooltip>
         )}
 
-        {!isShareMode && (
+        {!isShareMode && !isReadOnly && (
           <ShareButton blinkoItem={blinkoItem} isIOSDevice={isIOSDevice} />
         )}
 
@@ -151,7 +166,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
         )}
 
         {/* Trash/Recycle bin button */}
-        {!isShareMode && (
+        {!isShareMode && !isReadOnly && (
           <Tooltip content={t('trash')} delay={1000}>
             <Icon
               icon="mingcute:delete-2-line"
@@ -177,7 +192,7 @@ export const CardHeader = observer(({ blinkoItem, blinko, isShareMode, isExpande
           />
         )}
 
-        {!isShareMode && (
+        {!isShareMode && !isReadOnly && (
           <LeftCickMenu
             className={isIOSDevice ? 'ml-[10px]' : (blinkoItem.isTop ? "ml-[10px]" : 'ml-auto group-hover/card:ml-2')}
             onTrigger={() => { blinko.curSelectedNote = _.cloneDeep(blinkoItem) }}
