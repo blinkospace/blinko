@@ -180,6 +180,8 @@
   "tablet": "Tablet",
   "desktop": "Desktop",
   "chars": "Chars",
+  "word-count": "Words",
+  "char-count": "Characters",
   "text-fold-length": "Text Fold Length",
   "title-first-line-of-the-text": "Title (first line of text)",
   "content-rest-of-the-text-if-the-text-is-longer-than-the-length": "Content (rest of the text, if the text exceeds the specified length)",
@@ -839,5 +841,9 @@
   "custom-title": "Custom Title",
   "custom-title-tip": "Used for browser tab and sign-in title. Leave empty to use the default title.",
   "custom-title-placeholder": "Enter a title (1-50 chars)",
+  "show-text-count": "Show text count",
+  "count-punctuation": "Include punctuation",
+  "word-count": "Words",
+  "char-count": "Characters",
   "login-with": "Login With {{title}}"
 }
