@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>space.blinko.Blinko</id>
+
+  <name>Blinko</name>
+  <summary>Self-hosted AI note tool</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+
+  <developer id="space.blinko">
+    <name>Blinko Space</name>
+  </developer>
+
+  <description>
+    <p>
+      Blinko is an open-source, self-hosted personal note tool that prioritises
+      privacy. Capture thoughts the moment they occur, then let AI-powered
+      retrieval find them again later.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Instant capture of notes and ideas in Markdown</li>
+      <li>AI-assisted search and retrieval across your own notes</li>
+      <li>Self-hosted: your data stays on infrastructure you control</li>
+      <li>Tags, comments and attachments for organising notes</li>
+      <li>Works with any Blinko server deployment</li>
+    </ul>
+    <p>
+      This desktop application connects to a Blinko server, which you deploy
+      yourself. A server endpoint is required on first launch.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">space.blinko.Blinko.desktop</launchable>
+
+  <url type="homepage">https://blinko.space</url>
+  <url type="bugtracker">https://github.com/blinkospace/blinko/issues</url>
+  <url type="vcs-browser">https://github.com/blinkospace/blinko</url>
+
+  <categories>
+    <category>Utility</category>
+    <category>TextEditor</category>
+  </categories>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+
+  <content_rating type="oars-1.1"/>
+
+  <!--
+    NOTE: Flathub submission additionally requires at least one <screenshots>
+    entry pointing at a stable, publicly hosted image URL. Add them here before
+    submitting to Flathub; they are not needed to build the bundle in CI.
+  -->
+
+  <releases>
+    <release version="1.8.8" date="2026-06-20"/>
+  </releases>
+</component>
