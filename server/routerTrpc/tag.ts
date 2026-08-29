@@ -112,9 +112,9 @@ export const tagRouter = router({
       icon: z.string()
     }))
     .output(tagSchema)
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { id, icon } = input
-      return await prisma.tag.update({ where: { id }, data: { icon } })
+      return await prisma.tag.update({ where: { id, accountId: ctx.user.id }, data: { icon } })
     }),
   deleteOnlyTag: authProcedure.use(demoAuthMiddleware)
     .meta({

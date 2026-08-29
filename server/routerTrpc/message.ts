@@ -71,6 +71,7 @@ export const messageRouter = router({
       const message = await prisma.message.findUnique({
         where: {
           id: input.id,
+          accountId: ctx.user.id,
         },
         select: {
           conversationId: true,
@@ -86,6 +87,7 @@ export const messageRouter = router({
         await prisma.message.delete({
           where: {
             id: input.id,
+            accountId: ctx.user.id,
           },
         });
 
@@ -108,6 +110,7 @@ export const messageRouter = router({
       const message = await prisma.message.findUnique({
         where: {
           id: input.id,
+          accountId: ctx.user.id,
         },
         select: {
           conversationId: true,
