@@ -850,5 +850,18 @@
   "custom-title": "Niestandardowy tytuł",
   "custom-title-tip": "Używany dla karty przeglądarki i tytułu logowania. Pozostaw puste, aby użyć domyślnego tytułu.",
   "custom-title-placeholder": "Wprowadź tytuł (1-50 znaków)",
-  "login-with": "Zaloguj się przez {{title}}"
+  "login-with": "Zaloguj się przez {{title}}",
+  "background-color": "Kolor tła",
+  "default": "Domyślny",
+  "red": "Czerwony",
+  "orange": "Pomarańczowy",
+  "yellow": "Żółty",
+  "green": "Zielony",
+  "teal": "Morski",
+  "light-blue": "Jasnoniebieski",
+  "blue": "Niebieski",
+  "purple": "Fioletowy",
+  "pink": "Różowy",
+  "brown": "Brązowy",
+  "gray": "Szary"
 }

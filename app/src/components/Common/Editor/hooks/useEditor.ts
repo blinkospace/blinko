@@ -468,7 +468,8 @@ export const useEditorInit = (
           onChange,
           onSend,
           mode,
-          vditor
+          vditor,
+          backgroundColor: mode === 'edit' ? blinko.curSelectedNote?.metadata?.backgroundColor || null : null
         });
 
         // Handle raw markdown mode (hide preview)

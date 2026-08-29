@@ -839,5 +839,18 @@
   "custom-title": "Azwel udmawan",
   "custom-title-tip": "Yettwaseqdec i yiccer n yiminig d uzwel n unekcum. Eǧǧ-it d ilem akken ad tesqedceḍ azwel amezwer.",
   "custom-title-placeholder": "Sekcem azwel (1-50 isekkilen)",
-  "login-with": "Kcem s {{title}}"
+  "login-with": "Kcem s {{title}}",
+  "background-color": "Init n ugil",
+  "default": "Lexṣas",
+  "red": "Azeggaɣ",
+  "orange": "Ačini",
+  "yellow": "Awerɣi",
+  "green": "Azegzaw",
+  "teal": "Ameggay",
+  "light-blue": "Anili afraw",
+  "blue": "Anili",
+  "purple": "Abeṛkan",
+  "pink": "Axedmi",
+  "brown": "Azemmur",
+  "gray": "Amelli"
 }

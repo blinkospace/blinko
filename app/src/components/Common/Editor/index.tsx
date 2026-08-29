@@ -16,6 +16,7 @@ import { UploadButtons } from './Toolbar/UploadButtons';
 import { ReferenceButton } from './Toolbar/ReferenceButton';
 import { NoteTypeButton } from './Toolbar/NoteTypeButton';
 import { HashtagButton } from './Toolbar/HashtagButton';
+import { BackgroundColorButton } from './Toolbar/BackgroundColorButton';
 import { ViewModeButton } from './Toolbar/ViewModeButton';
 import { SendButton } from './Toolbar/SendButton';
 import {
@@ -83,6 +84,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
             }}
           />
           <HashtagButton store={store} content={content} />
+          <BackgroundColorButton store={store} />
           <ReferenceButton store={store} />
           <ResourceReferenceButton store={store} />
           {blinko.config.value?.mainModelId && (
@@ -207,7 +209,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
     <>
       {/* Top toolbar portal */}
       {showTopToolbar && topToolbarElement && createPortal(
-        <div className='flex w-full items-center gap-1'>
+        <div className={`flex w-full items-center gap-1 ${store.backgroundColor ? 'card-custom-bg' : ''}`}>
           {renderToolbar()}
           {renderRightToolbar()}
         </div>,
@@ -217,8 +219,10 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
       <div {...getRootProps()} className={`${isDragAccept ? 'border-2 border-green-500 border-dashed' : ''} ${showTopToolbar ? 'h-full flex flex-col' : ''}`}>
       <Card
         shadow='none'
+        style={store.backgroundColor ? { backgroundColor: store.backgroundColor } : undefined}
         className={`${showTopToolbar ? 'h-full flex flex-col flex-1 min-h-0' : 'p-2'} relative ${withoutOutline ? '' : 'border-2 border-border'} !transition-all ${showTopToolbar ? 'overflow-hidden' : 'overflow-visible'} 
-        ${store.isFullscreen ? 'fixed inset-0 z-[9999] m-0 rounded-none border-none bg-background' : ''}`}
+        ${store.isFullscreen ? 'fixed inset-0 z-[9999] m-0 rounded-none border-none bg-background' : ''}
+        ${store.backgroundColor ? 'card-custom-bg' : ''}`}
         ref={el => {
           if (el) {
             //@ts-ignore

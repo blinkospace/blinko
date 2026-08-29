@@ -839,5 +839,18 @@
   "custom-title": "Aangepaste titel",
   "custom-title-tip": "Gebruikt voor browsertabblad en aanmeldtitel. Laat leeg om de standaardtitel te gebruiken.",
   "custom-title-placeholder": "Voer een titel in (1-50 tekens)",
-  "login-with": "Inloggen met {{title}}"
+  "login-with": "Inloggen met {{title}}",
+  "background-color": "Achtergrondkleur",
+  "default": "Standaard",
+  "red": "Rood",
+  "orange": "Oranje",
+  "yellow": "Geel",
+  "green": "Groen",
+  "teal": "Groenblauw",
+  "light-blue": "Lichtblauw",
+  "blue": "Blauw",
+  "purple": "Paars",
+  "pink": "Roze",
+  "brown": "Bruin",
+  "gray": "Grijs"
 }
