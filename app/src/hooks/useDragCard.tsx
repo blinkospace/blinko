@@ -28,17 +28,11 @@ export const useDragCard = ({ notes, onNotesUpdate, activeId, setActiveId, inser
   // Update local notes when the list changes (but not during drag operations)
   useEffect(() => {
     if (notes && !isDraggingRef.current) {
-      // Sort by isTop first (desc), then by sortOrder (asc) to maintain the correct order from the database
-      const sortedNotes = [...notes].sort((a, b) => {
-        // First, sort by isTop (pinned notes first)
-        if (a.isTop !== b.isTop) {
-          return b.isTop ? 1 : -1;
-        }
-        // Then sort by sortOrder
-        return a.sortOrder - b.sortOrder;
-      });
-      setLocalNotes(sortedNotes);
-      onNotesUpdate?.(sortedNotes);
+      // The API applies the configured timestamp ordering before pagination.
+      // Preserve that order here so stale sortOrder values cannot reorder it.
+      const orderedNotes = [...notes];
+      setLocalNotes(orderedNotes);
+      onNotesUpdate?.(orderedNotes);
     }
     else if (!notes) {
       setLocalNotes([]);
