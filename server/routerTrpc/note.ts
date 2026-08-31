@@ -22,6 +22,25 @@ const extractHashtags = (input: string): string[] => {
   return matches ? matches : [];
 };
 
+export const buildNoteOrderBy = ({
+  isOrderByCreateTime,
+  orderBy,
+}: {
+  isOrderByCreateTime?: boolean;
+  orderBy: 'asc' | 'desc';
+}): Prisma.notesOrderByWithRelationInput[] => {
+  const timeOrderBy: Prisma.notesOrderByWithRelationInput = isOrderByCreateTime
+    ? { createdAt: orderBy }
+    : { updatedAt: orderBy };
+
+  return [
+    { isTop: 'desc' },
+    timeOrderBy,
+    { sortOrder: 'asc' },
+    { id: 'asc' },
+  ];
+};
+
 export const noteRouter = router({
   list: authProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/note/list', summary: 'Query notes list', protect: true, tags: ['Note'] } })
@@ -191,11 +210,13 @@ export const noteRouter = router({
         ];
       }
       const config = await getGlobalConfig({ ctx });
-      let timeOrderBy = config?.isOrderByCreateTime ? { createdAt: orderBy } : { updatedAt: orderBy };
 
       const notes = await prisma.notes.findMany({
         where,
-        orderBy: [{ isTop: 'desc' }, { sortOrder: 'asc' }, timeOrderBy],
+        orderBy: buildNoteOrderBy({
+          isOrderByCreateTime: config?.isOrderByCreateTime,
+          orderBy,
+        }),
         skip: (page - 1) * size,
         take: size,
         include: {
