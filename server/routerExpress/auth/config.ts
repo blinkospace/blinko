@@ -64,7 +64,7 @@ export const ensureOAuthStrategies = async (providerId?: string) => {
   }
 };
 
-async function handleOAuthCallback(accessToken: string, refreshToken: string, profile: any, done: any) {
+export async function handleOAuthCallback(accessToken: string, refreshToken: string, profile: any, done: any) {
   try {
     let userName = profile.username || profile.displayName || profile.id.toString();
 
@@ -76,6 +76,16 @@ async function handleOAuthCallback(accessToken: string, refreshToken: string, pr
     });
 
     if (!existingUser) {
+      // Same rule as the password sign-up route: only the first user may register
+      // while "Allow register" is off
+      if ((await prisma.accounts.count()) > 0) {
+        const allowRegister = await prisma.config.findFirst({ where: { key: 'isAllowRegister' } });
+        //@ts-ignore
+        if (allowRegister?.config?.value === false || !allowRegister) {
+          return done(null, false, { message: 'not allow register' });
+        }
+      }
+
       const newUser = await prisma.accounts.create({
         data: {
           name: userName,
