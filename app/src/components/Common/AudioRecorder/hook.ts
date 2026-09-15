@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 export interface recorderControls {
   startRecording: () => Promise<MediaStream | undefined>;
@@ -11,272 +11,180 @@ export interface recorderControls {
   mediaRecorder?: MediaRecorder;
 }
 
-export type MediaAudioTrackConstraints = Pick<
-  MediaTrackConstraints,
-  | "deviceId"
-  | "groupId"
-  | "autoGainControl"
-  | "channelCount"
-  | "echoCancellation"
-  | "noiseSuppression"
-  | "sampleRate"
-  | "sampleSize"
->;
+export type MediaAudioTrackConstraints = Pick<MediaTrackConstraints,
+  'deviceId' | 'groupId' | 'autoGainControl' | 'channelCount' |
+  'echoCancellation' | 'noiseSuppression' | 'sampleRate' | 'sampleSize'>;
 
-/**
- * @returns Controls for the recording. Details of returned controls are given below
- *
- * @param `audioTrackConstraints`: Takes a {@link https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings#instance_properties_of_audio_tracks subset} of `MediaTrackConstraints` that apply to the audio track
- * @param `onNotAllowedOrFound`: A method that gets called when the getUserMedia promise is rejected. It receives the DOMException as its input.
- *
- * @details `startRecording`: Calling this method would result in the recording to start. Sets `isRecording` to true
- * @details `stopRecording`: This results in a recording in progress being stopped and the resulting audio being present in `recordingBlob`. Sets `isRecording` to false
- * @details `togglePauseResume`: Calling this method would pause the recording if it is currently running or resume if it is paused. Toggles the value `isPaused`
- * @details `recordingBlob`: This is the recording blob that is created after `stopRecording` has been called
- * @details `isRecording`: A boolean value that represents whether a recording is currently in progress
- * @details `isPaused`: A boolean value that represents whether a recording in progress is paused
- * @details `recordingTime`: Number of seconds that the recording has gone on. This is updated every second
- * @details `mediaRecorder`: The current mediaRecorder in use
- */
-const useAudioRecorder: (
+export default function useAudioRecorder(
   audioTrackConstraints?: MediaAudioTrackConstraints,
   onNotAllowedOrFound?: (exception: DOMException) => any,
-  mediaRecorderOptions?: MediaRecorderOptions
-) => recorderControls = (
-  audioTrackConstraints,
-  onNotAllowedOrFound,
-  mediaRecorderOptions
-) => {
+  mediaRecorderOptions?: MediaRecorderOptions,
+): recorderControls {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
-  const [timerInterval, setTimerInterval] = useState<NodeJS.Timer>();
   const [recordingBlob, setRecordingBlob] = useState<Blob>();
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const hasStoppedRef = useRef<boolean>(false);
+  const recorderRef = useRef<MediaRecorder>();
+  const pendingRef = useRef<Promise<MediaStream | undefined>>();
+  const generation = useRef(0);
+  const mounted = useRef(true);
+  const manualPause = useRef(false);
+  const timer = useRef<ReturnType<typeof setInterval>>();
+  const elapsed = useRef(0);
+  const startedAt = useRef<number>();
+  const wakeLock = useRef<WakeLockSentinel>();
+  const requestingWakeLock = useRef(false);
 
-  const _startTimer: () => void = useCallback(() => {
-    const interval = setInterval(() => {
-      setRecordingTime((time) => time + 1);
-    }, 1000);
-    setTimerInterval(interval);
-  }, [setRecordingTime, setTimerInterval]);
+  const releaseWakeLock = useCallback(() => {
+    const lock = wakeLock.current;
+    wakeLock.current = undefined;
+    void lock?.release().catch(() => {});
+  }, []);
 
-  const _stopTimer: () => void = useCallback(() => {
-    timerInterval != null && clearInterval(timerInterval);
-    setTimerInterval(undefined);
-  }, [timerInterval, setTimerInterval]);
+  const acquireWakeLock = useCallback(async () => {
+    if (!mounted.current || document.visibilityState !== 'visible' ||
+        recorderRef.current?.state !== 'recording' || wakeLock.current || requestingWakeLock.current ||
+        !navigator.wakeLock) return;
+    requestingWakeLock.current = true;
+    try {
+      const lock = await navigator.wakeLock.request('screen');
+      if (!mounted.current || document.visibilityState !== 'visible' || recorderRef.current?.state !== 'recording') {
+        await lock.release();
+      } else {
+        wakeLock.current = lock;
+        lock.addEventListener('release', () => {
+          if (wakeLock.current === lock) wakeLock.current = undefined;
+        }, { once: true });
+      }
+    } catch { /* Optional: unavailable browser API or power-saving policy. */ }
+    finally { requestingWakeLock.current = false; }
+  }, []);
 
-  const cleanupResources = useCallback(() => {
-    // Stop all audio tracks
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => {
-        if (track.readyState === 'live') {
-          track.stop();
-        }
-      });
-      mediaStreamRef.current = null;
+  const updateClock = useCallback(() => {
+    const recorder = recorderRef.current;
+    const capturing = recorder?.state === 'recording' &&
+      recorder.stream.getAudioTracks().some(track => track.readyState === 'live' && !track.muted);
+    const now = performance.now();
+    if (!capturing && startedAt.current !== undefined) {
+      elapsed.current += now - startedAt.current;
+      startedAt.current = undefined;
+    } else if (capturing && startedAt.current === undefined) startedAt.current = now;
+    if (mounted.current) {
+      setRecordingTime(Math.floor((elapsed.current + (startedAt.current === undefined ? 0 : now - startedAt.current)) / 1000));
+      setIsPaused(recorder?.state === 'paused');
     }
   }, []);
 
-  /**
-   * Calling this method would result in the recording to start. Sets `isRecording` to true
-   */
-  const startRecording: () => Promise<MediaStream | undefined> = useCallback(async () => {
-    if (timerInterval != null) return undefined;
-    hasStoppedRef.current = false;
+  const stopRecording = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+    // onstop follows the final dataavailable event. Keep elapsed time and chunks.
+    updateClock();
+    releaseWakeLock();
+  }, [releaseWakeLock, updateClock]);
 
-    try {
-      console.log("Requesting microphone permission...");
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: audioTrackConstraints ? audioTrackConstraints : {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
+  const startRecording = useCallback((): Promise<MediaStream | undefined> => {
+    if (pendingRef.current) return pendingRef.current;
+    // One session per dialog, including after an unexpected stop.
+    if (recorderRef.current) return Promise.resolve(
+      recorderRef.current.state === 'inactive' ? undefined : recorderRef.current.stream);
+    const attempt = generation.current;
+    const pending = (async () => {
+      let stream: MediaStream | undefined;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: audioTrackConstraints || {
+          echoCancellation: true, noiseSuppression: true, autoGainControl: true,
+        } });
+        if (!mounted.current || generation.current !== attempt) {
+          stream.getTracks().forEach(track => track.stop());
+          return undefined;
         }
-      });
-      
-      // Save stream reference for later cleanup
-      mediaStreamRef.current = stream;
-
-      // Cache microphone permission
-      localStorage.setItem('microphone_permission_granted', 'true');
-
-      console.log("Microphone access granted, tracks:", stream.getAudioTracks().length);
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) {
-        console.log("Track settings:", audioTrack.getSettings());
-      }
-      
-      setIsRecording(true);
-      
-      let options: MediaRecorderOptions = mediaRecorderOptions || {};
-      if (!options.mimeType) {
-        // Try different MIME types
-        const mimeTypes = [
-          'audio/webm;codecs=opus',
-          'audio/webm',
-          'audio/mp4',
-          'audio/ogg;codecs=opus',
-          ''  // Default
-        ];
-        
-        for (const type of mimeTypes) {
-          if (!type || MediaRecorder.isTypeSupported(type)) {
-            options.mimeType = type;
-            console.log("Using MIME type:", type || "default");
-            break;
+        const options = { audioBitsPerSecond: 128000, ...mediaRecorderOptions };
+        if (!options.mimeType) {
+          const type = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus']
+            .find(type => MediaRecorder.isTypeSupported(type));
+          if (type) options.mimeType = type;
+        }
+        const recorder = new MediaRecorder(stream, options);
+        const chunks: Blob[] = [];
+        recorderRef.current = recorder;
+        recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+        recorder.onstop = () => {
+          clearInterval(timer.current);
+          updateClock();
+          releaseWakeLock();
+          stream!.getTracks().forEach(track => track.stop());
+          if (mounted.current) {
+            if (chunks.length) setRecordingBlob(new Blob(chunks, { type: recorder.mimeType || chunks[0]!.type }));
+            setIsRecording(false);
+            setIsPaused(false);
+            setMediaRecorder(undefined);
           }
+        };
+        recorder.onpause = () => { updateClock(); releaseWakeLock(); };
+        recorder.onresume = () => { updateClock(); void acquireWakeLock(); };
+        recorder.onerror = () => {
+          // MediaRecorder delivers remaining data and stop after an error.
+          if (recorder.state !== 'inactive') stopRecording();
+        };
+        for (const track of stream.getAudioTracks()) {
+          track.addEventListener('mute', updateClock);
+          track.addEventListener('unmute', updateClock);
+          track.addEventListener('ended', stopRecording);
         }
-      }
-
-      // Set appropriate bitrate for better quality
-      if (!options.audioBitsPerSecond) {
-        options.audioBitsPerSecond = 128000; // 128kbps
-      }
-
-      console.log("Creating MediaRecorder...");
-      const recorder = new MediaRecorder(stream, options);
-      const dataChunks: Blob[] = [];
-      
-      recorder.ondataavailable = (event) => {
-        console.log("Data chunk received:", event.data.size, "bytes");
-        if (event.data && event.data.size > 0) {
-          dataChunks.push(event.data);
+        recorder.start(100);
+        setMediaRecorder(recorder);
+        setIsRecording(true);
+        updateClock();
+        timer.current = setInterval(updateClock, 250);
+        void acquireWakeLock();
+        // A disabled localStorage must not abort an already running recorder.
+        try { localStorage.setItem('microphone_permission_granted', 'true'); } catch {}
+        return stream;
+      } catch (error) {
+        stream?.getTracks().forEach(track => track.stop());
+        if (mounted.current && generation.current === attempt) {
+          recorderRef.current = undefined;
+          onNotAllowedOrFound?.(error as DOMException);
         }
-      };
-      
-      recorder.onstop = () => {
-        console.log("Recording stopped, data chunks:", dataChunks.length);
-        const blob = new Blob(dataChunks, { type: options.mimeType || 'audio/webm' });
-        console.log("Final blob created:", blob.size, "bytes, type:", blob.type);
-        setRecordingBlob(blob);
-        
-        // Only auto-cleanup resources if not manually stopped to avoid duplicated cleanup
-        if (!hasStoppedRef.current) {
-          cleanupResources();
-        }
-        
-        setMediaRecorder(undefined);
-      };
-      
-      recorder.onerror = (event) => {
-        console.error("MediaRecorder error:", event);
-      };
-      
-      // Set more frequent data collection for better visualization
-      recorder.start(100); // Collect data every 100ms
-      console.log("MediaRecorder started, state:", recorder.state);
-      
-      setMediaRecorder(recorder);
-      _startTimer();
-      
-      // Return stream for use in AudioDialog
-      return stream;
-    } catch (err: any) {
-      console.error("Failed to get microphone access:", err.name, err.message);
-
-      // Clear cached permission on any error
-      localStorage.removeItem('microphone_permission_granted');
-
-      // Provide more detailed error information
-      if (err.name === 'NotAllowedError') {
-        console.error("User denied microphone permission");
-      } else if (err.name === 'NotFoundError') {
-        console.error("No microphone device found");
-      } else if (err.name === 'NotReadableError') {
-        console.error("Microphone may be in use by another application");
+        throw error;
       }
+    })();
+    pendingRef.current = pending;
+    void pending.finally(() => { if (pendingRef.current === pending) pendingRef.current = undefined; }).catch(() => {});
+    return pending;
+  }, [audioTrackConstraints, mediaRecorderOptions, onNotAllowedOrFound, acquireWakeLock, releaseWakeLock, stopRecording, updateClock]);
 
-      onNotAllowedOrFound?.(err);
-      throw err; // Rethrow error for UI handling
-    }
-  }, [
-    timerInterval,
-    setIsRecording,
-    setMediaRecorder,
-    _startTimer,
-    setRecordingBlob,
-    onNotAllowedOrFound,
-    mediaRecorderOptions,
-    cleanupResources,
-  ]);
+  const togglePauseResume = useCallback(() => {
+    const recorder = recorderRef.current;
+    if (recorder?.state === 'recording') { manualPause.current = true; recorder.pause(); }
+    else if (recorder?.state === 'paused') { manualPause.current = false; recorder.resume(); }
+    updateClock();
+  }, [updateClock]);
 
-  /**
-   * Calling this method results in a recording in progress being stopped and the resulting audio being present in `recordingBlob`. Sets `isRecording` to false
-   */
-  const stopRecording: () => void = useCallback(() => {
-    console.log("Attempting to stop recording, MediaRecorder state:", mediaRecorder?.state);
-    hasStoppedRef.current = true;
-    
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      try {
-        mediaRecorder.stop();
-        console.log("MediaRecorder.stop() called");
-      } catch (err) {
-        console.error("Failed to stop recording:", err);
+  useEffect(() => {
+    mounted.current = true;
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') { releaseWakeLock(); return; }
+      const recorder = recorderRef.current;
+      if (recorder?.state === 'paused' && !manualPause.current) {
+        try { recorder.resume(); } catch { stopRecording(); }
       }
-    } else {
-      console.warn("Cannot stop recording: MediaRecorder doesn't exist or is already inactive");
-    }
-    
-    _stopTimer();
-    setRecordingTime(0);
-    setIsRecording(false);
-    setIsPaused(false);
-    
-    // Manual cleanup of resources
-    cleanupResources();
-  }, [
-    mediaRecorder,
-    setRecordingTime,
-    setIsRecording,
-    setIsPaused,
-    _stopTimer,
-    cleanupResources,
-  ]);
+      updateClock();
+      void acquireWakeLock();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      mounted.current = false;
+      generation.current++;
+      pendingRef.current = undefined;
+      stopRecording();
+      recorderRef.current?.stream.getTracks().forEach(track => track.stop());
+      clearInterval(timer.current);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [acquireWakeLock, releaseWakeLock, stopRecording, updateClock]);
 
-  /**
-   * Calling this method would pause the recording if it is currently running or resume if it is paused. Toggles the value `isPaused`
-   */
-  const togglePauseResume: () => void = useCallback(() => {
-    if (!mediaRecorder) {
-      console.warn("Cannot pause/resume: MediaRecorder doesn't exist");
-      return;
-    }
-    
-    if (isPaused) {
-      console.log("Resuming recording");
-      setIsPaused(false);
-      try {
-        mediaRecorder.resume();
-        _startTimer();
-      } catch (err) {
-        console.error("Failed to resume recording:", err);
-      }
-    } else {
-      console.log("Pausing recording");
-      setIsPaused(true);
-      _stopTimer();
-      try {
-        mediaRecorder.pause();
-      } catch (err) {
-        console.error("Failed to pause recording:", err);
-      }
-    }
-  }, [mediaRecorder, isPaused, setIsPaused, _startTimer, _stopTimer]);
-
-  return {
-    startRecording,
-    stopRecording,
-    togglePauseResume,
-    recordingBlob,
-    isRecording,
-    isPaused,
-    recordingTime,
-    mediaRecorder,
-  };
-};
-
-export default useAudioRecorder;
+  return { startRecording, stopRecording, togglePauseResume, recordingBlob, isRecording, isPaused, recordingTime, mediaRecorder };
+}

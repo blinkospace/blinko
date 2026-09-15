@@ -27,6 +27,7 @@ type filterType = {
 interface UpsertNoteParams {
   /** Note content */
   content?: string | null;
+  expectedContent?: string;
   /** Whether the note is archived */
   isArchived?: boolean;
   /** Whether the note is in recycle bin */
@@ -185,6 +186,7 @@ export class BlinkoStore implements Store {
       console.log("upsertNote", params)
       const {
         content = null,
+        expectedContent,
         isArchived,
         isRecycle,
         type,
@@ -227,6 +229,7 @@ export class BlinkoStore implements Store {
 
       const res = await api.notes.upsert.mutate({
         content,
+        expectedContent,
         type,
         isArchived,
         isRecycle,

@@ -38,7 +38,7 @@
   },
   "engines": {
     "bun": ">=1.0.0",
-    "node": ">=20.0.0"
+    "node": ">=22.13.0"
   },
   "dependencies": {
     "dotenv": "^16.5.0",

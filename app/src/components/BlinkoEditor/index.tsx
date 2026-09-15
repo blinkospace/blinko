@@ -22,6 +22,10 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
   const isCreateMode = mode == 'create'
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
+  const editBase = useRef({ id: blinko.curSelectedNote?.id, content: blinko.curSelectedNote?.content ?? '' });
+  if (editBase.current.id !== blinko.curSelectedNote?.id) {
+    editBase.current = { id: blinko.curSelectedNote?.id, content: blinko.curSelectedNote?.content ?? '' };
+  }
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const location = useLocation()
@@ -149,9 +153,9 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
       }
       onSend={async ({ files, references, noteType, metadata }) => {
         if (isCreateMode) {
-          console.log("createMode", files, references, noteType, metadata)
           //@ts-ignore
-          await blinko.upsertNote.call({ type: noteType, references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }), metadata })
+          const saved = await blinko.upsertNote.call({ type: noteType, references, refresh: false, content: blinko.noteContent, attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }), metadata })
+          if (!saved) return;
           blinko.createAttachmentsStorage.clear()
           blinko.createContentStorage.clear()
           if (blinko.noteTypeDefault == NoteType.NOTE && searchParams.get('path') != 'notes') {
@@ -165,17 +169,21 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
           blinko.updateTicker++
         } else {
           if (!blinko.curSelectedNote) return;
-          await blinko.upsertNote.call({
+          const saved = await blinko.upsertNote.call({
             id: blinko.curSelectedNote.id,
             type: noteType,
             //@ts-ignore
             content: blinko.curSelectedNote.content,
+            expectedContent: editBase.current.content,
             //@ts-ignore
             attachments: files.map(i => { return { name: i.name, path: i.uploadPath, size: i.size, type: i.type } }),
             references,
             metadata,
             refresh: true // Ensure list is refreshed after update
           })
+          if (!saved) return;
+          editBase.current.content = saved.content;
+          blinko.curSelectedNote.content = saved.content;
           try {
             const index = blinko.editAttachmentsStorage.list?.findIndex(i => i.id == blinko.curSelectedNote!.id)
             if (index != -1) {

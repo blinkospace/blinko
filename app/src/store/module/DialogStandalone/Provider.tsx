@@ -7,6 +7,7 @@ import { useMediaQuery } from "usehooks-ts";
 import { motion } from "motion/react";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { CancelIcon } from "@/components/Common/Icons";
+import { useMemo } from 'react';
 
 const CloseButton = ({ onClose }: { onClose: () => void }) => (
   <motion.div
@@ -44,7 +45,8 @@ const Dialog = observer(() => {
   const modal = RootStore.Get(DialogStandaloneStore);
   const isPc = useMediaQuery('(min-width: 768px)')
   const { className, classNames, isOpen, placement, title, size, content, isDismissable, onlyContent = false, noPadding = false, showOnlyContentCloseButton = false, transparent = false } = modal;
-  const Content = typeof content === 'function' ? content : () => content;
+  // Keep the component identity across dialog renders (e.g. viewport changes).
+  const Content = useMemo(() => typeof content === 'function' ? content : () => content, [content]);
   const isIOS = useIsIOS()
   useHistoryBack({
     state: isOpen,

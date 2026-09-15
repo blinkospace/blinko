@@ -19,8 +19,10 @@ export const NoteContent = observer(({ blinkoItem, blinko, isExpanded, isShareMo
         content={blinkoItem.content}
         onChange={(newContent) => {
           if (isShareMode) return;
-          blinkoItem.content = newContent
-          blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false })
+          const expectedContent = blinkoItem.content;
+          blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, expectedContent, refresh: false }).then(result => {
+            if (result) blinkoItem.content = result.content;
+          });
         }}
         isShareMode={isShareMode}
         largeSpacing={isShareMode || isExpanded}

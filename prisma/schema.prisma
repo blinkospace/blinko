@@ -94,6 +94,21 @@ model notes {
   comments          comments[]      @relation("NoteComments")
   histories         noteHistory[]
   internalShares    noteInternalShare[]
+  processing        noteProcessing?
+}
+
+// Durable outbox and per-attachment checkpoints; never stored in notes.metadata.
+model noteProcessing {
+  noteId      Int      @id
+  status      String   @default("queued")
+  state       Json     @db.JsonB
+  token       String?  @db.VarChar
+  leaseUntil  DateTime? @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+  note        notes    @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([status, leaseUntil])
 }
 
 model comments {

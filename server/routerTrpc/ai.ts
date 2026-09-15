@@ -11,8 +11,12 @@ import { ModelCapabilities } from '@server/aiServer/types';
 import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
 import { fetchWithProxy } from '@server/lib/proxy';
 import { inferModelCapabilities } from '@shared/lib/modelTemplates';
+import { helper } from '@shared/lib/helper';
+import { processingControl, processingStatus } from './noteProcessing';
 
 export const aiRouter = router({
+  processingControl,
+  processingStatus,
   embeddingUpsert: authProcedure
     .input(z.object({
       id: z.number(),
@@ -182,7 +186,7 @@ export const aiRouter = router({
       const result = await tagAgent.generate(
         `Existing tags list: [${tags.join(', ')}]\nNote content: ${content}\nPlease suggest appropriate tags for this content. Include full hierarchical paths for tags like #Parent/Child instead of just #Child.`
       )
-      return result?.text?.trim().split(',').map(tag => tag.trim()).filter(Boolean) ?? []
+      return helper.extractHashtags(result?.text || '')
     }),
   autoEmoji: authProcedure
     .input(z.object({

@@ -55,7 +55,7 @@ RUN wget -qO /app/dumb-init https://github.com/Yelp/dumb-init/releases/download/
 
 
 # Runtime Stage - Using Alpine as required
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 # Add Build Arguments
 ARG USE_MIRROR=false

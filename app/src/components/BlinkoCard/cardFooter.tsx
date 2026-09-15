@@ -9,6 +9,7 @@ import { CommentCount } from './commentButton';
 import { BlinkoItem } from '.';
 import { RootStore } from '@/store';
 import dayjs from '@/lib/dayjs';
+import { ProcessingAction } from './processingAction';
 
 interface CardFooterProps {
   blinkoItem: BlinkoItem;
@@ -21,6 +22,9 @@ export const CardFooter = ({ blinkoItem, blinko, isShareMode }: CardFooterProps)
   return (
     <div className="flex items-center">
       <ConvertTypeButton blinkoItem={blinkoItem} />
+      {!isShareMode && !blinkoItem.isRecycle && (
+        <ProcessingAction noteId={blinkoItem.id} content={blinkoItem.content} blinko={blinko} />
+      )}
       <RightContent blinkoItem={blinkoItem} t={t} />
     </div>
   );

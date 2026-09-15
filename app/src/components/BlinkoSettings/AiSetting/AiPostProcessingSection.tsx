@@ -56,7 +56,7 @@ export const AiPostProcessingSection = observer(() => {
             toolTipContent={
               <div className="w-[300px] flex flex-col gap-2">
                 <div>
-                  {t('automatically-process-notes-after-creation-or-update')}
+                  {t('note-processing-automatic-help')}
                 </div>
                 <div>
                   {t('can-generate-summaries-tags-or-perform-analysis')}
@@ -76,6 +76,8 @@ export const AiPostProcessingSection = observer(() => {
           />
         }
       />
+
+      <p className="px-2 text-xs text-default-500">{t('note-processing-voice-help')}</p>
 
       {isUseAiPostProcessing && (
         <>

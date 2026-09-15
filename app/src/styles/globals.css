@@ -1,6 +1,35 @@
 @import "tailwindcss";
 @config "../../tailwind.config.js";
 
+/* Reveal on hover for the primary mouse/trackpad; keep visible for touch. */
+.voice-attachment-remove {
+  opacity: 0.7;
+  transition: opacity 150ms;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .voice-attachment-remove {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .voice-message .voice-attachment-remove {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.voice-message:hover .voice-attachment-remove,
+.voice-message[data-pointer="touch"] .voice-attachment-remove,
+.voice-message[data-pointer="pen"] .voice-attachment-remove,
+.voice-attachment-remove:focus,
+.voice-attachment-remove[aria-expanded="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .bm-burger-button {
   display: none;
 }
