@@ -1362,10 +1362,32 @@ export const noteRouter = router({
     )
     .mutation(async function ({ input, ctx }) {
       const { noteId, type } = input;
+      const accountId = Number(ctx.id);
+      // Same visibility rule the list and detail queries use: the caller owns
+      // the note, or it was shared with them internally.
+      const visibleToCaller: Prisma.notesWhereInput = {
+        OR: [
+          { accountId },
+          { internalShares: { some: { accountId } } },
+        ],
+      };
+
+      // Without this the procedure answers for any note id, so a caller could
+      // read the references of notes they cannot see.
+      const anchorNote = await prisma.notes.findFirst({
+        where: { id: noteId, ...visibleToCaller },
+        select: { id: true },
+      });
+
+      if (!anchorNote) {
+        throw new Error('Note not found or you do not have access');
+      }
 
       if (type === 'references') {
         const references = await prisma.noteReference.findMany({
-          where: { fromNoteId: noteId },
+          // A note the caller can see may still reference notes they cannot,
+          // so the referenced notes are filtered as well.
+          where: { fromNoteId: noteId, toNote: visibleToCaller },
           include: {
             toNote: {
               include: {
@@ -1389,7 +1411,7 @@ export const noteRouter = router({
         }));
       } else {
         const referencedBy = await prisma.noteReference.findMany({
-          where: { toNoteId: noteId },
+          where: { toNoteId: noteId, fromNote: visibleToCaller },
           include: {
             fromNote: {
               include: {
