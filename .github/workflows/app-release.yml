@@ -246,6 +246,17 @@ jobs:
           prerelease: ${{ github.event.inputs.is-test == 'true' }}
           includeUpdaterJson: ${{ github.event.inputs.is-test != 'true' }}
 
+      # The Flatpak job repackages this .deb instead of rebuilding from source,
+      # so it has to be handed over as an artifact in both test and release mode.
+      - name: Upload Linux .deb for Flatpak job
+        if: matrix.platform == 'ubuntu-22.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: blinko-linux-deb-${{ needs.set-version.outputs.version }}
+          path: app/src-tauri/target/release/bundle/deb/*.deb
+          retention-days: 1
+          if-no-files-found: error
+
       - name: Upload test artifacts
         if: github.event.inputs.is-test == 'true'
         uses: actions/upload-artifact@v4
@@ -389,6 +400,110 @@ jobs:
         with:
           name: blinko-test-android-${{ needs.set-version.outputs.version }}
           path: app/src-tauri/gen/android/app/build/outputs/apk/universal/release/Blinko_${{ needs.set-version.outputs.version }}_universal.apk
+          retention-days: 7
+
+  # Flatpak Build Task
+  #
+  # Repackages the Linux .deb from publish-desktop against org.gnome.Platform.
+  # Unlike the AppImage, this does NOT bundle WebKitGTK: the runtime supplies
+  # WebKitGTK together with a matching GL stack, which is what stops the
+  # "Could not create default EGL display: EGL_BAD_PARAMETER" blank-window
+  # failure seen on distros whose Mesa is newer than the ubuntu-22.04 builder's.
+  publish-flatpak:
+    needs: [set-version, publish-desktop]
+    if: always() && !cancelled() && needs.publish-desktop.result == 'success'
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # ubuntu-24.04, not 22.04: 22.04's flatpak-builder is 1.2, which invokes
+      # `appstream-compose` from appstream-glib, and current GNOME SDKs ship only
+      # `appstreamcli compose`. 24.04 has flatpak-builder 1.4.x, which uses the
+      # latter. Running it natively (rather than the Flathub-packaged
+      # org.flatpak.Builder) also avoids the builder sandbox being unable to see
+      # runtimes installed in the host's user installation.
+      - name: Install Flatpak tooling
+        run: |
+          # GitHub's 24.04 image restricts unprivileged user namespaces via
+          # AppArmor, which bubblewrap (and therefore flatpak-builder) needs.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder desktop-file-utils
+          flatpak-builder --version
+          flatpak remote-add --if-not-exists --user \
+            flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y --noninteractive \
+            flathub org.gnome.Platform//50 org.gnome.Sdk//50
+
+      - name: Cache flatpak-builder state
+        if: github.event.inputs.disable-all-cache != 'true'
+        uses: actions/cache@v4
+        with:
+          path: .flatpak-builder
+          key: flatpak-builder-${{ runner.os }}-${{ hashFiles('flatpak/space.blinko.Blinko.yml') }}
+          restore-keys: flatpak-builder-${{ runner.os }}-
+
+      - name: Download Linux .deb
+        uses: actions/download-artifact@v4
+        with:
+          name: blinko-linux-deb-${{ needs.set-version.outputs.version }}
+          path: flatpak/
+
+      - name: Stage .deb and sync AppStream version
+        run: |
+          set -euo pipefail
+          cd flatpak
+          ls -la *.deb
+          mv -- *.deb blinko.deb
+          # Keep <releases> in step with the version actually being shipped so
+          # the bundle's AppStream data is not stale in software centres.
+          python3 - "${{ needs.set-version.outputs.version }}" <<'PY'
+          import datetime, re, sys
+          version = sys.argv[1].lstrip('v')
+          path = 'space.blinko.Blinko.metainfo.xml'
+          today = datetime.date.today().isoformat()
+          xml = open(path, encoding='utf-8').read()
+          xml = re.sub(
+              r'<releases>.*?</releases>',
+              f'<releases>\n    <release version="{version}" date="{today}"/>\n  </releases>',
+              xml,
+              flags=re.S,
+          )
+          open(path, 'w', encoding='utf-8').write(xml)
+          print(f'metainfo release set to {version} ({today})')
+          PY
+
+      - name: Validate desktop entry
+        run: desktop-file-validate flatpak/space.blinko.Blinko.desktop
+
+      - name: Build Flatpak bundle
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.set-version.outputs.version }}"
+          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+            --repo=flatpak-repo flatpak-build flatpak/space.blinko.Blinko.yml
+          flatpak build-bundle flatpak-repo \
+            "Blinko_${VERSION}_x86_64.flatpak" space.blinko.Blinko \
+            --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+          ls -lh "Blinko_${VERSION}_x86_64.flatpak"
+
+      - name: Upload Flatpak to Release
+        if: github.event.inputs.is-test != 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: Blinko_${{ needs.set-version.outputs.version }}_x86_64.flatpak
+          tag_name: ${{ needs.set-version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Flatpak as artifact (Test Mode)
+        if: github.event.inputs.is-test == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: blinko-test-flatpak-${{ needs.set-version.outputs.version }}
+          path: Blinko_${{ needs.set-version.outputs.version }}_x86_64.flatpak
           retention-days: 7
 
   # Generate changelog after all builds are complete
