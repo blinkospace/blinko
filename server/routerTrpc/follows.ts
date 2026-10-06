@@ -32,9 +32,9 @@ export const followsRouter = router({
           value: true
         }
       })
-      const recommandList = res?.value?.[String(ctx.id)] as RecommandListType
+      const recommandList = (res?.value?.[String(ctx.id)] as RecommandListType) ?? []
       // console.log(recommandList, 'recommand_list')
-      return recommandList.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).filter(item => item.content.includes(searchText))
+      return [...recommandList].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).filter(item => item.content.includes(searchText))
     }),
   // i want to follow a site
   follow: authProcedure
