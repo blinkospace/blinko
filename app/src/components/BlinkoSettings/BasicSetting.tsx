@@ -290,8 +290,8 @@ export const BasicSetting = observer(() => {
             thumbIcon={store.setRigster.loading.value ? <Icon icon="eos-icons:three-dots-loading" width="24" height="24" /> : null}
             isDisabled={store.setRigster.loading.value}
             isSelected={user.canRegister.value}
-            onChange={async e => {
-              await store.setRigster.call(e.target.checked)
+            onValueChange={async (checked) => {
+              await store.setRigster.call(checked)
               user.canRegister.call()
             }}
           />} />
