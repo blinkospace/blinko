@@ -133,6 +133,17 @@ export class RecommandJob extends BaseScheduleJob {
               }));
             }
 
+            if (newItem.content) {
+              newItem.content = newItem.content.replace(
+                /(!\[[^\]]*\]\()(\/api\/file\/[^)]+)(\))/g,
+                (_, open, path, close) => `${open}${url.origin}${path}${close}`
+              );
+              newItem.content = newItem.content.replace(
+                /(<img\s[^>]*src=["'])(\/api\/file\/[^"']+)(["'][^>]*>)/g,
+                (_, open, path, close) => `${open}${url.origin}${path}${close}`
+              );
+            }
+
             return newItem;
           });
 
