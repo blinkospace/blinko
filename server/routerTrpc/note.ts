@@ -14,13 +14,10 @@ import { Context } from '../context';
 import { cache } from '@shared/lib/cache';
 import { AiModelFactory } from '@server/aiServer/aiModelFactory';
 import { authProcedure, demoAuthMiddleware, publicProcedure, router } from '@server/middleware';
-
-const extractHashtags = (input: string): string[] => {
-  const withoutCodeBlocks = input.replace(/```[\s\S]*?```/g, '');
-  const hashtagRegex = /(?<!:\/\/)(?<=\s|^)#[^\s#]+(?=\s|$)/g;
-  const matches = withoutCodeBlocks.match(hashtagRegex);
-  return matches ? matches : [];
-};
+import { createProcessingState, NoteProcessingJob, readProcessingState } from '../jobs/noteProcessingJob';
+import { isAudioAttachment, isVoiceRecording, mergeTranscriptAppend } from '../aiServer/noteProcessing';
+import { inlineTagIds } from '../aiServer/tagProcessing';
+import { TRPCError } from '@trpc/server';
 
 export const noteRouter = router({
   list: authProcedure
@@ -841,6 +838,7 @@ export const noteRouter = router({
     .input(
       z.object({
         content: z.union([z.string(), z.null()]).default(null),
+        expectedContent: z.string().optional(),
         type: z.union([z.nativeEnum(NoteType), z.literal(-1)]).default(-1),
         attachments: z
           .array(
@@ -901,7 +899,7 @@ export const noteRouter = router({
         }
       }
 
-      const tagTree = helper.buildHashTagTreeFromHashString(extractHashtags(content?.replace(/\\/g, '') + ' '));
+      let tagTree = helper.buildHashTagTreeFromHashString(helper.extractHashtags(content?.replace(/\\/g, '') + ' '));
       let newTags: Prisma.tagCreateManyInput[] = [];
       const config = await getGlobalConfig({ ctx });
 
@@ -959,7 +957,10 @@ export const noteRouter = router({
       }
 
       if (id) {
-        const existingNote = await prisma.notes.findUnique({
+        let previousContent = '';
+        const note = await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM notes WHERE id = ${id} FOR UPDATE`;
+        const existingNote = await tx.notes.findUnique({
           where: { id },
           select: {
             content: true,
@@ -972,14 +973,25 @@ export const noteRouter = router({
           }
         });
 
+        previousContent = existingNote?.content || '';
+        if (existingNote && content != null && input.expectedContent !== undefined) {
+          const processing = await tx.noteProcessing.findUnique({ where: { noteId: id } });
+          const merged = mergeTranscriptAppend(input.expectedContent, content, existingNote.content,
+            processing ? readProcessingState(processing.state).audio : []);
+          if (merged === null) throw new TRPCError({ code: 'CONFLICT', message: 'The note changed while you were editing. Your draft has been kept; reload the note before saving again.' });
+          content = merged;
+          update.content = merged;
+          tagTree = helper.buildHashTagTreeFromHashString(helper.extractHashtags(merged.replace(/\\/g, '') + ' '));
+        }
+
         if (existingNote && content != null && content !== existingNote.content) {
-          const latestVersion = await prisma.noteHistory.findFirst({
+          const latestVersion = await tx.noteHistory.findFirst({
             where: { noteId: id },
             orderBy: { version: 'desc' },
             select: { version: true },
           });
 
-          await prisma.noteHistory.create({
+          await tx.noteHistory.create({
             data: {
               noteId: id,
               content: existingNote.content,
@@ -1001,7 +1013,8 @@ export const noteRouter = router({
           ? { id }  // Only filter by ID for shared editors
           : { id, accountId: Number(ctx.id) }; // Filter by ID and accountId for owners
 
-        const note = await prisma.notes.update({ where: whereClause, data: update });
+        return tx.notes.update({ where: whereClause, data: update });
+        });
         if (content == null) {
           SendWebhook({ ...note, attachments }, isRecycle ? 'delete' : 'update', ctx);
           return note;
@@ -1009,6 +1022,7 @@ export const noteRouter = router({
         const oldTagsInThisNote = await prisma.tagsToNote.findMany({ where: { noteId: note.id }, include: { tag: true } });
         await handleAddTags(tagTree, undefined, note.id);
         const oldTags = oldTagsInThisNote.map((i) => i.tag).filter((i) => !!i);
+        const previousInlineTags = inlineTagIds(previousContent, oldTags);
         const oldTagsString = oldTags.map((i) => `${i?.name}<key>${i?.parent}`);
         const newTagsString = newTags.map((i) => `${i?.name}<key>${i?.parent}`);
         const needTobeAddedRelationTags = _.difference(newTagsString, oldTagsString);
@@ -1052,7 +1066,7 @@ export const noteRouter = router({
                       const [name, parent] = i.split('<key>');
                       return oldTags.find((t) => t?.name == name && t?.parent == Number(parent))!.id;
                     })
-                    .filter((i) => !!i),
+                    .filter((i) => !!i && previousInlineTags.has(i)),
                 },
               },
             },
@@ -1108,7 +1122,7 @@ export const noteRouter = router({
 
         if (config?.embeddingModelId) {
           AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt!, updatedAt: note.updatedAt });
-          for (const attachment of attachments) {
+          for (const attachment of attachments.filter(a => !isAudioAttachment(a) && !isVoiceRecording(a))) {
             AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path });
           }
         }
@@ -1117,7 +1131,14 @@ export const noteRouter = router({
         return note;
       } else {
         try {
-          const note = await prisma.notes.create({
+          let queued = false;
+          const note = await prisma.$transaction(async tx => {
+            const attachmentsIds = await tx.attachments.findMany({ where: {
+              path: { in: attachments.map(i => i.path) }, accountId: Number(ctx.id), noteId: null,
+            }, orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }] });
+            const state = createProcessingState(config, Number(ctx.id), attachmentsIds);
+            queued = !!config.isUseAiPostProcessing || (!!config.voiceModelId && attachmentsIds.some(isVoiceRecording));
+            const created = await tx.notes.create({
             data: {
               content: content ?? '',
               type,
@@ -1127,11 +1148,16 @@ export const noteRouter = router({
               ...(input.createdAt && { createdAt: input.createdAt }),
               ...(input.updatedAt && { updatedAt: input.updatedAt }),
               ...(input.metadata && { metadata: input.metadata }),
+              ...(queued && { processing: { create: { state: JSON.parse(JSON.stringify(state)) } } }),
             },
+            });
+            await tx.attachments.updateMany({
+              where: { id: { in: attachmentsIds.map(i => i.id) }, accountId: Number(ctx.id), noteId: null },
+              data: { noteId: created.id },
+            });
+            return created;
           });
           await handleAddTags(tagTree, undefined, note.id);
-          const attachmentsIds = await prisma.attachments.findMany({ where: { path: { in: attachments.map((i) => i.path) } } });
-          await prisma.attachments.updateMany({ where: { id: { in: attachmentsIds.map((i) => i.id) } }, data: { noteId: note.id } });
           //add references
           if (references && references.length > 0) {
             await prisma.noteReference.createMany({
@@ -1140,80 +1166,20 @@ export const noteRouter = router({
           }
 
           if (config?.embeddingModelId) {
-            AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt!, updatedAt: note.updatedAt });
-            for (const attachment of attachments) {
+            if (!queued) void AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'insert', createTime: note.createdAt!, updatedAt: note.updatedAt });
+            for (const attachment of attachments.filter(a => !isAudioAttachment(a) && !isVoiceRecording(a))) {
               AiService.embeddingInsertAttachments({ id: note.id, updatedAt: note.updatedAt, filePath: attachment.path });
             }
           }
 
-          // Process audio attachments if voice model is configured
-          if (config?.voiceModelId && attachments.length > 0) {
-            try {
-              // Check if there are any audio attachments
-              const audioAttachments = attachments.filter(attachment =>
-                AiService.isAudio(attachment.name || attachment.path)
-              );
-
-              if (audioAttachments.length > 0) {
-                // Run audio transcription asynchronously to not block the response
-                AiService.processNoteAudioAttachments({
-                  attachments: audioAttachments,
-                  voiceModelId: config.voiceModelId,
-                  accountId: Number(ctx.id),
-                }).then(({ success, transcriptions }) => {
-                  if (success && transcriptions.length > 0) {
-                    // Append transcriptions to note content
-                    const transcriptionText = transcriptions
-                      .map(t => `${t.transcription}`)
-                      .join('');
-
-                    // Update note with transcriptions
-                    prisma.notes.update({
-                      where: { id: note.id },
-                      data: { content: note.content + transcriptionText },
-                    }).then(() => {
-                      console.log(`Added transcriptions to note ${note.id},${transcriptionText}`);
-
-                      // Re-run embedding if model is configured
-                      if (config?.embeddingModelId) {
-                        AiService.embeddingUpsert({
-                          id: note.id,
-                          content: note.content + transcriptionText,
-                          type: 'update',
-                          createTime: note.createdAt!,
-                          updatedAt: new Date(),
-                        });
-                      }
-                    }).catch((err) => {
-                      console.error('Error updating note with transcription:', err);
-                    });
-                  }
-                }).catch((err) => {
-                  console.error('Error in audio transcription:', err);
-                });
-              }
-            } catch (error) {
-              console.error('Failed to start audio transcription:', error);
-            }
-          }
-
-          // Process with AI if post-processing is enabled
-          if (config?.isUseAiPostProcessing) {
-            try {
-              // Run post-processing asynchronously to not block the response
-              AiService.postProcessNote({ noteId: note.id, ctx }).catch((err) => {
-                console.error('Error in post-processing note:', err);
-              });
-            } catch (error) {
-              console.error('Failed to start post-processing:', error);
-            }
-          }
+          // The durable job awaits each saved transcript before invoking any AI stage.
+          if (queued) void NoteProcessingJob.wake(note.id);
 
           SendWebhook({ ...note, attachments }, 'create', ctx);
 
           return note;
         } catch (error) {
-          console.log(error);
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'The note could not be saved. Your draft has been kept.' });
         }
       }
     }),

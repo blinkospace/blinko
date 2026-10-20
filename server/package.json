@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:note-processing": "bun test __tests__/unit/aiServer/noteProcessing.pipeline.test.ts __tests__/unit/aiServer/noteProcessing.tags.test.ts __tests__/integration/aiServer/noteProcessing.openai.test.ts ../shared/lib/__tests__/hashtags.test.ts",
     "dev": "bun --env-file ../.env --watch index.ts",
     "build:web": "bun esbuild.config.ts",
     "start": "cross-env NODE_ENV=production bun --env-file ../.env ../dist/index.js"

@@ -22,6 +22,7 @@ export const AiPostProcessingSection = observer(() => {
   const [aiTagsPrompt, setAiTagsPrompt] = useState('');
   const [aiSmartEditPrompt, setAiSmartEditPrompt] = useState('');
   const [aiCustomPrompt, setAiCustomPrompt] = useState('');
+  const [aiCustomAction, setAiCustomAction] = useState('tools');
 
   useEffect(() => {
     blinko.config.call();
@@ -35,6 +36,7 @@ export const AiPostProcessingSection = observer(() => {
       setAiTagsPrompt(blinko.config.value.aiTagsPrompt || '');
       setAiSmartEditPrompt(blinko.config.value.aiSmartEditPrompt || '');
       setAiCustomPrompt(blinko.config.value.aiCustomPrompt || '');
+      setAiCustomAction(blinko.config.value.aiCustomAction || 'tools');
     }
   }, [blinko.config.value]);
 
@@ -56,7 +58,7 @@ export const AiPostProcessingSection = observer(() => {
             toolTipContent={
               <div className="w-[300px] flex flex-col gap-2">
                 <div>
-                  {t('automatically-process-notes-after-creation-or-update')}
+                  {t('note-processing-automatic-help')}
                 </div>
                 <div>
                   {t('can-generate-summaries-tags-or-perform-analysis')}
@@ -76,6 +78,8 @@ export const AiPostProcessingSection = observer(() => {
           />
         }
       />
+
+      <p className="px-2 text-xs text-default-500">{t('note-processing-voice-help')}</p>
 
       {isUseAiPostProcessing && (
         <>
@@ -109,7 +113,10 @@ export const AiPostProcessingSection = observer(() => {
                   {t('smart-edit')}
                 </SelectItem>
                 <SelectItem key="both" startContent={<Icon icon="tabler:analyze" />}>
-                  {t('both')}
+                  {t('comment-and-tags')}
+                </SelectItem>
+                <SelectItem key="smartEditTags" startContent={<Icon icon="tabler:robot" />}>
+                  {t('smart-edit-and-tags')}
                 </SelectItem>
                 <SelectItem key="custom" startContent={<Icon icon="tabler:code" />}>
                   {t('custom')}
@@ -155,7 +162,7 @@ export const AiPostProcessingSection = observer(() => {
             />
           )}
 
-          {(aiPostProcessingMode === 'tags' || aiPostProcessingMode === 'both') && (
+          {['tags', 'both', 'smartEditTags'].includes(aiPostProcessingMode) && (
             <Item
               type={isPc ? 'row' : 'col'}
               leftContent={
@@ -190,7 +197,7 @@ export const AiPostProcessingSection = observer(() => {
             />
           )}
 
-          {aiPostProcessingMode === 'smartEdit' && (
+          {['smartEdit', 'smartEditTags'].includes(aiPostProcessingMode) && (
             <Item
               type={isPc ? 'row' : 'col'}
               leftContent={
@@ -207,7 +214,7 @@ export const AiPostProcessingSection = observer(() => {
                       <Icon icon="proicons:info" width="18" height="18" />
                     </Tooltip>
                   </div>
-                  <div><Button size="sm" color="warning" className="ml-2">{t('function-call-required')}</Button></div>
+                  <div className="text-xs text-default-400">{t('smart-edit-replace-help')}</div>
                 </div>
               }
               rightContent={
@@ -230,6 +237,28 @@ export const AiPostProcessingSection = observer(() => {
             />
           )}
 
+          {aiPostProcessingMode === 'custom' && (
+            <Item
+              leftContent={t('custom-processing-action')}
+              rightContent={
+                <Select
+                  aria-label={t('custom-processing-action')}
+                  selectedKeys={[aiCustomAction]}
+                  className="w-[260px]"
+                  onSelectionChange={(keys) => {
+                    const value = Array.from(keys)[0] as string;
+                    if (!value) return;
+                    setAiCustomAction(value);
+                    updateConfig('aiCustomAction', value);
+                  }}
+                >
+                  <SelectItem key="replace">{t('smart-edit')}</SelectItem>
+                  <SelectItem key="comment">{t('add-as-comment')}</SelectItem>
+                  <SelectItem key="tools">{t('custom-processing-tools')}</SelectItem>
+                </Select>
+              }
+            />
+          )}
           {aiPostProcessingMode === 'custom' && (
             <Item
               type={isPc ? 'row' : 'col'}

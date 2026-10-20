@@ -5,6 +5,7 @@ import { RootStore } from '@/store/root';
 import { useNavigate } from 'react-router-dom';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { useEffect, useRef, useState, useMemo } from 'react';
+import type { TagTreeDBNode } from '@shared/lib/helper';
 
 interface BlogContentProps {
   blinkoItem: Note & {
@@ -73,19 +74,14 @@ export const CardBlogBox = ({ blinkoItem, isExpanded }: BlogContentProps) => {
             <div className='flex flex-nowrap gap-1 overflow-x-scroll mt-1 hide-scrollbar'>
               {(() => {
                 const tagTree = helper.buildHashTagTreeFromDb(blinkoItem.tags.map(t => t.tag));
-                const tagPaths = tagTree.flatMap(node => helper.generateTagPaths(node));
-                const uniquePaths = tagPaths.filter(path => {
-                  return !tagPaths.some(otherPath =>
-                    otherPath !== path && otherPath.startsWith(path + '/')
-                  );
-                });
-                return uniquePaths.map((path) => (
-                  <div key={path} className='text-desc text-xs blinko-tag whitespace-nowrap font-bold hover:opacity-80 !transition-all cursor-pointer' onClick={(e) => {
+                const leaves = (tag: TagTreeDBNode): TagTreeDBNode[] => tag.children?.length ? tag.children.flatMap(leaves) : [tag];
+                return tagTree.flatMap(leaves).map((tag) => (
+                  <div key={tag.id} className='text-desc text-xs blinko-tag whitespace-nowrap font-bold hover:opacity-80 !transition-all cursor-pointer' onClick={(e) => {
                     e.stopPropagation()
-                    navigate(`/?path=all&searchText=${encodeURIComponent("#" + path)}`)
+                    navigate(`/?path=all&tagId=${tag.id}`)
                     RootStore.Get(BlinkoStore).forceQuery++
                   }}>
-                    #{path}
+                    #{tag.metadata.path}
                   </div>
                 ));
               })()}

@@ -13,6 +13,7 @@ import { DBJob } from './jobs/dbjob';
 import { RebuildEmbeddingJob } from './jobs/rebuildEmbeddingJob';
 import { RecommandJob } from './jobs/recommandJob';
 import { AIScheduledTaskJob } from './jobs/aiScheduledTaskJob';
+import { NoteProcessingJob } from './jobs/noteProcessingJob';
 
 // tRPC related imports
 import { createContext } from './context';
@@ -72,6 +73,7 @@ async function initializeJobs() {
     
     // Start pg-boss
     await getPgBoss();
+    await NoteProcessingJob.initialize();
     
     // Initialize all jobs
     // These will restore their schedules from the database if they were running

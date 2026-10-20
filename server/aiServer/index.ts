@@ -16,12 +16,10 @@ import { CoreMessage } from '@mastra/core';
 import { MDocument } from '@mastra/rag';
 import { embedMany } from 'ai';
 import { RebuildEmbeddingJob } from '../jobs/rebuildEmbeddingJob';
-import { userCaller } from '../routerTrpc/_app';
-
-import { getAllPathTags } from '@server/lib/helper';
 import { commentWebhookInclude, sendCommentWebhook } from '@server/lib/commentWebhook';
 import { LibSQLVector } from '@mastra/libsql';
 import { RuntimeContext } from "@mastra/core/di";
+import { AudioProvider } from './providers/AudioProvider';
 
 export function isImage(filePath: string): boolean {
   if (!filePath) return false;
@@ -76,8 +74,20 @@ export class AiService {
     await VectorStore.truncateIndex({ indexName: 'blinko' });
   }
 
-  static async embeddingUpsert({ id, content, type, createTime, updatedAt }: { id: number; content: string; type: 'update' | 'insert'; createTime: Date; updatedAt?: Date }) {
+  private static embeddingTasks = new Map<number, Promise<any>>();
+
+  static async embeddingUpsert(input: { id: number; content: string; type: 'update' | 'insert'; createTime: Date; updatedAt?: Date }) {
+    const previous = this.embeddingTasks.get(input.id) || Promise.resolve();
+    const task = previous.catch(() => undefined).then(() => this.embeddingUpsertCurrent(input));
+    this.embeddingTasks.set(input.id, task);
+    try { return await task; }
+    finally { if (this.embeddingTasks.get(input.id) === task) this.embeddingTasks.delete(input.id); }
+  }
+
+  private static async embeddingUpsertCurrent({ id, content, type, createTime, updatedAt }: { id: number; content: string; type: 'update' | 'insert'; createTime: Date; updatedAt?: Date }) {
     try {
+      const current = await prisma.notes.findUnique({ where: { id } });
+      if (!current || current.isRecycle || current.content !== content) return { ok: false, error: 'NOTE_CHANGED' };
       const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
       if (!Embeddings) {
         throw new Error("No embeddings model config")
@@ -92,47 +102,34 @@ export class AiService {
         }
       }
 
-      const note = await prisma.notes.findUnique({
-        where: { id },
-        select: { metadata: true, attachments: true }
-      });
+      const chunks = content.trim() ? await MDocument.fromMarkdown(content).chunk() : [];
 
-      const chunks = await MDocument.fromMarkdown(content).chunk();
-      if (type == 'update') {
-        AiModelFactory.queryAndDeleteVectorById(id);
-      }
-
-      const { embeddings } = await embedMany({
+      const embeddings = chunks.length ? (await embedMany({
         values: chunks.map((chunk) => chunk.text + 'Create At: ' + createTime.toISOString() + ' Update At: ' + updatedAt?.toISOString()),
         model: Embeddings,
-      });
+      })).embeddings : [];
 
-      await VectorStore.upsert({
+      const latest = await prisma.notes.findUnique({ where: { id } });
+      if (!latest || latest.isRecycle || latest.content !== content) return { ok: false, error: 'NOTE_CHANGED' };
+      await AiModelFactory.queryAndDeleteVectorById(id, true);
+      if (chunks.length) await VectorStore.upsert({
         indexName: 'blinko',
         vectors: embeddings,
+        ids: chunks.map((_chunk, index) => `note-${id}-${index}`),
         metadata: chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, createTime, updatedAt })),
       });
 
       try {
-        await prisma.notes.update({
-          where: { id },
-          data: {
-            metadata: {
-              //@ts-ignore
-              ...(note?.metadata || {}),
-              isIndexed: true,
-            },
-            updatedAt,
-          },
-        });
+        await prisma.$executeRaw`
+          UPDATE notes SET metadata = (COALESCE(metadata::jsonb, '{}'::jsonb) || '{"isIndexed":true}'::jsonb)::json
+          WHERE id = ${id} AND content = ${content} AND "isRecycle" = false`;
       } catch (error) {
         console.log(error);
       }
 
       return { ok: true };
     } catch (error) {
-      console.log(error, 'embeddingUpsert error');
-      return { ok: false, error: error?.message };
+      return { ok: false, error: 'EMBEDDING_FAILED' };
     }
   }
 
@@ -173,22 +170,9 @@ export class AiService {
       });
 
       try {
-        const note = await prisma.notes.findUnique({
-          where: { id },
-          select: { metadata: true }
-        });
-        await prisma.notes.update({
-          where: { id },
-          data: {
-            metadata: {
-              //@ts-ignore
-              ...(note?.metadata || {}),
-              isIndexed: true,
-              isAttachmentsIndexed: true,
-            },
-            updatedAt,
-          },
-        });
+        await prisma.$executeRaw`
+          UPDATE notes SET metadata = (COALESCE(metadata::jsonb, '{}'::jsonb) || '{"isIndexed":true,"isAttachmentsIndexed":true}'::jsonb)::json
+          WHERE id = ${id} AND "isRecycle" = false`;
       } catch (error) {
         console.log(error);
       }
@@ -348,208 +332,6 @@ export class AiService {
     }
   }
 
-  static async postProcessNote({ noteId, ctx }: { noteId: number; ctx: Context }) {
-    try {
-      const runtimeContext = new RuntimeContext();
-      runtimeContext.set('accountId', ctx.id);
-
-      const caller = userCaller(ctx);
-      // Get the configuration
-      const config = await AiModelFactory.globalConfig();
-
-      // Check if post-processing is enabled
-      if (!config.isUseAiPostProcessing) {
-        return { success: false, message: 'AI post-processing not enabled' };
-      }
-
-      // Fetch the note
-      const note = await prisma.notes.findUnique({
-        where: { id: noteId },
-        select: {
-          content: true,
-          accountId: true,
-          type: true,
-          tags: {
-            include: {
-              tag: true,
-            },
-          },
-        },
-      });
-      let noteType = 'blinko'
-      switch (note?.type) {
-        case 0:
-          noteType = 'blinko';
-          break;
-        case 1:
-          noteType = 'note';
-          break;
-        case 2:
-          noteType = 'todo';
-          break;
-        default:
-          noteType = 'blinko';
-      }
-
-      if (!note) {
-        return { success: false, message: 'Note not found' };
-      }
-
-      const processingMode = config.aiPostProcessingMode || 'comment';
-
-      // Handle custom processing mode
-      if (processingMode === 'custom') {
-        // Get all tags for tag replacement
-        const tags = await getAllPathTags();
-        const tagsList = tags.join(', ');
-
-        // Get custom prompt and replace variables
-        let customPrompt = config.aiCustomPrompt || 'Analyze the following note content and provide feedback.';
-        customPrompt = customPrompt.replace('{tags}', tagsList).replace('{note}', note.content);
-        const withOnlineSearch = !!config.tavilyApiKey;
-        // Process with AI using BaseChatAgent with tools
-
-        const agent = await AiModelFactory.BaseChatAgent({
-          withTools: true,
-          withOnlineSearch: withOnlineSearch,
-          extraInstructions: `You are an AI assistant that helps to process notes. You MUST use the available tools to complete your task.
-This is a one-time conversation, so you MUST take action immediately using the tools provided.
-You have access to tools that can help you modify notes, add comments, or create new notes.
-DO NOT just respond with suggestions or analysis - you MUST use the appropriate tool to implement your changes.
-If you need to add a comment, use the createCommentTool.
-If you need to update the note, use the updateBlinkoTool.
-If you need to create a new note, use the upsertBlinkoTool.
-Remember: ALWAYS use tools to implement your suggestions rather than just describing what should be done.`,
-        });
-        const result = await agent.generate([
-          {
-            role: 'user',
-            content: `Current user name: ${ctx.name}\n${customPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}
-            Current Note Type: ${noteType}`
-          }
-        ], {
-          runtimeContext
-        });
-
-        return { success: true, message: 'Custom processing completed' };
-      }
-
-      // Get the custom prompt, or use default
-      const prompt = config.aiCommentPrompt || 'Analyze the following note content. Extract key topics as tags and provide a brief summary of the main points.';
-
-      // Process with AI
-      const agent = await AiModelFactory.CommentAgent();
-      const result = await agent.generate([
-        {
-          role: 'user',
-          content: prompt,
-        },
-        {
-          role: 'user',
-          content: `Note content: ${note.content}`,
-        },
-      ]);
-
-      const aiResponse = result.text.trim();
-
-      // Handle based on the processing mode
-      if (processingMode === 'comment' || processingMode === 'both') {
-        // Add comment
-        const comment = await prisma.comments.create({
-          data: {
-            content: aiResponse,
-            noteId,
-            guestName: 'Blinko AI',
-            guestIP: '',
-            guestUA: '',
-          },
-          include: commentWebhookInclude,
-        });
-        sendCommentWebhook('comment.created', comment, ctx);
-
-        await CreateNotification({
-          accountId: note.accountId ?? 0,
-          title: 'ai-post-processing-notification',
-          content: 'ai-processed-your-note',
-          type: NotificationType.COMMENT,
-        });
-      }
-
-      if (processingMode === 'tags' || processingMode === 'both') {
-        try {
-          let suggestedTags: string[] = [];
-          // If no clear tag format, process with an agent specialized for tag extraction
-          const aiTagsPrompt = config.aiTagsPrompt
-          let tagAgent: any;
-          if (aiTagsPrompt != '') {
-            tagAgent = await AiModelFactory.TagAgent(aiTagsPrompt);
-          } else {
-            tagAgent = await AiModelFactory.TagAgent();
-          }
-          const tags = await getAllPathTags();
-          const result = await tagAgent.generate(
-            `Existing tags list:  [${tags.join(', ')}]\n Note content:\n${note.content}`
-          )
-          suggestedTags = result.text.split(',').map((tag) => tag.trim());
-          // Filter out empty tags and limit to 5 tags max
-          suggestedTags = suggestedTags.filter(Boolean).slice(0, 5);
-          caller.notes.upsert({
-            id: noteId,
-            content: note.content + '\n' + suggestedTags.join(' '),
-          });
-        } catch (error) {
-          console.error('Error processing tags:', error);
-        }
-      }
-
-      if (processingMode === 'smartEdit' || processingMode === 'both') {
-        try {
-          const smartEditPrompt = config.aiSmartEditPrompt || 'Improve this note by organizing content, adding headers, and enhancing readability.';
-          const agent = await AiModelFactory.BaseChatAgent({
-            withTools: true,
-            extraInstructions: `You are an AI assistant that helps to improve notes. You'll be provided with a note content, and your task is to enhance it according to instructions. You have access to tools that can help you modify the note. Use these tools to make the requested improvements.`,
-          });
-          const result = await agent.generate([
-            {
-              role: 'user',
-              content: `\nCurrent user id: ${ctx.id}\nCurrent user name: ${ctx.name}\n${smartEditPrompt}\n\nNote ID: ${noteId}\nNote content:\n${note.content}`
-            }
-          ], {
-            runtimeContext
-          });
-          const comment = await prisma.comments.create({
-            data: {
-              content: result.text,
-              noteId,
-              guestName: 'Blinko AI',
-              guestIP: '',
-              guestUA: '',
-            },
-            include: commentWebhookInclude,
-          });
-          sendCommentWebhook('comment.created', comment, ctx);
-        } catch (error) {
-          console.error('Error during smart edit:', error);
-          const comment = await prisma.comments.create({
-            data: {
-              content: `⚠️ **Smart Edit Error**\n\nI encountered an error while trying to edit this note. This may happen if the AI model doesn't support function calling or if there was an issue with the edit process.\n\nError details: ${error.message}`,
-              noteId,
-              guestName: 'Blinko AI',
-              guestIP: '',
-              guestUA: '',
-            },
-            include: commentWebhookInclude,
-          });
-          sendCommentWebhook('comment.created', comment, ctx);
-        }
-      }
-
-      return { success: true, message: 'Note processed successfully' };
-    } catch (error) {
-      console.error('Error in post-processing note:', error);
-      return { success: false, message: error.message || 'Unknown error' };
-    }
-  }
 
   /**
    * Transcribe audio file to text
@@ -579,33 +361,33 @@ Remember: ALWAYS use tools to implement your suggestions rather than just descri
       }
 
       // Get audio provider
-      const { audioModel } = await AiModelFactory.GetProvider();
+      const client = await new AudioProvider().getTranscriptionClient({
+        provider: voiceModel.provider.provider,
+        apiKey: voiceModel.provider.apiKey,
+        baseURL: voiceModel.provider.baseURL,
+        modelKey: voiceModel.modelKey,
+      });
       // Read audio file
       const fs = await import('fs');
       if (!fs.existsSync(filePath)) {
         throw new Error(`Audio file not found: ${filePath}`);
       }
 
-      // Get file extension to determine audio format
-      const path = await import('path');
-      const fileExtension = path.extname(filePath).toLowerCase().substring(1);
-      // Create audio stream
       const audioStream = fs.createReadStream(filePath);
-      // Execute speech to text, 
-      // {
-      //   filetype: fileExtension || 'mp3',
-      // }
-      const transcription = await audioModel?.listen(audioStream,
-        {
-          filetype: fileExtension || 'mp3',
-        }
-      );
-
-      console.log(`Audio transcription completed for file: ${filePath},${transcription}`);
-      return transcription?.toString() || '';
+      try {
+        const response = await client.audio.transcriptions.create({
+          file: audioStream,
+          model: voiceModel.modelKey || 'whisper-1',
+          response_format: 'json',
+        }, { signal: AbortSignal.timeout(120_000) });
+        if (typeof response.text !== 'string') throw new Error('Invalid transcription response');
+        return response.text.trim();
+      } finally {
+        audioStream.destroy();
+      }
     } catch (error) {
-      console.error('Error transcribing audio:', error);
-      throw new Error(`Audio transcription failed: ${error.message}`);
+      // Do not log provider errors: they may contain audio, credentials or file paths.
+      throw new Error('Audio transcription failed');
     }
   }
 

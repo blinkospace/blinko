@@ -27,28 +27,19 @@ import { aiModels } from '@shared/index';
 import { MastraVoice } from '@mastra/core/voice';
 
 export class AiModelFactory {
-  static async queryAndDeleteVectorById(targetId: number) {
+  static async queryAndDeleteVectorById(targetId: number, noteOnly = false) {
     const { VectorStore } = await AiModelFactory.GetProvider();
     try {
       const query = `
-          WITH target_record AS (
-            SELECT vector_id 
-            FROM 'blinko'
-            WHERE metadata->>'id' = ? 
-            LIMIT 1
-          )
           DELETE FROM 'blinko'
-          WHERE vector_id IN (SELECT vector_id FROM target_record)
+          WHERE metadata->>'id' = ?
+            AND (? = 0 OR COALESCE(metadata->>'isAttachment', 0) = 0)
           RETURNING *;`;
       //@ts-ignore
       const result = await VectorStore.turso.execute({
         sql: query,
-        args: [targetId],
+        args: [targetId, noteOnly ? 1 : 0],
       });
-
-      if (result.rows.length === 0) {
-        throw new Error(`id  ${targetId} is not found`);
-      }
 
       return {
         success: true,
@@ -329,7 +320,7 @@ export class AiModelFactory {
       }
     };
   }
-  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true, extraInstructions }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean; extraInstructions?: string }) {
+  static async BaseChatAgent({ withTools = true, withOnlineSearch = false, withMcpTools = true, extraInstructions, localTools }: { withTools?: boolean; withOnlineSearch?: boolean; withMcpTools?: boolean; extraInstructions?: string; localTools?: Record<string, any> }) {
     const provider = await AiModelFactory.GetProvider();
     let tools: Record<string, any> = {};
     if (withTools) {
@@ -348,14 +339,17 @@ export class AiModelFactory {
         },
       };
     }
-    if (withOnlineSearch) {
+    // Processing jobs supply staged, note-scoped tools. They must not inherit MCP or
+    // generic tools with immediate external side effects.
+    if (localTools) tools = { tools: localTools };
+    if (withOnlineSearch && !localTools) {
       tools = {
         tools: { ...tools?.tools, webSearchTool },
       };
     }
 
     // Load MCP tools if enabled
-    if (withMcpTools && withTools) {
+    if (withMcpTools && withTools && !localTools) {
       try {
         const hasMcp = await hasMcpServers();
         if (hasMcp) {
@@ -387,7 +381,9 @@ export class AiModelFactory {
       "Always respond in the user's language.\n" +
       'Maintain a friendly and professional conversational tone.';
 
-    const baseInstructions = `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n` + globalConfig.globalPrompt || defaultInstructions;
+    const baseInstructions = globalConfig.globalPrompt
+      ? `Today is ${dayjs().format('YYYY-MM-DD HH:mm:ss')}\n${globalConfig.globalPrompt}`
+      : defaultInstructions;
     const instructions = extraInstructions ? `${baseInstructions}\n\n${extraInstructions}` : baseInstructions;
 
     const BlinkoAgent = new Agent({
@@ -440,16 +436,16 @@ export class AiModelFactory {
   static TagAgent = AiModelFactory.#createAgentFactory(
     'Blinko Tagging Agent',
     (customPrompt?: string) => {
-      console.log(customPrompt, 'customPrompt');
+      const outputContract = 'Return hashtags as plain text, respecting the requested tag count. Each tag must start with #; hierarchical tags use #Parent/Child. The application saves these as real tags. Do not return prose, JSON, code blocks, or Markdown formatting.';
       if (customPrompt) {
-        return customPrompt;
+        return `${customPrompt}\n\n${outputContract}`;
       }
       return `You are a precise label classification expert, and you will generate precisely matched content labels based on the content. Rules:
-      1. **Core Selection Principle**: Select 5 to 8 tags from the existing tag list that are most relevant to the content theme. Carefully compare the key information, technical types, application scenarios, and other elements of the content to ensure that the selected tags accurately reflect the main idea of the content.
+      1. **Core Selection Principle**: Select up to 5 tags from the existing tag list that are most relevant to the content theme. Carefully compare the key information, technical types, application scenarios, and other elements of the content to ensure that the selected tags accurately reflect the main idea of the content.
       2. **Language Matching Strategy**: If the language of the existing tags does not match the language of the content, give priority to using the language of the existing tags to maintain the consistency of the language style of the tag system.
       3. **Tag Structure Requirements**: When using existing tags, it is necessary to construct a parent-child hierarchical structure. For example, place programming language tags under parent tags such as #Code or #Programming, like #Code/JavaScript, #Programming/Python. When adding new tags, try to classify them under appropriate existing parent tags as well.
       4. **New Tag Generation Rules**: If there are no tags in the existing list that match the content, create new tags based on the key technologies, business fields, functional features, etc. of the content. The language of the new tags should be consistent with that of the content.
-      5. **Response Format Specification**: Only return tags separated by commas. There should be no spaces between tags, and no formatting or code blocks should be used. Each tag should start with #, such as #JavaScript.
+      5. **Response Format Specification**: ${outputContract}
       6. **Example**: For JavaScript content related to web development, a reference response could be #Programming/Languages, #Web/Development, #Code/JavaScript, #Front-End Development/Frameworks (if applicable), #Browser Compatibility. It is strictly prohibited to respond in formats such as code blocks, JSON, or Markdown. Just provide the tags directly. 
           `;
     },

@@ -4,6 +4,7 @@ import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
 import { Popover, PopoverTrigger, PopoverContent, Button } from "@heroui/react";
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
+import { useState } from 'react';
 
 const TipsDialog = observer(({ content, onConfirm, onCancel, buttonSlot }: any) => {
   const { t } = useTranslation()
@@ -38,25 +39,30 @@ export const showTipsDialog = async (props: { size?: 'sm' | 'md' | 'lg' | 'xl', 
   })
 }
 
-export const TipsPopover = observer((props: { children: React.ReactNode, content, onConfirm, onCancel?, isLoading?: boolean }) => {
+export const TipsPopover = observer((props: { children: React.ReactNode, content, onConfirm, onCancel?, isLoading?: boolean, keepParentOpen?: boolean }) => {
   const { t } = useTranslation()
   const { isLoading = false } = props
-  return <Popover placement="bottom" showArrow={true}>
+  const [open, setOpen] = useState(false);
+  return <Popover placement="bottom" showArrow={true} isOpen={open} onOpenChange={setOpen}>
     <PopoverTrigger>
       {props.children}
     </PopoverTrigger>
-    <PopoverContent>
+    <PopoverContent onClick={event => event.stopPropagation()}>
       <div className="px-1 py-2 flex flex-col">
         <div className='text-yellow-500 '>
           <div className="font-bold mb-2">{props.content}</div>
         </div>
         <div className='flex my-1 gap-2'>
-          <Button startContent={<Icon icon="iconoir:cancel" width="20" height="20" />} variant="flat" size="sm" className="ml-auto" color='default' onPress={e => {
-            RootStore.Get(DialogStandaloneStore).close()
+          {/* Close on click, not pointer-up: consume the touch-generated click before unmounting. */}
+          <Button type="button" startContent={<Icon icon="iconoir:cancel" width="20" height="20" />} variant="flat" size="sm" className="ml-auto" color='default' onClick={e => {
+            e.stopPropagation()
+            setOpen(false)
+            if (!props.keepParentOpen) RootStore.Get(DialogStandaloneStore).close()
             props.onCancel?.()
           }}>{t('cancel')}</Button>
-          <Button startContent={<Icon icon="cil:check-alt" width="20" height="20" />} isLoading={isLoading}  size="sm" color='danger' onPress={async e => {
-            props.onConfirm?.()
+          <Button type="button" startContent={<Icon icon="cil:check-alt" width="20" height="20" />} isLoading={isLoading}  size="sm" color='danger' onClick={async e => {
+            e.stopPropagation()
+            if (await props.onConfirm?.() !== false) setOpen(false)
           }}>{t('confirm')}</Button>
         </div>
       </div>

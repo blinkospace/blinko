@@ -33,9 +33,11 @@ export const helper = {
     return { result, isLoadAll, isEmpty: data.length == 0 }
   },
   extractHashtags(input: string): string[] {
-    const hashtagRegex = /#[^\s#]*(?:[*?.。]|$)/g;
-    const matches = input.match(hashtagRegex);
-    return matches ? matches : [];
+    const withoutCodeBlocks = input.replace(/```[\s\S]*?```/g, '');
+    // Unicode word segments with optional slash-separated children. The
+    // boundaries reject URLs, Markdown headings and incomplete tag paths.
+    const hashtagRegex = /(?<![\p{L}\p{M}\p{N}_#/:])#[\p{L}\p{M}\p{N}_-]+(?:\/[\p{L}\p{M}\p{N}_-]+)*(?![\/\p{L}\p{M}\p{N}_-])/gu;
+    return [...new Set(withoutCodeBlocks.match(hashtagRegex) || [])];
   },
   buildHashTagTreeFromHashString(paths: string[]): TagTreeNode[] {
     const root: TagTreeNode[] = [];

@@ -4,7 +4,7 @@ import useAudioRecorder from "../AudioRecorder/hook";
 import { Icon } from '@/components/Common/Iconify/icons';
 import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { requestMicrophonePermission, checkMicrophonePermission } from "@/lib/tauriHelper";
-import { Button, Card, CardBody } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { useTranslation } from "react-i18next";
 
 interface MyAudioRecorderProps {
@@ -12,12 +12,6 @@ interface MyAudioRecorderProps {
 }
 
 export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
-  const [isRecording, setIsRecording] = useState(false);
-  const [lastRecordingBlob, setLastRecordingBlob] = useState<Blob | null>(null);
-  const [recordingTime, setRecordingTime] = useState<number>(0);
-  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
-  const [milliseconds, setMilliseconds] = useState<number>(0);
-  const millisecondTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [audioPermissionGranted, setAudioPermissionGranted] = useState<boolean>(() => {
     // Initialize with cached permission status
     return localStorage.getItem('microphone_permission_granted') === 'true';
@@ -32,7 +26,8 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
     startRecording,
     stopRecording,
     recordingBlob,
-    mediaRecorder,
+    isRecording,
+    recordingTime,
   } = useAudioRecorder();
 
   // Setup audio analyzer
@@ -133,6 +128,7 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
 
   // Start recording automatically when component mounts
   useEffect(() => {
+    let cancelled = false;
     const initRecording = async () => {
       try {
         // If we already have cached permission, skip permission check
@@ -153,26 +149,16 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
           setAudioPermissionGranted(true);
         }
 
+        if (cancelled) return;
         const stream = await startRecording();
+        if (cancelled) return;
         if (stream) {
           setupAudioAnalyser(stream);
         } else {
           console.error('Failed to start recording');
           return;
         }
-        setIsRecording(true);
 
-        // Start timer for recording duration
-        const timer = setInterval(() => {
-          setRecordingTime(prev => prev + 1);
-        }, 1000);
-        setTimerId(timer);
-
-        // Start milliseconds timer for smoother UI updates
-        const msTimer = setInterval(() => {
-          setMilliseconds(prev => (prev + 1) % 100);
-        }, 10);
-        millisecondTimerRef.current = msTimer;
       } catch (error) {
         console.error("Failed to start recording:", error);
         // Clear cached permission on error
@@ -184,72 +170,28 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
     initRecording();
 
     return () => {
-      if (timerId) clearInterval(timerId);
-      if (millisecondTimerRef.current) clearInterval(millisecondTimerRef.current);
+      cancelled = true;
       cleanupAudioAnalyser();
     };
   }, []);
 
-  // When recording blob changes, store it
   useEffect(() => {
-    if (recordingBlob) {
-      setLastRecordingBlob(recordingBlob);
-    }
-  }, [recordingBlob]);
-
-  // Monitor mediaRecorder status changes
-  useEffect(() => {
-    if (mediaRecorder) {
-      const handleStart = () => {
-        setIsRecording(true);
-      };
-
-      const handleStop = () => {
-        setIsRecording(false);
-        cleanupAudioAnalyser();
-      };
-
-      mediaRecorder.addEventListener('start', handleStart);
-      mediaRecorder.addEventListener('stop', handleStop);
-
-      return () => {
-        mediaRecorder.removeEventListener('start', handleStart);
-        mediaRecorder.removeEventListener('stop', handleStop);
-      };
-    }
-  }, [mediaRecorder, cleanupAudioAnalyser]);
-
-  const handleStopRecording = useCallback(() => {
-    if (isRecording) {
-      setIsRecording(false);
-
-      try {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
-          stopRecording();
-        }
-      } catch (error) {
-        console.error("Stop recording error:", error);
+    if (!isRecording) cleanupAudioAnalyser();
+    const resumeAnalyser = () => {
+      if (document.visibilityState === 'visible' && isRecording && audioContextRef.current?.state === 'suspended') {
+        void audioContextRef.current.resume().catch(() => {});
       }
+    };
+    document.addEventListener('visibilitychange', resumeAnalyser);
+    return () => document.removeEventListener('visibilitychange', resumeAnalyser);
+  }, [isRecording, cleanupAudioAnalyser]);
 
-      if (timerId) {
-        clearInterval(timerId);
-        setTimerId(null);
-      }
-
-      if (millisecondTimerRef.current) {
-        clearInterval(millisecondTimerRef.current);
-        millisecondTimerRef.current = null;
-      }
-
-      cleanupAudioAnalyser();
-    }
-  }, [isRecording, stopRecording, mediaRecorder, timerId, cleanupAudioAnalyser]);
+  const handleStopRecording = stopRecording;
 
   const handleComplete = useCallback(() => {
-    if (recordingBlob) {
-      const isMP4 = recordingBlob.type === 'audio/mp4';
-      const extension = isMP4 ? 'mp4' : 'webm';
-      const mimeType = isMP4 ? 'audio/mp4' : 'audio/webm';
+    if (recordingBlob?.size && !isRecording) {
+      const mimeType = recordingBlob.type;
+      const extension = mimeType.includes('mp4') ? 'mp4' : mimeType.includes('ogg') ? 'ogg' : 'webm';
       const file = new File([recordingBlob], `my_recording_${Date.now()}.${extension}`, {
         type: mimeType
       });
@@ -276,27 +218,22 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
 
       onComplete?.(file);
     }
-  }, [recordingBlob, onComplete, recordingTime]);
+  }, [recordingBlob, onComplete, recordingTime, isRecording]);
 
   const handleDelete = useCallback(() => {
     // Stop current recording
     stopRecording();
 
-    // Clean up timers
-    if (timerId) clearInterval(timerId);
-    if (millisecondTimerRef.current) clearInterval(millisecondTimerRef.current);
-
     // Close the dialog
     RootStore.Get(DialogStandaloneStore).close();
-  }, [stopRecording, timerId]);
+  }, [stopRecording]);
 
-  // Format time display as MM:SS.XX
+  // One recorder-owned clock; preserve elapsed time after stopping.
   const formattedTime = useMemo(() => {
     const minutes = Math.floor(recordingTime / 60).toString().padStart(2, '0');
     const seconds = Math.floor(recordingTime % 60).toString().padStart(2, '0');
-    const ms = milliseconds.toString().padStart(2, '0');
-    return `${minutes}:${seconds}.${ms}`;
-  }, [recordingTime, milliseconds]);
+    return `${minutes}:${seconds}`;
+  }, [recordingTime]);
 
   const { t } = useTranslation();
 
@@ -339,7 +276,7 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
         <div className="flex flex-col items-center w-full h-full p-4 bg-neutral-900 rounded-lg">
           <div className="w-full h-8 flex items-center">
             <span className="text-white font-bold">REC</span>
-            <span className="ml-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            <span className={`ml-2 w-2 h-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`}></span>
           </div>
 
           <div className="w-full flex-1 flex flex-col items-center justify-center py-4 min-h-[200px]">
@@ -385,6 +322,7 @@ export const MyAudioRecorder = ({ onComplete }: MyAudioRecorderProps) => {
                 </button>
                 <button
                   className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center focus:outline-none active:transform active:scale-95 transition-transform"
+                  disabled={!recordingBlob?.size}
                   onClick={handleComplete}
                 >
                   <Icon icon="mdi:check" className="text-white" width="30" height="30" />

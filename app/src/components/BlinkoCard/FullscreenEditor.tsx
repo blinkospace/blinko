@@ -248,7 +248,7 @@ export const FullscreenEditor = observer(({ blinkoItem, isOpen, onClose }: Fulls
                 content={blinko.noteDetail.value?.content ?? blinkoItem.content}
                 onChange={(newContent) => {
                   blinkoItem.content = newContent;
-                  blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, refresh: false });
+                  blinko.upsertNote.call({ id: blinkoItem.id, content: newContent, expectedContent: blinko.noteDetail.value?.content ?? blinkoItem.content, refresh: false });
                 }}
                 largeSpacing={true}
               />
