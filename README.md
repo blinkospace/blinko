@@ -28,6 +28,12 @@
 [中文](README.zh-CN.md)
 </div>
 
+<div align="center">
+
+[![Deploy to Railyard](https://app.railyard.run/deploy/badge)](https://app.railyard.run/deploy?repo=https://github.com/blinkospace/blinko)
+
+</div>
+
 > Live Demo: username:blinko password:blinko
 
 
