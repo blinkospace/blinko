@@ -1,3 +1,4 @@
+import { fetchPublicUrl } from '../../lib/publicHttp';
 import express from 'express';
 import path from 'path';
 import { FileService } from '../../lib/files';
@@ -100,7 +101,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: "No URL provided" });
     }
 
-    const response = await fetch(url);
+    const response = await fetchPublicUrl(url, { maxBytes: 50 * 1024 * 1024, timeoutMs: 20000 });
     if (!response.ok) {
       return res.status(400).json({ error: "Failed to fetch file from URL" });
     }

@@ -1,3 +1,4 @@
+import { withAttachmentShareLinks } from '../lib/attachmentShare';
 
 import { z } from 'zod';
 import { prisma } from '../prisma';
@@ -563,7 +564,7 @@ export const noteRouter = router({
       }
       return {
         hasPassword: !!note.sharePassword,
-        data: note,
+        data: await withAttachmentShareLinks(note),
       };
     }),
   detail: authProcedure

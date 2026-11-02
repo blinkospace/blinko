@@ -30,6 +30,7 @@ export interface TokenData {
   token?: string;
   expires?: string;
   requiresTwoFactor?: boolean;
+  challenge?: string;
   [key: string]: any;
 }
 
@@ -45,6 +46,7 @@ type SignInResponse = {
   status: number;
   url?: string;
   requiresTwoFactor?: boolean;
+  challenge?: string;
   userId?: number;
   token?: string;
 };
@@ -107,6 +109,7 @@ export async function signIn(
       if (data.requiresTwoFactor) {
         const tokenData = {
           requiresTwoFactor: true,
+          challenge: data.challenge,
           user: {
             id: String(data.userId)
           }
@@ -118,6 +121,7 @@ export async function signIn(
         return {
           ok: true,
           requiresTwoFactor: true,
+          challenge: data.challenge,
           userId: data.userId,
           status: response.status,
         };
@@ -154,6 +158,7 @@ export async function signIn(
         body: JSON.stringify({
           userId: options.userId,
           code: options.twoFactorCode,
+          challenge: options.challenge || RootStore.Get(UserStore).tokenData.value?.challenge,
         }),
       });
 

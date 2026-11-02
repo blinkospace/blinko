@@ -25,6 +25,7 @@ export class UserStore implements Store {
   sid = 'user';
   constructor() {
     makeAutoObservable(this)
+    try { if (typeof window !== 'undefined') window.localStorage.removeItem('password'); } catch { /* Storage may be unavailable. */ }
   }
   tokenData = new StorageState<TokenData | null>({ key: 'blinkoToken', value: null });
   theme: any = 'light';
@@ -115,7 +116,6 @@ export class UserStore implements Store {
         return false;
       }
 
-      console.log('Verifying 2FA with userId:', userId, 'Full tokenData:', JSON.stringify(this.tokenData.value));
 
       const res = await signIn('oauth-2fa', {
         userId,
@@ -165,7 +165,6 @@ export class UserStore implements Store {
     this.isSetup = true;
     eventBus.emit('user:ready', this);
   }
-
 
   async initializeFonts(savedFontStyle: string) {
     try {
@@ -272,7 +271,6 @@ export class UserStore implements Store {
       setTauriTheme(themeToSet).catch(console.error);
       this.themeInitialized = true;
     }
-
 
     const darkElement = document.querySelector('.dark')
     const lightElement = document.querySelector('.light')

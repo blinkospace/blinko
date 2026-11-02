@@ -1,4 +1,4 @@
-import { router, authProcedure } from '../middleware';
+import { router, authProcedure, superAdminAuthMiddleware } from '../middleware';
 import { z } from 'zod';
 import { AiService } from '@server/aiServer';
 import { prisma } from '../prisma';
@@ -10,6 +10,7 @@ import { getAllPathTags } from '@server/lib/helper';
 import { ModelCapabilities } from '@server/aiServer/types';
 import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
 import { fetchWithProxy } from '@server/lib/proxy';
+import { visibleProvider, visibleModel } from '../lib/providerVisibility';
 import { inferModelCapabilities } from '@shared/lib/modelTemplates';
 
 export const aiRouter = router({
@@ -245,7 +246,7 @@ export const aiRouter = router({
       };
     }),
 
-  testConnect: authProcedure
+  testConnect: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       providerId: z.number(),
       modelKey: z.string(),
@@ -355,11 +356,11 @@ export const aiRouter = router({
     }),
 
   getAllProviders: authProcedure
-    .query(async () => {
-      return await AiModelFactory.getAllAiProviders();
+    .query(async ({ ctx }) => {
+      return (await AiModelFactory.getAllAiProviders()).map(provider => visibleProvider(provider, ctx.role === 'superadmin'));
     }),
 
-  createProvider: authProcedure
+  createProvider: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       title: z.string(),
       provider: z.string(),
@@ -375,7 +376,7 @@ export const aiRouter = router({
       });
     }),
 
-  updateProvider: authProcedure
+  updateProvider: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       id: z.number(),
       title: z.string().optional(),
@@ -394,7 +395,7 @@ export const aiRouter = router({
       });
     }),
 
-  deleteProvider: authProcedure
+  deleteProvider: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       id: z.number()
     }))
@@ -405,34 +406,36 @@ export const aiRouter = router({
     }),
 
   getAllModels: authProcedure
-    .query(async () => {
-      return await prisma.aiModels.findMany({
+    .query(async ({ ctx }) => {
+      const models = await prisma.aiModels.findMany({
         include: { provider: true },
         orderBy: [{ provider: { sortOrder: 'asc' } }, { sortOrder: 'asc' }]
       });
+      return models.map(model => visibleModel(model, ctx.role === 'superadmin'));
     }),
 
   getModelsByProvider: authProcedure
     .input(z.object({
       providerId: z.number()
     }))
-    .query(async ({ input }) => {
-      return await prisma.aiModels.findMany({
+    .query(async ({ input, ctx }) => {
+      const models = await prisma.aiModels.findMany({
         where: { providerId: input.providerId },
         include: { provider: true },
         orderBy: { sortOrder: 'asc' }
       });
+      return models.map(model => visibleModel(model, ctx.role === 'superadmin'));
     }),
 
   getModelsByCapability: authProcedure
     .input(z.object({
       capability: z.string()
     }))
-    .query(async ({ input }) => {
-      return await AiModelFactory.getAiModelsByCapability(input.capability);
+    .query(async ({ input, ctx }) => {
+      return (await AiModelFactory.getAiModelsByCapability(input.capability)).map(model => visibleModel(model, ctx.role === 'superadmin'));
     }),
 
-  createModel: authProcedure
+  createModel: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       providerId: z.number(),
       title: z.string(),
@@ -457,7 +460,7 @@ export const aiRouter = router({
       });
     }),
 
-  updateModel: authProcedure
+  updateModel: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       id: z.number(),
       title: z.string().optional(),
@@ -484,7 +487,7 @@ export const aiRouter = router({
       });
     }),
 
-  deleteModel: authProcedure
+  deleteModel: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       id: z.number()
     }))
@@ -495,7 +498,7 @@ export const aiRouter = router({
     }),
 
 
-  createModelsFromProvider: authProcedure
+  createModelsFromProvider: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       providerId: z.number(),
       models: z.array(z.object({
@@ -534,7 +537,7 @@ export const aiRouter = router({
       return createdModels;
     }),
 
-  batchCreateModelsFromProvider: authProcedure
+  batchCreateModelsFromProvider: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       providerId: z.number(),
       selectedModels: z.array(z.object({
@@ -583,7 +586,7 @@ export const aiRouter = router({
       return createdModels;
     }),
 
-  fetchProviderModels: authProcedure
+  fetchProviderModels: authProcedure.use(superAdminAuthMiddleware)
     .input(z.object({
       providerId: z.number()
     }))

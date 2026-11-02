@@ -22,7 +22,7 @@ export default function OAuthCallback() {
 
   const handleTwoFactorAuth = async (code: string) => {
     try {
-      const params = new URLSearchParams(location.search);
+      const params = new URLSearchParams(location.hash ? location.hash.slice(1) : location.search);
       const userId = params.get('userId') || userStore.id;
 
       if (!userId) {
@@ -35,6 +35,7 @@ export default function OAuthCallback() {
       const res = await signIn('oauth-2fa', {
         userId: userId,
         twoFactorCode: code,
+        challenge: params.get('challenge') || userStore.tokenData.value?.challenge,
         callbackUrl: '/',
         redirect: false,
       });
@@ -70,7 +71,7 @@ export default function OAuthCallback() {
     console.log('OAuth callback, useEffect');
     const checkAuthStatus = async () => {
       try {
-        const params = new URLSearchParams(location.search);
+        const params = new URLSearchParams(location.hash ? location.hash.slice(1) : location.search);
         const errorMsg = params.get('error');
         const success = params.get('success');
         const requiresTwoFactor = params.get('requiresTwoFactor');
@@ -86,9 +87,11 @@ export default function OAuthCallback() {
         }
 
         if (requiresTwoFactor === 'true' && userId) {
+          window.history.replaceState(null, '', window.location.pathname);
           userStore.tokenData.save({
             ...userStore.tokenData.value,
             requiresTwoFactor: true,
+            challenge: params.get('challenge') || undefined,
             user: {
               ...(userStore.tokenData.value?.user || {}),
               id: userId
@@ -100,7 +103,7 @@ export default function OAuthCallback() {
           return;
         }
         
-        console.log('OAuth callback, success:', success, token);
+        window.history.replaceState(null, '', window.location.pathname);
         if (success === 'true') {
           if (token) {
             try {

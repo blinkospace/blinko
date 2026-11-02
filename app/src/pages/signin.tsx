@@ -69,7 +69,7 @@ export default function Component() {
         }
         const res = await signIn('credentials', {
           username: user ?? userStorage.value,
-          password: password ?? passwordStorage.value,
+          password,
           callbackUrl: '/',
           redirect: false,
         });
@@ -95,7 +95,7 @@ export default function Component() {
   });
 
   const userStorage = new StorageState({ key: 'username' });
-  const passwordStorage = new StorageState({ key: 'password' });
+
   const endpointStorage = new StorageState({ key: 'blinkoEndpoint' });
 
   useEffect(() => {
@@ -106,9 +106,7 @@ export default function Component() {
       if (userStorage.value) {
         setUser(userStorage.value);
       }
-      if (passwordStorage.value) {
-        setPassword(passwordStorage.value);
-      }
+      localStorage.removeItem('password');
       if (getSavedEndpoint()) {
         setEndpoint(getSavedEndpoint());
       }
@@ -121,7 +119,6 @@ export default function Component() {
     try {
       await SignIn.call();
       userStorage.setValue(user);
-      passwordStorage.setValue(password);
 
       if (isTauriEnv && endpoint) {
         saveBlinkoEndpoint(endpoint);

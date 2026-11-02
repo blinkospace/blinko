@@ -7,10 +7,12 @@ import mime from "mime-types";
 import { getTokenFromRequest } from "../../lib/helper";
 import { prisma } from "../../prisma";
 
+import { canReadFile, uploadedFileHeaders } from '../../lib/fileAccessPolicy';
+import { validAttachmentShareToken } from '../../lib/attachmentShare';
+
 const router = express.Router();
 
-const MAX_PRESIGNED_URL_EXPIRY = 604800 - (60 * 60 * 24);
-const CACHE_DURATION = MAX_PRESIGNED_URL_EXPIRY;
+const MAX_PRESIGNED_URL_EXPIRY = 300;
 
 function isImage(filename: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
@@ -21,7 +23,7 @@ async function generateThumbnail(s3ClientInstance: any, config: any, fullPath: s
   try {
     const command = new GetObjectCommand({
       Bucket: config.s3Bucket,
-      Key: decodeURIComponent(fullPath)
+      Key: fullPath
     });
 
     const response = await s3ClientInstance.send(command);
@@ -131,8 +133,9 @@ router.get(/.*/, async (req: Request, res: Response) => {
           include: {
             note: {
               select: {
-                isShare: true,
-                accountId: true
+                id: true, isShare: true, accountId: true, isRecycle: true,
+                sharePassword: true, shareExpiryDate: true, shareEncryptedUrl: true,
+                shareMaxView: true, shareViewCount: true
               }
             }
           }
@@ -143,32 +146,21 @@ router.get(/.*/, async (req: Request, res: Response) => {
           return res.status(404).json({ error: "File not found" });
         }
 
-        if (!token) {
-          if (myFile.note?.isShare) {
-            // Public shared file, allow access
-          } else {
-            return res.status(401).json({ error: "Unauthorized" });
-          }
-        } else {
-          // Check if user owns the file or the note containing the file
-          const isOwner = myFile.accountId === Number(token.id) || 
-                          myFile.note?.accountId === Number(token.id) ||
-                          token.role === 'superadmin';
-          
-          if (!myFile.note?.isShare && !isOwner) {
-            return res.status(401).json({ error: "Unauthorized" });
-          }
-        }
+        const grant = await validAttachmentShareToken(req.query.shareToken, myFile.note);
+        if (!canReadFile(myFile, token, grant)) return res.status(token ? 403 : 401).json({ error: 'Unauthorized' });
       } catch (error) {
         console.error('Error checking S3 file permissions:', error);
         return res.status(500).json({ error: "Error checking file permissions" });
       }
     } else {
       // For temp files, require authentication
-      if (!token) {
+      if (token?.role !== 'superadmin') {
         return res.status(401).json({ error: "Unauthorized" });
       }
     }
+
+    const fileHeaders = uploadedFileHeaders(fullPath, mime.lookup(fullPath) || 'application/octet-stream', req.query.download === 'true');
+    res.set(fileHeaders);
 
     if (isImage(fullPath) && needThumbnail) {
       try {
@@ -177,7 +169,7 @@ router.get(/.*/, async (req: Request, res: Response) => {
 
         res.set({
           "Content-Type": mime.lookup(filename) || "image/jpeg",
-          "Cache-Control": "public, max-age=31536000",
+          "Cache-Control": "private, no-store",
           "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(filename)}`,
           "X-Content-Type-Options": "nosniff",
         });
@@ -187,27 +179,26 @@ router.get(/.*/, async (req: Request, res: Response) => {
         console.error('Failed to generate thumbnail, falling back to original:', error);
         const command = new GetObjectCommand({
           Bucket: config.s3Bucket,
-          Key: decodeURIComponent(fullPath),
-          ResponseCacheControl: `public, max-age=${CACHE_DURATION}, immutable`,
+          Key: fullPath,
+          ResponseCacheControl: 'private, no-store',
+          ResponseContentType: fileHeaders['Content-Type'],
+          ResponseContentDisposition: fileHeaders['Content-Disposition'],
         });
 
-        console.log('Bucket:', config.s3Bucket);
-        console.log('Key:', decodeURIComponent(fullPath));
         const signedUrl = await getSignedUrl(s3ClientInstance as any, command as any, {
           expiresIn: MAX_PRESIGNED_URL_EXPIRY,
         });
 
-        console.log('Signed URL:', signedUrl);
-
         return res.redirect(signedUrl);
       }
     }
-    console.log('fullPath!!', decodeURIComponent(fullPath));
     //@important if @aws-sdk/client-s3 is not 3.693.0, has 403 error
     const command = new GetObjectCommand({
       Bucket: config.s3Bucket,
-      Key: decodeURIComponent(fullPath),
-      ResponseCacheControl: `public, max-age=${CACHE_DURATION}, immutable`
+      Key: fullPath,
+      ResponseCacheControl: 'private, no-store',
+      ResponseContentType: fileHeaders['Content-Type'],
+      ResponseContentDisposition: fileHeaders['Content-Disposition']
     });
 
     const signedUrl = await getSignedUrl(s3ClientInstance as any, command as any, {
@@ -215,8 +206,7 @@ router.get(/.*/, async (req: Request, res: Response) => {
     });
 
     res.set({
-      'Cache-Control': `public, max-age=${CACHE_DURATION}, immutable`,
-      'Expires': new Date(Date.now() + CACHE_DURATION * 1000).toUTCString()
+      'Cache-Control': 'private, no-store'
     });
 
     return res.redirect(signedUrl);

@@ -8,6 +8,7 @@ import { hashPassword, verifyPassword } from '@prisma/seed';
 import { generateTOTP, generateTOTPQRCode, verifyTOTP, generateApiToken } from "@server/lib/helper";
 import { deleteNotes } from './note';
 import { createSeed } from '@prisma/seedData';
+import { getGlobalConfig } from './config';
 
 export const userRouter = router({
   list: authProcedure.use(superAdminAuthMiddleware)
@@ -92,7 +93,7 @@ export const userRouter = router({
     })
     .input(z.object({
       id: z.number(),
-      originalPassword: z.string()
+      originalPassword: z.string().min(1)
     }))
     .output(z.boolean())
     .mutation(async ({ input, ctx }) => {
@@ -100,10 +101,8 @@ export const userRouter = router({
       if (!user) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
       }
-      if (input.originalPassword) {
-        if (!(await verifyPassword(input.originalPassword, user?.password ?? ''))) {
-          throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Password is incorrect' });
-        }
+      if (user.id === Number(ctx.id) || user.loginType || !user.password || !(await verifyPassword(input.originalPassword, user.password))) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid account credentials' });
       }
       await prisma.accounts.update({ where: { id: Number(ctx.id) }, data: { linkAccountId: user.id } })
       return true
@@ -117,7 +116,10 @@ export const userRouter = router({
     })
     .input(z.object({ id: z.number() }))
     .output(z.boolean())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      if (input.id !== Number(ctx.id)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'You can only unlink your own account' });
+      }
       await prisma.accounts.updateMany({
         where: { linkAccountId: input.id },
         data: { linkAccountId: null }
@@ -290,7 +292,7 @@ export const userRouter = router({
       const user = await prisma.accounts.findFirst({ where: { id: Number(ctx.id) } })
       if (user) {
         const token = await generateApiToken({ id: user.id, name: user.name ?? '', role: user.role })
-        console.log('token', token);
+
         await prisma.accounts.update({ where: { id: user.id }, data: { apiToken: token } })
         return true
       } else {
@@ -672,6 +674,11 @@ export const userRouter = router({
           code: 'UNAUTHORIZED',
           message: 'password is incorrect'
         });
+      }
+
+      const config = await getGlobalConfig({ ctx: { id: String(user.id), sub: String(user.id), name: user.name, role: user.role } as any });
+      if (config.twoFactorEnabled) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Two-factor authentication is required; use /api/auth/login and /api/auth/verify-2fa' });
       }
 
       const token = await generateApiToken({
