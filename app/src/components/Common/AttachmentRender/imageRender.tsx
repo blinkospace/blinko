@@ -8,7 +8,7 @@ import { observer } from 'mobx-react-lite';
 import { useMediaQuery } from 'usehooks-ts';
 import { DraggableFileGrid } from './DraggableFileGrid';
 import axiosInstance from '@/lib/axios';
-import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { getBlinkoFileUrl } from '@/lib/blinkoEndpoint';
 import { RootStore } from '@/store';
 import { UserStore } from '@/store/user';
 
@@ -30,7 +30,7 @@ export const ImageThumbnailRender = ({ src, className }: { src: string, classNam
       setLoading(true);
       try {
         // Try to get thumbnail first
-        const response = await axiosInstance.get(getBlinkoEndpoint(`${src}?thumbnail=true`), {
+        const response = await axiosInstance.get(getBlinkoFileUrl(src, { thumbnail: true }), {
           responseType: 'blob'
         });
 
@@ -39,7 +39,7 @@ export const ImageThumbnailRender = ({ src, className }: { src: string, classNam
       } catch (error) {
         try {
           // If thumbnail fails, try original image
-          const response = await axiosInstance.get(src, {
+          const response = await axiosInstance.get(getBlinkoFileUrl(src), {
             responseType: 'blob'
           });
 
@@ -120,7 +120,7 @@ const ImageRender = observer((props: IProps) => {
         </div>
       )}
       <div className='w-full'>
-        <PhotoView src={getBlinkoEndpoint(`${file.preview}?token=${RootStore.Get(UserStore).tokenData.value?.token}`)}>
+        <PhotoView src={getBlinkoFileUrl(file.preview, { token: RootStore.Get(UserStore).tokenData.value?.token })}>
           <div>
             <ImageThumbnailRender
               src={file.preview}

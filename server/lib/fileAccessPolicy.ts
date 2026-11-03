@@ -4,6 +4,7 @@ export type SharedNote = {
   id?: number;
   accountId?: number | null;
   isShare: boolean;
+  internalShares?: Array<{ accountId: number }>;
   isRecycle?: boolean;
   sharePassword?: string;
   shareExpiryDate?: Date | null;
@@ -29,7 +30,10 @@ export function canReadFile(
   if (
     user &&
     (user.role === "superadmin" ||
-      (id > 0 && (file.accountId === id || file.note?.accountId === id)))
+      (id > 0 &&
+        (file.accountId === id ||
+          file.note?.accountId === id ||
+          file.note?.internalShares?.some((share) => share.accountId === id))))
   )
     return true;
   const note = file.note;

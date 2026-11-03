@@ -10,7 +10,7 @@ import { observer } from 'mobx-react-lite';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@heroui/react';
 import { useTranslation } from 'react-i18next';
-import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { getBlinkoFileUrl } from '@/lib/blinkoEndpoint';
 
 interface AudioMetadata {
   coverUrl?: string;
@@ -243,11 +243,9 @@ export const AudioRender = observer(({ files, preview = false }: Props) => {
 
         // Use file preview and construct proper URL like music manager does
         if (file.preview) {
-          let audioUrl = getBlinkoEndpoint(file.preview);
-          const token = RootStore.Get(UserStore).tokenData?.value?.token;
-          if (token) {
-            audioUrl = `${audioUrl}?token=${token}`;
-          }
+          const audioUrl = getBlinkoFileUrl(file.preview, {
+            token: RootStore.Get(UserStore).tokenData?.value?.token,
+          });
 
           audioRef.current.src = audioUrl;
 

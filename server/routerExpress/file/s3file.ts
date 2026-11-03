@@ -135,7 +135,11 @@ router.get(/.*/, async (req: Request, res: Response) => {
               select: {
                 id: true, isShare: true, accountId: true, isRecycle: true,
                 sharePassword: true, shareExpiryDate: true, shareEncryptedUrl: true,
-                shareMaxView: true, shareViewCount: true
+                shareMaxView: true, shareViewCount: true,
+                internalShares: {
+                  where: { accountId: Number(token?.id) || -1 },
+                  select: { accountId: true }
+                }
               }
             }
           }

@@ -100,3 +100,16 @@ test("stalled DNS cannot occupy a preview worker indefinitely", async () => {
   ).rejects.toThrow("DNS lookup timed out");
   expect(requests.length).toBe(0);
 });
+
+test('an expired absolute deadline opens neither DNS nor a socket', async () => {
+  await expect(fetchPublicUrl('https://public.example/', { deadline: Date.now() - 1 })).rejects.toThrow('timed out');
+  expect(lookups).toBe(0);
+  expect(requests).toHaveLength(0);
+});
+test('an absolute deadline cannot be renewed by a fresh fetch timeout', async () => {
+  stalledDns = true;
+  const start = Date.now();
+  await expect(fetchPublicUrl('https://public.example/', { deadline: start + 20, timeoutMs: 5000 })).rejects.toThrow('DNS lookup timed out');
+  expect(Date.now() - start).toBeLessThan(500);
+  expect(requests).toHaveLength(0);
+});

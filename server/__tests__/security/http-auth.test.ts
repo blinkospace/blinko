@@ -235,7 +235,8 @@ describe("real Express 2FA HTTP flow", () => {
     );
     expect(
       responses.filter((r) => r.status === 200).length,
-    ).toBeLessThanOrEqual(1);
-    expect(tokenIssues).toBeLessThanOrEqual(1);
+    ).toBe(1);
+    expect(responses.filter((r) => r.status === 401)).toHaveLength(1);
+    expect(tokenIssues).toBe(1);
   });
 });

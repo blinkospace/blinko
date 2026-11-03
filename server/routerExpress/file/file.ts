@@ -12,6 +12,7 @@ import { FileService } from '../../lib/files';
 
 import { canReadFile, uploadedFileHeaders } from '../../lib/fileAccessPolicy';
 import { validAttachmentShareToken } from '../../lib/attachmentShare';
+import { canDownloadExport } from '../../lib/exportDownload';
 
 const router = express.Router();
 const STREAM_THRESHOLD = 5 * 1024 * 1024;
@@ -101,8 +102,9 @@ router.get(/.*/, async (req, res) => {
     const allowTemp = fullPath.includes('temp/');
     filePath = FileService.validateAndResolvePath(fullPath, UPLOAD_FILE_PATH, allowTemp);
     
-    // For temp/ paths, require authentication
-    if (allowTemp && token?.role !== 'superadmin') {
+    // Temp exports require both the requesting account and a scoped grant.
+    if (allowTemp && token?.role !== 'superadmin' &&
+        !await canDownloadExport(fullPath, token?.id, req.query.exportToken)) {
       return res.status(401).json({ error: "Unauthorized" });
     }
   } catch (error: any) {
@@ -134,7 +136,11 @@ router.get(/.*/, async (req, res) => {
             select: {
               id: true, isShare: true, accountId: true, isRecycle: true,
               sharePassword: true, shareExpiryDate: true, shareEncryptedUrl: true,
-              shareMaxView: true, shareViewCount: true
+              shareMaxView: true, shareViewCount: true,
+                internalShares: {
+                  where: { accountId: Number(token?.id) || -1 },
+                  select: { accountId: true }
+                }
             }
           }
         }

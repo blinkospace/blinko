@@ -16,7 +16,7 @@ import { getWithProxy } from '@server/lib/proxy';
 import path from 'path';
 import pathIsInside from 'path-is-inside';
 import { FileService } from '@server/lib/files';
-import { fetchPublicUrl, resolvePublicUrl } from '../lib/publicHttp';
+import { fetchPublicUrl, resolvePublicUrl, withPublicRequestDeadline } from '../lib/publicHttp';
 
 const limit = pLimit(5);
 let refreshTicker = 0;
@@ -156,26 +156,28 @@ export const publicRouter = router({
       ]),
     )
     .query(async function ({ input }) {
-      return cache.wrap(
-        input.url,
-        async () => {
-          try {
-            await resolvePublicUrl(input.url);
-            return await limit(async () => {
-              const result: Metadata = await unfurl(input.url, { fetch: fetchPublicUrl, oembed: false });
+      const deadline = Date.now() + 5000;
+      try {
+        return await withPublicRequestDeadline(deadline, () => cache.wrap(
+          input.url,
+          async () => {
+            await resolvePublicUrl(input.url, undefined, deadline - Date.now());
+            return limit(async () => {
+              // A timed-out queued request must never start a later network request.
+              if (Date.now() >= deadline) throw new Error('Remote request timed out');
+              const result: Metadata = await unfurl(input.url, {
+                fetch: (url) => fetchPublicUrl(url, { deadline }),
+                oembed: false,
+              });
               return { title: result?.title ?? '', favicon: result?.favicon ?? '', description: result?.description ?? '' };
             });
-          } catch (error) {
-            console.error('Link preview error:', error);
-            return {
-              title: '',
-              favicon: '',
-              description: '',
-            };
-          }
-        },
-        { ttl: 60 * 60 * 1000 },
-      );
+          },
+          { ttl: 60 * 60 * 1000 },
+        ));
+      } catch (error) {
+        console.error('Link preview error:', error);
+        return { title: '', favicon: '', description: '' };
+      }
     }),
   testWebhook: publicProcedure
     .meta({ openapi: { method: 'POST', path: '/v1/public/test-webhook', summary: 'Test webhook', tags: ['Public'] } })

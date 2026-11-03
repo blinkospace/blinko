@@ -3,6 +3,8 @@ import express from "express";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
+import jwt from "jsonwebtoken";
+import { createHmac, randomUUID } from "node:crypto";
 
 const directory = await mkdtemp(
   path.join(os.tmpdir(), "blinko-file-security-"),
@@ -67,6 +69,7 @@ mock.module("@aws-sdk/s3-request-presigner", () => ({
 const { default: fileRouter } = await import("../../routerExpress/file/file");
 const { default: s3Router } = await import("../../routerExpress/file/s3file");
 const { default: rssRouter } = await import("../../routerExpress/rss");
+const { exportDownloadUrl, canDownloadExport } = await import("../../lib/exportDownload");
 const {
   attachmentShareToken,
   validAttachmentShareToken,
@@ -147,6 +150,8 @@ test("public shares still work while password-protected attachments require a va
   expect((await get("?shareToken=" + grant)).status).toBe(200);
   record.note.sharePassword = "changed-password";
   expect((await get("?shareToken=" + grant)).status).toBe(401);
+  // A stale public grant must not mask the logged-in owner's own permission.
+  expect((await get("?shareToken=" + grant, "owner")).status).toBe(200);
 });
 test("grants cannot authorize another note, revoked shares or expired shares", async () => {
   record.note.isShare = true;
@@ -189,6 +194,38 @@ test("ordinary login does not grant access to temporary directories", async () =
       })
     ).status,
   ).toBe(401);
+});
+test("ordinary users download only their own requested export with an unexpired path-bound grant", async () => {
+  const file = `temp/notes_export_${randomUUID()}.zip`;
+  await writeFile(path.join(directory, file), "own export archive");
+  const url = await exportDownloadUrl(file, 1);
+  const request = (target: string, identity?: string) => fetch(origin + target, {
+    headers: identity ? { Authorization: "Bearer " + identity } : {},
+  });
+  const own = await request(url, "owner");
+  expect(own.status).toBe(200);
+  expect(await own.text()).toBe("own export archive");
+  expect(own.headers.get("cache-control")).toBe("private, no-store");
+  expect((await request(url, "other")).status).toBe(401);
+  expect((await request(url)).status).toBe(401);
+  expect((await request('/api/file/' + file, "owner")).status).toBe(401);
+  expect((await request(url.replace(file, 'temp/private.txt'), "owner")).status).toBe(401);
+  const key = createHmac("sha256", "TEST_ONLY_SIGNING_KEY").update("blinko-export-download-v1").digest("hex");
+  const expired = jwt.sign({ path: file }, key, { audience: "blinko-export-download", subject: "1", expiresIn: -1 });
+  expect(await canDownloadExport(file, 1, expired)).toBe(false);
+  expect((await request('/api/file/' + file + '?exportToken=' + expired, "owner")).status).toBe(401);
+  const grant = new URL(url, origin).searchParams.get('exportToken');
+  expect(await canDownloadExport(file, 1, 'bad' + grant)).toBe(false);
+  expect(await canDownloadExport(file, 1, await attachmentShareToken(record.note))).toBe(false);
+});
+test("internal read-only and editor recipients can read local and S3 attachments until revoked", async () => {
+  record.note.internalShares = [{ accountId: 2 }];
+  expect((await get("", "other")).status).toBe(200);
+  expect((await s3get("", "other")).status).toBe(302);
+  record.note.internalShares = [];
+  expect((await get("", "other")).status).toBe(403);
+  expect((await s3get("", "other")).status).toBe(403);
+  expect((await get()).status).toBe(401);
 });
 const s3get = (suffix = "", identity?: string) =>
   fetch(origin + "/api/s3file/upload.html" + suffix, {

@@ -334,7 +334,6 @@ export class UserStore implements Store {
 
   handleToken(tokenData: TokenData | null, successCallback?: () => void) {
     const location = window.location;
-    console.log('handleToken', tokenData);
 
     if (tokenData && (tokenData.user || tokenData.token)) {
       if (tokenData.token && (!tokenData.user || !tokenData.user.id)) {

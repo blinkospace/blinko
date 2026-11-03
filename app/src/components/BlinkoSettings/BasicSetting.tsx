@@ -23,7 +23,7 @@ import { DialogStandaloneStore } from "@/store/module/DialogStandalone";
 import { UploadFileWrapper } from "../Common/UploadFile";
 import Avatar from "boring-avatars";
 import { signOut } from "../Auth/auth-client";
-import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
+import { getBlinkoEndpoint, getBlinkoFileUrl } from "@/lib/blinkoEndpoint";
 
 export const BasicSetting = observer(() => {
   const user = RootStore.Get(UserStore)
@@ -105,7 +105,7 @@ export const BasicSetting = observer(() => {
               >
                 {user.userInfo.value?.image ? (
                   <img
-                    src={getBlinkoEndpoint(`${user.userInfo.value.image}?token=${user.tokenData.value?.token}`)}
+                    src={getBlinkoFileUrl(user.userInfo.value.image, { token: user.tokenData.value?.token })}
                     alt="avatar"
                     className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                   />

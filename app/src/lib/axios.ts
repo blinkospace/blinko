@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { RootStore } from '@/store/root';
 import { UserStore } from '@/store/user';
+import { getBlinkoEndpoint } from './blinkoEndpoint';
+import { isBlinkoUrl } from './fileUrl';
 
 // Create axios instance
 const axiosInstance = axios.create({
@@ -15,8 +17,11 @@ axiosInstance.interceptors.request.use(
     const userStore = RootStore.Get(UserStore);
     const token = userStore.tokenData.value?.token;
     
-    // If token exists, add it to request headers
-    if (token) {
+    // Attachment content can reference an external image. Only the configured
+    // Blinko origin receives the user's bearer token.
+    const endpoint = getBlinkoEndpoint('/');
+    const target = new URL(config.url || '', new URL(config.baseURL || '', endpoint)).href;
+    if (token && isBlinkoUrl(target, endpoint)) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     

@@ -107,3 +107,23 @@ test("proxy diagnostics require admin and reject arbitrary targets before using 
   ).toBe(true);
   expect(proxy.mock.calls[0][1].config.maxRedirects).toBe(0);
 });
+
+test('the preview deadline includes the limiter queue and expired queued work never starts', async () => {
+  let release!: () => void;
+  const blocked = new Promise<void>((resolve) => { release = resolve; });
+  preview.mockImplementation(async () => {
+    await blocked;
+    return { title: 'late', description: 'late' };
+  });
+  const start = Date.now();
+  const jobs = Array.from({ length: 6 }, (_, index) =>
+    publicRouter.createCaller(ctx()).linkPreview({ url: `https://1.1.1.1/queued-${index}` }),
+  );
+  const results = await Promise.all(jobs);
+  expect(results.every((value) => value?.title === '')).toBe(true);
+  expect(Date.now() - start).toBeLessThan(6000);
+  expect(preview).toHaveBeenCalledTimes(5);
+  release();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(preview).toHaveBeenCalledTimes(5);
+}, 10000);

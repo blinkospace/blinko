@@ -44,6 +44,7 @@ export async function resolvePublicUrl(
   resolver = lookup,
   timeoutMs = 5000,
 ) {
+  if (timeoutMs <= 0) throw new Error("Remote request timed out");
   const url = new URL(input);
   if (
     !["http:", "https:"].includes(url.protocol) ||
@@ -72,14 +73,31 @@ export async function resolvePublicUrl(
   return { url, address: addresses[0] };
 }
 
+// Bound caller wait as well as transport time (including time in a limiter queue).
+export async function withPublicRequestDeadline<T>(deadline: number, operation: () => Promise<T>): Promise<T> {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) throw new Error("Remote request timed out");
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation(),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("Remote request timed out")), remaining);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Pin the validated DNS result to the socket and revalidate every redirect. Do
 // not use an ambient HTTP proxy that could resolve the destination differently.
 export async function fetchPublicUrl(
   input: string,
-  options: { maxBytes?: number; timeoutMs?: number; redirects?: number } = {},
+  options: { maxBytes?: number; timeoutMs?: number; redirects?: number; deadline?: number } = {},
 ) {
   let target = input;
-  const deadline = Date.now() + (options.timeoutMs ?? 5000);
+  const deadline = Math.min(options.deadline ?? Infinity, Date.now() + (options.timeoutMs ?? 5000));
   const maxBytes = options.maxBytes ?? 2 * 1024 * 1024;
   for (let hop = 0; hop <= (options.redirects ?? 5); hop++) {
     const { url, address } = await resolvePublicUrl(

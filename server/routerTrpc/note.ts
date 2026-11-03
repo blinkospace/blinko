@@ -1,4 +1,5 @@
 import { withAttachmentShareLinks } from '../lib/attachmentShare';
+import { prepareAttachmentBindings, bindPreparedAttachments } from '../lib/attachmentBinding';
 
 import { z } from 'zod';
 import { prisma } from '../prisma';
@@ -869,7 +870,6 @@ export const noteRouter = router({
       let { id, isArchived, isRecycle, type, attachments, content, isTop, isShare, references } = input;
 
       // Check for internal sharing permission if updating an existing note
-      let isSharedEditor = false;
       if (id) {
         const notePermission = await prisma.notes.findFirst({
           where: {
@@ -893,7 +893,6 @@ export const noteRouter = router({
 
         // If user is not the owner but has edit permission, restrict certain operations
         if (notePermission.accountId !== Number(ctx.id)) {
-          isSharedEditor = true;
           // Prevent shared users from changing archive status, top status, or share status
           isArchived = null;
           isTop = null;
@@ -911,10 +910,18 @@ export const noteRouter = router({
           const matches = /!\[.*?\]\((\/api\/(?:s3)?file\/[^)]+)\)/.exec(match);
           return matches?.[1] || '';
         }) || [];
-      if (markdownImages.length > 0) {
-        const images = await prisma.attachments.findMany({ where: { path: { in: markdownImages } } });
-        attachments = [...attachments, ...images.map((i) => ({ path: i.path, name: i.name, size: Number(i.size), type: i.type }))];
-      }
+      // Validate every registered attachment before notes, history, tags or
+      // references can change. Markdown images follow the same owner boundary.
+      const preparedAttachments = await prepareAttachmentBindings(
+        prisma,
+        attachments.map(file => file.path),
+        Number(ctx.id),
+        id,
+        markdownImages,
+      );
+      attachments = preparedAttachments.map(file => ({
+        path: file.path, name: file.name, size: Number(file.size), type: file.type,
+      }));
 
       const handleAddTags = async (tagTree: TagTreeNode[], parentTag: Prisma.tagCreateManyInput | undefined, noteId?: number) => {
         for (const i of tagTree) {
@@ -960,49 +967,58 @@ export const noteRouter = router({
       }
 
       if (id) {
-        const existingNote = await prisma.notes.findUnique({
-          where: { id },
-          select: {
-            content: true,
-            accountId: true,
-            type: true,
-            isArchived: true,
-            isTop: true,
-            isShare: true,
-            isRecycle: true
-          }
-        });
-
-        if (existingNote && content != null && content !== existingNote.content) {
-          const latestVersion = await prisma.noteHistory.findFirst({
-            where: { noteId: id },
-            orderBy: { version: 'desc' },
-            select: { version: true },
+        const note = await prisma.$transaction(async (tx) => {
+          const existingNote = await tx.notes.findUnique({
+            where: { id },
+            select: {
+              content: true,
+              accountId: true,
+              type: true,
+              isArchived: true,
+              isTop: true,
+              isShare: true,
+              isRecycle: true
+            }
           });
 
-          await prisma.noteHistory.create({
-            data: {
-              noteId: id,
-              content: existingNote.content,
-              version: (latestVersion?.version || 0) + 1,
-              accountId: Number(ctx.id),
-              metadata: {
-                type: existingNote.type,
-                isArchived: existingNote.isArchived,
-                isTop: existingNote.isTop,
-                isShare: existingNote.isShare,
-                isRecycle: existingNote.isRecycle,
+          if (existingNote && content != null && content !== existingNote.content) {
+            const latestVersion = await tx.noteHistory.findFirst({
+              where: { noteId: id },
+              orderBy: { version: 'desc' },
+              select: { version: true },
+            });
+
+            await tx.noteHistory.create({
+              data: {
+                noteId: id,
+                content: existingNote.content,
+                version: (latestVersion?.version || 0) + 1,
+                accountId: Number(ctx.id),
+                metadata: {
+                  type: existingNote.type,
+                  isArchived: existingNote.isArchived,
+                  isTop: existingNote.isTop,
+                  isShare: existingNote.isShare,
+                  isRecycle: existingNote.isRecycle,
+                },
               },
+            });
+          }
+
+          // Recheck edit permission in the write, including a concurrently revoked share.
+          const note = await tx.notes.update({
+            where: {
+              id,
+              OR: [
+                { accountId: Number(ctx.id) },
+                { internalShares: { some: { accountId: Number(ctx.id), canEdit: true } } },
+              ],
             },
+            data: update,
           });
-        }
-
-        // For shared editors, we need to use a different where clause
-        const whereClause = isSharedEditor
-          ? { id }  // Only filter by ID for shared editors
-          : { id, accountId: Number(ctx.id) }; // Filter by ID and accountId for owners
-
-        const note = await prisma.notes.update({ where: whereClause, data: update });
+          await bindPreparedAttachments(tx, preparedAttachments, Number(ctx.id), note.id, id);
+          return note;
+        });
         if (content == null) {
           SendWebhook({ ...note, attachments }, isRecycle ? 'delete' : 'update', ctx);
           return note;
@@ -1086,27 +1102,6 @@ export const noteRouter = router({
           await prisma.tag.deleteMany({ where: { id: { in: needTobeDeledTags }, accountId: Number(ctx.id) } });
         }
 
-        // insert not repeat attachments
-        try {
-          if (attachments?.length != 0) {
-            const oldAttachments = await prisma.attachments.findMany({ where: { noteId: note.id } });
-            const needTobeAddedAttachmentsPath = _.difference(
-              attachments?.map((i) => i.path),
-              oldAttachments.map((i) => i.path),
-            );
-            if (needTobeAddedAttachmentsPath.length != 0) {
-              // console.log({ needTobeAddedAttachmentsPath })
-              const attachmentsIds = await prisma.attachments.findMany({ where: { path: { in: needTobeAddedAttachmentsPath } } });
-              await prisma.attachments.updateMany({
-                where: { id: { in: attachmentsIds.map((i) => i.id) } },
-                data: { noteId: note.id },
-              });
-            }
-          }
-        } catch (err) {
-          console.log(err);
-        }
-
         if (config?.embeddingModelId) {
           AiService.embeddingUpsert({ id: note.id, content: note.content, type: 'update', createTime: note.createdAt!, updatedAt: note.updatedAt });
           for (const attachment of attachments) {
@@ -1118,21 +1113,23 @@ export const noteRouter = router({
         return note;
       } else {
         try {
-          const note = await prisma.notes.create({
-            data: {
-              content: content ?? '',
-              type,
-              accountId: Number(ctx.id),
-              isShare: isShare ? true : false,
-              isTop: isTop ? true : false,
-              ...(input.createdAt && { createdAt: input.createdAt }),
-              ...(input.updatedAt && { updatedAt: input.updatedAt }),
-              ...(input.metadata && { metadata: input.metadata }),
-            },
+          const note = await prisma.$transaction(async (tx) => {
+            const created = await tx.notes.create({
+              data: {
+                content: content ?? '',
+                type,
+                accountId: Number(ctx.id),
+                isShare: isShare ? true : false,
+                isTop: isTop ? true : false,
+                ...(input.createdAt && { createdAt: input.createdAt }),
+                ...(input.updatedAt && { updatedAt: input.updatedAt }),
+                ...(input.metadata && { metadata: input.metadata }),
+              },
+            });
+            await bindPreparedAttachments(tx, preparedAttachments, Number(ctx.id), created.id);
+            return created;
           });
           await handleAddTags(tagTree, undefined, note.id);
-          const attachmentsIds = await prisma.attachments.findMany({ where: { path: { in: attachments.map((i) => i.path) } } });
-          await prisma.attachments.updateMany({ where: { id: { in: attachmentsIds.map((i) => i.id) } }, data: { noteId: note.id } });
           //add references
           if (references && references.length > 0) {
             await prisma.noteReference.createMany({
@@ -1215,6 +1212,7 @@ export const noteRouter = router({
           return note;
         } catch (error) {
           console.log(error);
+          throw error;
         }
       }
     }),

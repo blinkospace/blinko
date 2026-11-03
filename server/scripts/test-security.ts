@@ -6,6 +6,12 @@ import path from "node:path";
 const cwd = fileURLToPath(new URL("..", import.meta.url));
 for (const suite of [
   "policies",
+  "attachment-binding",
+  "file-urls",
+  "exports",
+  "file-storage",
+  "oauth-callback",
+  "pending-two-factor",
   "authorization",
   "http-auth",
   "http-files",
