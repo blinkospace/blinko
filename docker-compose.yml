@@ -44,6 +44,9 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
+    # Persisting container data
+    volumes:
+      - blinko-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test:
         ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
@@ -52,3 +55,6 @@ services:
       retries: 5
     networks:
       - blinko-network
+
+volumes:
+  blinko-postgres-data:
