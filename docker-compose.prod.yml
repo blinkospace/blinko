@@ -1,7 +1,3 @@
-networks:
-  blinko-network:
-    driver: host
-
 services:
   blinko-website:
     image: blinkospace/blinko:latest
@@ -11,13 +7,13 @@ services:
       # NEXTAUTH_URL: http://localhost:1111
       # NEXT_PUBLIC_BASE_URL: http://localhost:1111
       NEXTAUTH_SECRET: my_ultra_secure_nextauth_secret
-      DATABASE_URL: postgresql://postgres:mysecretpassword@192.168.31.69:5435/postgres
-    # depends_on:
-    #   postgres:
-    #     condition: service_healthy
+      # Point this at your own PostgreSQL instance when you do not use the
+      # bundled `postgres` service below (host:port).
+      DATABASE_URL: postgresql://postgres:mysecretpassword@postgres:5432/postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
     # Make sure you have enough permissions.
-    # volumes:
-      # - ~/your-name/.blinko:/app/.blinko 
     restart: always
     logging:
       options:
@@ -26,34 +22,38 @@ services:
     ports:
       - 1111:1111
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://blinko-website:1111/"]
-      interval: 30s 
-      timeout: 10s   
-      retries: 5     
-      start_period: 30s 
-    # networks:
-    #   - blinko-network
+      test: ["CMD", "wget", "--spider", "http://blinko-website:1111/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - blinko-network
 
-  # postgres:
-  #   image: postgres:14
-  #   container_name: blinko-postgres
-  #   restart: always
-  #   ports:
-  #     - 5435:5432
-  #   environment:
-  #     POSTGRES_DB: postgres
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: mysecretpassword
-  #     TZ: Asia/Shanghai
-  #   # Persisting container data
-  #   # Make sure you have enough permissions.
-  #   # volumes:
-  #     # - ~/your-name/.db:/var/lib/postgresql/data
-  #   healthcheck:
-  #     test:
-  #       ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
-  #     interval: 5s
-  #     timeout: 10s
-  #     retries: 5
-  #   networks:
-  #     - blinko-network
+  postgres:
+    image: postgres:14
+    container_name: blinko-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      TZ: Asia/Shanghai
+    # Persisting container data
+    volumes:
+      - blinko-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+    networks:
+      - blinko-network
+
+networks:
+  blinko-network:
+    driver: bridge
+
+volumes:
+  blinko-postgres-data:
