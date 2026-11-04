@@ -83,6 +83,9 @@ beforeAll(async () => {
     path.join(directory, "upload.html"),
     "<script>unsafe</script>",
   );
+  for (const name of ["active.svg", "active.xhtml", "active.xml", "active.js"]) {
+    await writeFile(path.join(directory, name), "<script>window.fixtureExecuted=true</script>");
+  }
   await mkdir(path.join(directory, "temp"));
   await writeFile(
     path.join(directory, "temp", "private.txt"),
@@ -141,6 +144,20 @@ test("owner receives HTML as download with an inert content type, sandbox and no
   expect(response.headers.get("x-content-type-options")).toBe("nosniff");
   expect(await response.text()).toBe("<script>unsafe</script>");
 });
+test.each(["upload.html", "active.svg", "active.xhtml", "active.xml", "active.js"])(
+  "publicly shared %s stays an inert download even when inline/thumbnail options are requested",
+  async (name) => {
+    record.note.isShare = true;
+    const response = await fetch(`${origin}/api/file/${name}?download=false&thumbnail=true`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("application/octet-stream");
+    expect(response.headers.get("content-disposition")).toStartWith("attachment;");
+    expect(response.headers.get("content-security-policy")).toContain("sandbox");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    await response.arrayBuffer();
+  },
+);
 test("public shares still work while password-protected attachments require a valid scoped grant", async () => {
   record.note.isShare = true;
   expect((await get()).status).toBe(200);
@@ -266,14 +283,16 @@ test("S3 signs exactly the object key whose attachment permission was checked", 
   expect(checkedFilePath).toBe("/api/s3file/literal%2Fname.html");
   expect(signed[0].input.Key).toBe("literal%2Fname.html");
 });
-test.each(["rss", "atom"])(
-  "%s ignores request Host and Origin when constructing feed links",
-  async (type) => {
-    const response = await fetch(origin + "/api/rss/1/" + type, {
-      headers: { Host: "attacker.example", Origin: "https://attacker.example" },
-    });
+for (const type of ["rss", "atom"]) {
+  test.each([
+    { Host: "attacker.example" },
+    { Origin: "https://attacker.example" },
+    { Host: "attacker.example", Origin: "https://attacker.example", "X-Forwarded-Host": "forwarded.example" },
+  ])(`${type} ignores attacker-controlled request origins`, async (headers) => {
+    const response = await fetch(origin + "/api/rss/1/" + type, { headers });
     expect(response.status).toBe(200);
     expect(feedOrigin).toBe("https://trusted.example");
     expect(response.headers.get("cache-control")).toBe("private, no-store");
-  },
-);
+    await response.text();
+  });
+}

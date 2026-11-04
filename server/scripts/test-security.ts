@@ -19,6 +19,7 @@ for (const suite of [
   "public-routes",
   "plugin",
   "mcp",
+  "mcp-process",
 ]) {
   const result = Bun.spawnSync(
     [
