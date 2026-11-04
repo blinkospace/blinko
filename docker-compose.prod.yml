@@ -26,7 +26,7 @@ services:
     ports:
       - 1111:1111
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://blinko-website:1111/"]
+      test: ["CMD", "wget", "--spider", "http://blinko-website:1111/"]
       interval: 30s 
       timeout: 10s   
       retries: 5     
