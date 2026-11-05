@@ -6,9 +6,13 @@ import { authenticator } from 'otplib';
 import { getGlobalConfig } from '../../routerTrpc/config';
 import { verifyToken, generateToken, generateApiToken } from '../../lib/helper';
 
-const router = express.Router();
+import { TwoFactorLogin, TwoFactorRateLimit } from '../../lib/twoFactorLogin';
 
-function handleOAuthCallback(req: any, res: any, err: any, user: any, info: any) {
+const router = express.Router();
+const pendingLogins = new TwoFactorLogin(prisma.session);
+const twoFactorLimit = new TwoFactorRateLimit();
+
+async function handleOAuthCallback(req: any, res: any, err: any, user: any, info: any) {
   if (err) {
     console.error('OAuth authentication error:', err);
     return res.redirect(`/oauth-callback?error=${encodeURIComponent(err.message || 'Authentication failed')}`);
@@ -16,7 +20,9 @@ function handleOAuthCallback(req: any, res: any, err: any, user: any, info: any)
 
   if (!user) {
     if (info && info.requiresTwoFactor) {
-      return res.redirect(`/oauth-callback?requiresTwoFactor=true&userId=${info.userId}`);
+      const challenge = await pendingLogins.issue(Number(info.userId));
+      res.set('Referrer-Policy', 'no-referrer');
+      return res.redirect(`/oauth-callback#requiresTwoFactor=true&userId=${info.userId}&challenge=${challenge}`);
     }
     return res.redirect(`/oauth-callback?error=${encodeURIComponent(info?.message || 'Authentication failed')}`);
   }
@@ -45,7 +51,7 @@ router.get('/callback/:providerId', async (req, res, next) => {
   await ensureOAuthStrategies(providerId);
   console.log(`${providerId} callback route accessed`);
   passport.authenticate(providerId, (err, user, info) => {
-    handleOAuthCallback(req, res, err, user, info);
+    void handleOAuthCallback(req, res, err, user, info).catch(next);
   })(req, res, next);
 });
 
@@ -82,12 +88,15 @@ router.post('/login', (req, res, next) => {
 
     if (!user) {
       if (info && info.requiresTwoFactor) {
+        let challenge: string;
+        try { challenge = await pendingLogins.issue(Number(info.userId)); } catch { return res.status(503).json({ error: 'Unable to start verification' }); }
         return res.status(200).json({
           requiresTwoFactor: true,
+          challenge,
           userId: info.userId,
         });
       }
-      return res.status(401).json({ error: info.message || 'Authentication failed' });
+      return res.status(401).json({ error: info?.message || 'Authentication failed' });
     }
 
     try {
@@ -114,14 +123,20 @@ router.post('/login', (req, res, next) => {
 
 router.post('/verify-2fa', async (req: any, res) => {
   try {
+    if (!twoFactorLimit.allow(req.ip || req.socket.remoteAddress || 'unknown')) {
+      return res.status(429).json({ error: 'Too many verification attempts' });
+    }
     const userId = req.body.userId;
 
-    if (!userId || !req.body.code) {
+    if (!userId || typeof req.body.code !== 'string' || !/^\d{6}$/.test(req.body.code)) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
+    const attempt = await pendingLogins.begin(req.body.challenge, userId);
+    if (!attempt) return res.status(401).json({ error: 'Invalid or expired login challenge' });
+
     const user = await prisma.accounts.findUnique({
-      where: { id: Number(userId) },
+      where: { id: attempt.userId },
     });
 
     if (!user) {
@@ -139,6 +154,10 @@ router.post('/verify-2fa', async (req: any, res) => {
       },
     });
 
+    if (!config.twoFactorEnabled || !config.twoFactorSecret) {
+      return res.status(401).json({ error: 'Two-factor authentication is not enabled' });
+    }
+
     const isValidToken = authenticator.verify({
       token: req.body.code,
       secret: config.twoFactorSecret ?? '',
@@ -148,6 +167,9 @@ router.post('/verify-2fa', async (req: any, res) => {
       return res.status(401).json({ error: 'Invalid verification code' });
     }
 
+    if (!(await pendingLogins.consume(attempt))) {
+      return res.status(401).json({ error: 'Login challenge already used or expired' });
+    }
     const token = await generateToken(user, true);
     const apiToken = await generateApiToken({ id: user.id, name: user.name ?? '', role: user.role });
     await prisma.accounts.update({

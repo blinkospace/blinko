@@ -14,7 +14,7 @@ import { EditorStore } from '../Editor/editorStore';
 import { DraggableFileGrid } from './DraggableFileGrid';
 import { AudioRender } from './audioRender';
 import { downloadFromLink } from '@/lib/tauriHelper';
-import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { getBlinkoFileUrl } from '@/lib/blinkoEndpoint';
 import { RootStore } from '@/store';
 import { UserStore } from '@/store/user';
 
@@ -42,12 +42,9 @@ const AttachmentsRender = observer((props: IProps) => {
       {/* video render  */}
       <div className="columns-1 md:columns-1">
         {files?.filter(i => i.previewType == 'video').map((file, index) => {
-          // Add token to video URL for authentication
-          let videoUrl = getBlinkoEndpoint(file.preview);
-          const token = RootStore.Get(UserStore).tokenData?.value?.token;
-          if (token) {
-            videoUrl = `${videoUrl}?token=${token}`;
-          }
+          const videoUrl = getBlinkoFileUrl(file.preview, {
+            token: RootStore.Get(UserStore).tokenData?.value?.token,
+          });
           
           return (
             <div
@@ -88,7 +85,7 @@ const AttachmentsRender = observer((props: IProps) => {
               ${!preview ? 'min-w-[200px] flex-shrink-0' : 'w-full'}`}
             onClick={() => {
               if (preview) {
-                downloadFromLink(getBlinkoEndpoint(file.uploadPromise.value))
+                downloadFromLink(file.uploadPromise?.value || file.preview)
               }
             }}
           >

@@ -1,6 +1,7 @@
 import { router, authProcedure, publicProcedure } from '../middleware';
 import { z } from 'zod';
 import { prisma } from '../prisma';
+import { requireOwnedConversation } from '../lib/conversationAccess';
 
 export const conversationRouter = router({
   create: authProcedure
@@ -19,10 +20,12 @@ export const conversationRouter = router({
     .input(z.object({
       id: z.number()
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      await requireOwnedConversation(input.id, Number(ctx.id));
       await prisma.message.deleteMany({
         where: {
-          conversationId: input.id
+          conversationId: input.id,
+          conversation: { accountId: Number(ctx.id) },
         }
       });
       return {
@@ -75,13 +78,13 @@ export const conversationRouter = router({
         // Decode the share ID to extract conversation ID
         const decoded = Buffer.from(input.shareId, 'base64').toString('utf-8');
         const conversationId = parseInt(decoded.replace('blinko-ai-share-', ''));
-        
+
         if (isNaN(conversationId)) {
           throw new Error('Invalid share ID');
         }
 
         const conversation = await prisma.conversation.findUnique({
-          where: { 
+          where: {
             id: conversationId,
             isShare: true  // Only return if the conversation is shared
           },
@@ -150,10 +153,12 @@ export const conversationRouter = router({
       id: z.number()
     }))
     .mutation(async ({ input, ctx }) => {
+      await requireOwnedConversation(input.id, Number(ctx.id));
       return await prisma.$transaction(async (prisma) => {
         await prisma.message.deleteMany({
           where: {
-            conversationId: input.id
+            conversationId: input.id,
+            conversation: { accountId: Number(ctx.id) },
           }
         });
         return await prisma.conversation.delete({
@@ -164,4 +169,4 @@ export const conversationRouter = router({
         });
       });
     }),
-}); 
+});

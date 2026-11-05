@@ -16,7 +16,7 @@ import { observer } from 'mobx-react-lite';
 import { toJS } from 'mobx';
 import { motion } from 'framer-motion';
 import { ImageThumbnailRender } from '../Common/AttachmentRender/imageRender';
-import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { getBlinkoFileUrl } from '@/lib/blinkoEndpoint';
 import { UserStore } from '@/store/user';
 
 
@@ -53,7 +53,7 @@ export const ResourceItemPreview = ({
     <div className={`w-full flex items-center gap-2 p-2 rounded-md cursor-pointer group ${className}`} onClick={onClick}>
       {isImage ? (
         <PhotoProvider>
-          <PhotoView src={getBlinkoEndpoint(`${item.path}?token=${RootStore.Get(UserStore).tokenData.value?.token}`)}>
+          <PhotoView src={getBlinkoFileUrl(item.path, { token: RootStore.Get(UserStore).tokenData.value?.token })}>
             <div>
               <ImageThumbnailRender src={item.path} className="!w-[28px] !h-[28px] object-cover rounded" />
             </div>

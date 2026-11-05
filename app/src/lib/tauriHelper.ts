@@ -11,6 +11,7 @@ import { downloadDir, publicDir } from '@tauri-apps/api/path'
 import { setStatusBarColor } from 'tauri-plugin-blinko-api'
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { getBlinkoFileUrl } from './blinkoEndpoint';
 
 export interface PermissionStatus {
     audio: boolean;
@@ -69,13 +70,13 @@ export async function downloadFromLink(uri: string, filename?: string) {
     try {
         RootStore.Get(ToastPlugin).loading(i18n.t('downloading'), { id: 'downloading' })
 
+        const token = RootStore.Get(UserStore).tokenData.value?.token;
+        const downloadUrl = getBlinkoFileUrl(uri, { token, download: true });
+
         if (!filename) {
-            const url = new URL(uri);
+            const url = new URL(downloadUrl);
             filename = url.pathname.split('/').pop() || 'downloaded_file';
         }
-
-        const token = RootStore.Get(UserStore).tokenData.value?.token;
-        const downloadUrl = token ? `${uri}?token=${token}` : uri;
 
         if (isAndroid()) {
             const downloadDirPath = await downloadDir();

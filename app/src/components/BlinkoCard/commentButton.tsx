@@ -24,7 +24,7 @@ import i18n from '@/lib/i18n';
 import { Spinner } from '@heroui/react';
 import { ToastPlugin } from '@/store/module/Toast/Toast';
 import { BlinkoItem } from '.';
-import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { getBlinkoFileUrl } from '@/lib/blinkoEndpoint';
 import { FallbackImage } from '../Common/FallbackImage';
 export type AvatarAccount = { image?: string; nickname?: string; name?: string; id?: any | number; };
 
@@ -43,7 +43,7 @@ export const UserAvatar = observer(({ account, guestName, isAuthor, blinkoItem, 
       {account ? (
         <>
           {account.image ? (
-            <FallbackImage src={blinkoItem?.originURL ? (blinkoItem.originURL + account.image) : getBlinkoEndpoint(account.image + `?token=${RootStore.Get(UserStore).tokenData.value?.token}`)} radius="full" alt="" width={size} height={size} />
+            <FallbackImage src={blinkoItem?.originURL ? (blinkoItem.originURL + account.image) : getBlinkoFileUrl(account.image, { token: RootStore.Get(UserStore).tokenData.value?.token })} radius="full" alt="" width={size} height={size} />
           ) : (
             <Avatar
               size={size}

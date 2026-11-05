@@ -1,3 +1,4 @@
+import { exportDownloadUrl, EXPORT_DOWNLOAD_TTL_MS } from '../lib/exportDownload';
 import { router, authProcedure, demoAuthMiddleware, superAdminAuthMiddleware } from '@server/middleware';
 import { z } from 'zod';
 import { DBJob } from '@server/jobs/dbjob';
@@ -217,10 +218,10 @@ export const taskRouter = router({
         } catch (error) {
           console.warn('Failed to cleanup export zip file:', error);
         }
-      }, 5 * 60 * 1000);
+      }, EXPORT_DOWNLOAD_TTL_MS).unref();
       return {
         success: true,
-        downloadUrl: `/api/file${result.path}`,
+        downloadUrl: await exportDownloadUrl(result.path.replace(/^\//, ''), Number(ctx.id)),
         fileCount: result.fileCount
       };
     }),

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@server/prisma';
 import { mcpClientManager } from '@server/aiServer/mcp';
 import { TRPCError } from '@trpc/server';
-import path from 'path';
+import { approvedStdioConfig } from '../lib/mcpStdioPolicy';
 
 // Schema for MCP server
 const mcpServerSchema = z.object({
@@ -29,75 +29,6 @@ const connectionStatusSchema = z.object({
   toolCount: z.number(),
   lastUsed: z.date().optional(),
 });
-
-// Allowed commands for MCP stdio servers (whitelist approach)
-const ALLOWED_MCP_COMMANDS = [
-  'npx',
-  'node',
-  'python',
-  'python3',
-  'bun',
-  'deno',
-  // Add other trusted MCP server commands as needed
-];
-
-/**
- * Validates if a command is allowed for MCP stdio servers
- * @param command - The command to validate
- * @returns true if the command is allowed, false otherwise
- */
-function isCommandAllowed(command: string): boolean {
-  if (!command || typeof command !== 'string') {
-    return false;
-  }
-
-  // Get the base command name (without path)
-  const baseName = path.basename(command).toLowerCase();
-  
-  // Check if it's in the whitelist
-  return ALLOWED_MCP_COMMANDS.includes(baseName);
-}
-
-/**
- * Validates if command arguments are safe (no shell injection)
- * @param args - Array of command arguments
- * @returns true if all arguments are safe, false otherwise
- */
-function areArgsSafe(args: string[]): boolean {
-  if (!Array.isArray(args)) {
-    return false;
-  }
-
-  // Dangerous patterns that could lead to command injection
-  const dangerousPatterns = [
-    /[;&|`$]/g,           // Shell metacharacters: ; & | ` $
-    /\$\(/g,               // Command substitution: $(...)
-    /`/g,                  // Backtick command substitution
-    />\s*\//g,             // Redirect to absolute path: > /path
-    /\/etc\//g,            // Access to /etc directory
-    /\/proc\//g,           // Access to /proc filesystem
-    /\/sys\//g,            // Access to /sys filesystem
-    /\.\./g,               // Path traversal
-    /&&/g,                 // Command chaining
-    /\|\|/g,               // Command chaining
-    /<|>/g,                // Input/output redirection
-  ];
-
-  // Check each argument for dangerous patterns
-  for (const arg of args) {
-    if (typeof arg !== 'string') {
-      return false;
-    }
-    
-    for (const pattern of dangerousPatterns) {
-      if (pattern.test(arg)) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
 
 export const mcpServersRouter = router({
   // List all MCP servers (admin only)
@@ -159,19 +90,7 @@ export const mcpServersRouter = router({
 
       // Security validation for stdio type: validate command and args
       if (input.type === 'stdio') {
-        if (!input.command || !isCommandAllowed(input.command)) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Command not allowed. Allowed commands: ${ALLOWED_MCP_COMMANDS.join(', ')}`
-          });
-        }
-
-        if (input.args && !areArgsSafe(input.args)) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'Arguments contain disallowed characters or patterns that could lead to command injection'
-          });
-        }
+        approvedStdioConfig({ command: input.command ?? null, args: input.args, env: input.env });
       }
 
       const server = await prisma.mcpServers.create({
@@ -227,22 +146,7 @@ export const mcpServersRouter = router({
 
       // Security validation for stdio type: validate command and args
       if (serverType === 'stdio') {
-        const commandToValidate = data.command !== undefined ? data.command : existingServer.command;
-        
-        if (!commandToValidate || !isCommandAllowed(commandToValidate)) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Command not allowed. Allowed commands: ${ALLOWED_MCP_COMMANDS.join(', ')}`
-          });
-        }
-
-        const argsToValidate = data.args !== undefined ? data.args : (existingServer.args as string[] | null);
-        if (argsToValidate && !areArgsSafe(argsToValidate)) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'Arguments contain disallowed characters or patterns that could lead to command injection'
-          });
-        }
+        approvedStdioConfig({ command: data.command ?? existingServer.command, args: data.args !== undefined ? data.args : existingServer.args, env: data.env !== undefined ? data.env : existingServer.env });
       }
 
       // Disconnect if connected before updating

@@ -10,6 +10,7 @@ import { signIn, getTokenData } from '@/components/Auth/auth-client';
 import { eventBus } from '@/lib/event';
 import { UserStore } from '@/store/user';
 import { Button } from '@heroui/react';
+import { newPendingTwoFactor, pendingTwoFactor } from '@/lib/pendingTwoFactor';
 
 export default function OAuthCallback() {
   const navigate = useNavigate();
@@ -22,19 +23,16 @@ export default function OAuthCallback() {
 
   const handleTwoFactorAuth = async (code: string) => {
     try {
-      const params = new URLSearchParams(location.search);
-      const userId = params.get('userId') || userStore.id;
-
-      if (!userId) {
+      const pending = pendingTwoFactor(userStore.tokenData.value);
+      if (!pending) {
         RootStore.Get(ToastPlugin).error(t('verification-failed'));
-        return { ok: false, error: 'Missing user ID' };
+        return { ok: false, error: 'Invalid or expired login challenge' };
       }
 
-      console.log('OAuth callback, userId:', userId);
-
       const res = await signIn('oauth-2fa', {
-        userId: userId,
+        userId: pending.user.id,
         twoFactorCode: code,
+        challenge: pending.challenge,
         callbackUrl: '/',
         redirect: false,
       });
@@ -67,10 +65,9 @@ export default function OAuthCallback() {
   };
 
   useEffect(() => {
-    console.log('OAuth callback, useEffect');
     const checkAuthStatus = async () => {
       try {
-        const params = new URLSearchParams(location.search);
+        const params = new URLSearchParams(location.hash ? location.hash.slice(1) : location.search);
         const errorMsg = params.get('error');
         const success = params.get('success');
         const requiresTwoFactor = params.get('requiresTwoFactor');
@@ -85,22 +82,32 @@ export default function OAuthCallback() {
           return;
         }
 
-        if (requiresTwoFactor === 'true' && userId) {
-          userStore.tokenData.save({
-            ...userStore.tokenData.value,
-            requiresTwoFactor: true,
-            user: {
-              ...(userStore.tokenData.value?.user || {}),
-              id: userId
-            }
-          });
-
+        const freshPending = requiresTwoFactor === 'true'
+          ? newPendingTwoFactor(userId, params.get('challenge'))
+          : null;
+        // A refresh follows URL scrubbing and has no bearer token yet. Restore
+        // the saved challenge before attempting the authenticated profile route.
+        const savedPending = !location.hash && !location.search
+          ? pendingTwoFactor(userStore.tokenData.value)
+          : null;
+        const pending = freshPending || savedPending;
+        if (pending) {
+          userStore.tokenData.save(pending);
+          window.history.replaceState(null, '', window.location.pathname);
           ShowTwoFactorModal(handleTwoFactorAuth, false);
           setIsLoading(false);
           return;
         }
-        
-        console.log('OAuth callback, success:', success, token);
+        if (requiresTwoFactor === 'true' || (!location.hash && !location.search && userStore.tokenData.value?.requiresTwoFactor)) {
+          userStore.tokenData.save(null);
+          window.history.replaceState(null, '', window.location.pathname);
+          setError(t('verification-failed'));
+          setShowReturnButton(true);
+          setIsLoading(false);
+          return;
+        }
+
+        window.history.replaceState(null, '', window.location.pathname);
         if (success === 'true') {
           if (token) {
             try {

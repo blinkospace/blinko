@@ -1,4 +1,4 @@
-import { router, authProcedure, publicProcedure } from '../middleware';
+import { router, authProcedure, publicProcedure, superAdminAuthMiddleware } from '../middleware';
 import { z } from 'zod';
 import { prisma } from '../prisma';
 import { GlobalConfig, ZConfigKey, ZConfigSchema, ZUserPerferConfigKey } from '../../shared/lib/types';
@@ -209,7 +209,7 @@ export const configRouter = router({
       }, {} as Record<string, any>);
     }),
 
-  ai: publicProcedure
+  ai: authProcedure.use(superAdminAuthMiddleware)
     .meta({ openapi: { method: 'GET', path: '/v1/config/ai', summary: 'Get AI model configuration by type', protect: true, tags: ['Config'] } })
     .input(z.object({
       type: z.enum(['mainModel', 'embeddingModel', 'voiceModel', 'rerankModel', 'imageModel', 'audioModel'])

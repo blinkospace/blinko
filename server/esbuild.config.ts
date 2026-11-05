@@ -24,7 +24,7 @@ async function build() {
       },
       packages: 'bundle',
       external: [
-        'buffer', 'crypto', 'events', 'fs', 'http', 'https', 'net', 
+        'buffer', 'crypto', 'events', 'fs', 'http', 'https', 'net',
         'os', 'path', 'querystring', 'stream', 'util', 'zlib',
         '@node-rs/crc32',
         'lightningcss',
@@ -35,6 +35,7 @@ async function build() {
         'sharp',
         'esbuild',
         'sqlite3',
+        'fsevents',
         '@libsql/linux-x64-musl',
         '@libsql/linux-x64-gnu',
         '@libsql/linux-arm64-musl',
@@ -56,16 +57,16 @@ async function build() {
 
     console.log('Build successful!');
     console.log(`Output file: ${path.resolve(process.cwd(), '../dist/index.js')}`);
-    
+
     if (result.metafile) {
       const outputFile = Object.keys(result.metafile.outputs)[0];
       const fileSizeMB = result.metafile.outputs[outputFile].bytes / 1024 / 1024;
       console.log(`JS size: ${fileSizeMB.toFixed(2)}MB`);
-      
+
       const sortedInputs = Object.entries(result.metafile.inputs)
         .sort((a, b) => b[1].bytes - a[1].bytes)
         .slice(0, 10);
-      
+
       console.log('\nThe largest 10 modules:');
       for (const [name, info] of sortedInputs) {
         console.log(`- ${name}: ${(info.bytes / 1024).toFixed(2)}KB`);
@@ -77,4 +78,4 @@ async function build() {
   }
 }
 
-build(); 
+build();

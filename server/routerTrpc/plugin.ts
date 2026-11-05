@@ -7,12 +7,14 @@ import path from 'path';
 import axios from 'axios';
 import yauzl from 'yauzl-promise';
 import { createWriteStream } from 'fs';
+import { pipeline } from 'node:stream/promises';
 import { pluginInfoSchema, installPluginSchema } from '../../shared/lib/types';
 import { pluginSchema } from '@shared/lib/prismaZodType';
 import { cache } from '@shared/lib/cache';
 import { existsSync } from 'fs';
 import { getHttpCacheKey, getWithProxy } from '@server/lib/proxy';
 import pathIsInside from 'path-is-inside';
+import { pluginDirectory, containedPluginPath, pluginNamePattern } from '../lib/pluginPaths';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache duration
 const MAX_RETRIES = 3;
@@ -85,11 +87,12 @@ async function downloadWithRetry(url: string, filePath: string, retries = MAX_RE
 
 
 const getPluginDir = (pluginName: string) => {
-  return path.join('.blinko', 'plugins', pluginName);
+  return pluginDirectory(pluginName);
 };
 
 const cleanPluginDir = async (pluginName: string) => {
   const pluginDir = getPluginDir(pluginName);
+  await containedPluginPath(path.dirname(pluginDir), pluginName);
   try {
     await fs.rm(pluginDir, { recursive: true, force: true });
   } catch (error) {
@@ -122,7 +125,7 @@ export const pluginRouter = router({
   getPluginCssContents: authProcedure
     .input(
       z.object({
-        pluginName: z.string(),
+        pluginName: z.string().regex(pluginNamePattern),
       }),
     )
     .output(z.array(z.object({
@@ -131,7 +134,8 @@ export const pluginRouter = router({
     })))
     .query(async ({ input }) => {
       try {
-        const pluginDir = path.join('.blinko', 'plugins', input.pluginName);
+        const pluginDir = getPluginDir(input.pluginName);
+        await containedPluginPath(path.dirname(pluginDir), input.pluginName);
         if (!existsSync(pluginDir)) {
           return [];
         }
@@ -141,7 +145,7 @@ export const pluginRouter = router({
 
         for (const cssFile of cssFiles) {
           try {
-            const filePath = path.join(pluginDir, cssFile);
+            const filePath = await containedPluginPath(pluginDir, cssFile);
             const content = await fs.readFile(filePath, 'utf-8');
             result.push({
               fileName: cssFile,
@@ -270,13 +274,24 @@ export const pluginRouter = router({
       }
     }),
 
-  installPlugin: authProcedure.input(installPluginSchema.extend({
+  installPlugin: authProcedure.use(superAdminAuthMiddleware).input(installPluginSchema.extend({
+    name: z.string().regex(pluginNamePattern),
     forceReinstall: z.boolean().optional().default(false)
   })).mutation(async ({ input }) => {
+    if (input.name === 'dev') throw new TRPCError({ code: 'BAD_REQUEST', message: 'Reserved plugin name' });
     const pluginDir = getPluginDir(input.name);
+    await containedPluginPath(path.dirname(pluginDir), input.name);
     const tempZipPath = path.join(pluginDir, 'release.zip');
+    let cleanOnFailure = false;
 
     try {
+      const repository = new URL(input.url || '');
+      if (repository.protocol !== 'https:' || repository.hostname !== 'github.com' || repository.port || repository.username || repository.password || !/^\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/?$/.test(repository.pathname)) {
+        throw new Error('Plugins must use an HTTPS GitHub repository');
+      }
+      if (!/^[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(input.version)) throw new Error('Invalid plugin version');
+      const releaseUrl = `${repository.origin}${repository.pathname.replace(/\/$/, '')}/releases/download/v${input.version}/release.zip`;
+
       // Check if plugin already exists
       const existingPlugin = await prisma.plugin.findFirst({
         where: {
@@ -290,6 +305,7 @@ export const pluginRouter = router({
       if (existingPlugin) {
         const metadata = existingPlugin.metadata as { version: string };
         if (metadata.version !== input.version || input.forceReinstall) {
+          cleanOnFailure = true;
           await cleanPluginDir(input.name);
         } else {
           throw new Error(`Plugin v${metadata.version} is already installed`);
@@ -297,32 +313,28 @@ export const pluginRouter = router({
       }
 
       // Create plugin directory and download files
+      cleanOnFailure = true;
       await ensureDirectoryExists(pluginDir);
-      const releaseUrl = `${input.url}/releases/download/v${input.version}/release.zip`;
-
       // Use retry mechanism for download
       await downloadWithRetry(releaseUrl, tempZipPath);
 
       // Extract zip file
       const zipFile = await yauzl.open(tempZipPath);
-      for await (const entry of zipFile) {
-        if (entry.filename.endsWith('/')) {
-          await fs.mkdir(path.join(pluginDir, entry.filename), { recursive: true });
-          continue;
+      try {
+        for await (const entry of zipFile) {
+          if (((entry.externalFileAttributes >>> 16) & 0o170000) === 0o120000) throw new Error('Plugin symlinks are not allowed');
+          const targetPath = await containedPluginPath(pluginDir, entry.filename.replace(/\/$/, ''));
+          if (entry.filename.endsWith('/')) {
+            await fs.mkdir(targetPath, { recursive: true });
+            continue;
+          }
+
+          await fs.mkdir(path.dirname(targetPath), { recursive: true });
+          await pipeline(await entry.openReadStream(), createWriteStream(targetPath));
         }
-
-        const targetPath = path.join(pluginDir, entry.filename);
-        await fs.mkdir(path.dirname(targetPath), { recursive: true });
-
-        const readStream = await entry.openReadStream();
-        const writeStream = createWriteStream(targetPath);
-
-        await new Promise((resolve, reject) => {
-          readStream.pipe(writeStream).on('finish', resolve).on('error', reject);
-        });
+      } finally {
+        await zipFile.close();
       }
-
-      await zipFile.close();
       await fs.unlink(tempZipPath);
 
       // Save to database
@@ -348,7 +360,7 @@ export const pluginRouter = router({
       });
     } catch (error) {
       // Clean up on error
-      await cleanPluginDir(input.name);
+      if (cleanOnFailure) await cleanPluginDir(input.name);
       console.error('Install plugin error:', error);
       throw error;
     }
@@ -359,7 +371,7 @@ export const pluginRouter = router({
     return plugins;
   }),
 
-  uninstallPlugin: authProcedure
+  uninstallPlugin: authProcedure.use(superAdminAuthMiddleware)
     .input(
       z.object({
         id: z.number(),
