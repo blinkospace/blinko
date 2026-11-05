@@ -20,7 +20,7 @@ Normal runtime operations can still write authentication state and legacy metada
 
 Verify actual account access, private/public/internal/protected sharing and owner export downloads in the target deployment. Apply the deployment's usual checks for external authentication, object storage and workload capacity.
 
-The actual Linux amd64 release image passed isolated startup and API account/file/export checks. Browser access to that exact image was not verified because the browser control connection was unavailable. Earlier browser acceptance covered the same client account/media/export behavior; it does not replace target-deployment verification.
+The actual Linux amd64 release image passed isolated startup and API account/file/export checks. Complete browser/device and deployment-specific acceptance in the target environment before rollout.
 
 ## Rollback
 
