@@ -15,7 +15,9 @@ on:
   workflow_dispatch:
 jobs:
   translate:
+    if: github.event.repository.private == false
     permissions:
+      contents: read
       issues: write
       discussions: write
       pull-requests: write
