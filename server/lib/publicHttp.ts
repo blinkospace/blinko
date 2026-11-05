@@ -1,42 +1,40 @@
 import { lookup } from "node:dns/promises";
-import { BlockList, isIP } from "node:net";
+import { isIP } from "node:net";
 import http from "node:http";
 import https from "node:https";
 
-const blockedV4 = new BlockList();
-for (const [address, prefix] of [
-  ["0.0.0.0", 8],
-  ["10.0.0.0", 8],
-  ["100.64.0.0", 10],
-  ["127.0.0.0", 8],
-  ["169.254.0.0", 16],
-  ["172.16.0.0", 12],
-  ["192.0.0.0", 24],
-  ["192.0.2.0", 24],
-  ["192.88.99.0", 24],
-  ["192.168.0.0", 16],
-  ["198.18.0.0", 15],
-  ["198.51.100.0", 24],
-  ["203.0.113.0", 24],
-  ["224.0.0.0", 4],
-  ["240.0.0.0", 4],
-] as const)
-  blockedV4.addSubnet(address, prefix);
-const globalV6 = new BlockList();
-globalV6.addSubnet("2000::", 3, "ipv6");
-const blockedV6 = new BlockList();
-blockedV6.addSubnet("2001::", 23, "ipv6");
-blockedV6.addSubnet("2001:db8::", 32, "ipv6");
-blockedV6.addSubnet("2002::", 16, "ipv6");
-blockedV6.addSubnet("3fff::", 20, "ipv6");
+// Explicit prefix arithmetic also works on deployed Bun versions whose
+// node:net BlockList implementation does not enforce IPv4 entries correctly.
+const ipv4Number = (address: string) =>
+  address.split('.').reduce((value, octet) => value * 256 + Number(octet), 0);
+const inPrefix = (value: number, network: number, prefix: number) => {
+  const size = 2 ** (32 - prefix);
+  return Math.floor(value / size) === Math.floor(network / size);
+};
+const blockedV4 = [
+  ["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10],
+  ["127.0.0.0", 8], ["169.254.0.0", 16], ["172.16.0.0", 12],
+  ["192.0.0.0", 24], ["192.0.2.0", 24], ["192.88.99.0", 24],
+  ["192.168.0.0", 16], ["198.18.0.0", 15], ["198.51.100.0", 24],
+  ["203.0.113.0", 24], ["224.0.0.0", 4], ["240.0.0.0", 4],
+].map(([address, prefix]) => [ipv4Number(address as string), Number(prefix)] as const);
+const blockedV6 = [
+  [0x20010000, 23], [0x20010db8, 32], [0x20020000, 16], [0x3fff0000, 20],
+] as const;
 
 export function isPublicAddress(address: string) {
   const family = isIP(address);
-  return family === 4
-    ? !blockedV4.check(address)
-    : family === 6 &&
-        globalV6.check(address, "ipv6") &&
-        !blockedV6.check(address, "ipv6");
+  if (family === 4) {
+    const value = ipv4Number(address);
+    return !blockedV4.some(([network, prefix]) => inPrefix(value, network, prefix));
+  }
+  if (family !== 6) return false;
+  // Every IPv6 range used here is at most /32. A missing second hextet
+  // represents compression and is zero; leading compression lies outside /3.
+  const [first, second] = address.split(':');
+  const value = parseInt(first || '0', 16) * 65536 + parseInt(second || '0', 16);
+  return inPrefix(value, 0x20000000, 3) &&
+    !blockedV6.some(([network, prefix]) => inPrefix(value, network, prefix));
 }
 
 export async function resolvePublicUrl(

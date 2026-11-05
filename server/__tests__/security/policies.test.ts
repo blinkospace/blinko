@@ -293,3 +293,15 @@ describe("2FA first-factor challenges", () => {
     expect(limit.allow("ip", 6 * 60 * 1000)).toBe(true);
   });
 });
+
+// The deployed Bun 1.2.8 runtime must reject these without relying on BlockList.
+test.each([
+  '10.255.255.255', '100.64.0.1', '100.127.255.255', '172.31.255.255',
+  '192.168.255.255', '198.19.255.255', '224.0.0.1', '255.255.255.255',
+  '2001:1ff:ffff::1', '2001:db8::1', '2002:7f00:1::', '3fff:fff::1',
+])('reserved destination remains blocked on the deployed runtime: %s', (address) => {
+  expect(isPublicAddress(address)).toBe(false);
+});
+test.each(['1.1.1.1', '8.8.8.8', '100.128.0.1', '172.32.0.1', '2001:4860:4860::8888', '2606:4700:4700::1111'])(
+  'public destinations remain available: %s', (address) => expect(isPublicAddress(address)).toBe(true),
+);
