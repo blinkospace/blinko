@@ -368,12 +368,51 @@ jobs:
           storeFile=$HOME/.android/upload-keystore.jks
           EOF
 
+      - name: Set Android release version
+        env:
+          RELEASE_VERSION: ${{ needs.set-version.outputs.version }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          version = os.environ['RELEASE_VERSION']
+          match = re.fullmatch(r'(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?', version)
+          if not match:
+              raise SystemExit('Invalid Android release version')
+          major, minor, patch = map(int, match.groups())
+          code = major * 1_000_000 + minor * 1_000 + patch
+          if minor >= 1000 or patch >= 1000 or not 0 < code <= 2_100_000_000:
+              raise SystemExit('Android versionCode out of range')
+          Path('app/src-tauri/gen/android/app/tauri.properties').write_text(
+              f'tauri.android.versionCode={code}\ntauri.android.versionName={version}\n')
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write(f'ANDROID_VERSION_CODE={code}\n')
+          PY
+
       - name: Build Android App
         run: |
           cd app
           bun run tauri:android:build
         env:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.11902837
+
+      - name: Verify APK version before upload
+        env:
+          RELEASE_VERSION: ${{ needs.set-version.outputs.version }}
+        run: |
+          python3 - <<'PY'
+          import os, re, subprocess
+          from pathlib import Path
+          candidates = list((Path(os.environ['ANDROID_HOME']) / 'build-tools').glob('*/aapt'))
+          if not candidates:
+              raise SystemExit('Android aapt is unavailable')
+          apk = 'app/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk'
+          output = subprocess.check_output([str(candidates[0]), 'dump', 'badging', apk], text=True)
+          package = next(line for line in output.splitlines() if line.startswith('package:'))
+          assert re.search(r"versionName='([^']+)'", package).group(1) == os.environ['RELEASE_VERSION']
+          assert re.search(r"versionCode='([^']+)'", package).group(1) == os.environ['ANDROID_VERSION_CODE']
+          print(package)
+          PY
 
       - name: Rename Android App File
         run: |
