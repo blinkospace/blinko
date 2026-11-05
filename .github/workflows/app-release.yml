@@ -32,6 +32,12 @@ on:
         required: false
         type: boolean
         default: false
+      build-target:
+        description: 'Platforms to build (supports retrying Android independently)'
+        required: false
+        type: choice
+        options: [all, android, desktop]
+        default: all
       disable-all-cache:
         description: 'Disable all caches (force clean build)'
         required: false
@@ -118,7 +124,7 @@ jobs:
   # Desktop Platform Build Task
   publish-desktop:
     needs: [set-version, update-version]
-    if: always() && !cancelled() && needs.set-version.result == 'success' && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
+    if: always() && !cancelled() && github.event.inputs.build-target != 'android' && needs.set-version.result == 'success' && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
     permissions:
       contents: write
     strategy:
@@ -262,7 +268,7 @@ jobs:
   # Android Platform Build Task
   publish-android:
     needs: [set-version, update-version]
-    if: always() && !cancelled() && needs.set-version.result == 'success' && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
+    if: always() && !cancelled() && github.event.inputs.build-target != 'desktop' && needs.set-version.result == 'success' && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -295,6 +301,8 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
 
       - name: Install NDK
         run: sdkmanager "ndk;27.0.11902837"
