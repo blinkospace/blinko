@@ -1,34 +1,29 @@
-# Security patch upgrade and rollback
+# 1.8.9 upgrade guidance
 
-This patch is based on public 1.8.8 (`b2586d03`). It must be reviewed and released as a coordinated server/frontend update. Passing the checks below is scoped evidence, not a guarantee for every deployment.
+Update the server and matching clients together. Back up persistent data and retain the previous application image before making deployment changes.
 
-## Database and rollback evidence
+## Compatibility and configuration
 
-- No Prisma schema, migration or seed source changes; the lockfile and runtime dependency declarations are unchanged.
-- An isolated PostgreSQL 14.23 database received the original 30 migrations and synthetic old-format data: 7 accounts and 10,007 notes.
-- The same database was used by old code, patched code, then old code again in independent processes. The patch migration deploy reported no pending migrations.
-- All three phases passed actual `koray` password login, authenticated profile, private-note lookup and private-attachment download. The existing legacy session remained present.
-- Nine application-table digests were identical across phases: notes, attachments, messages, conversations, internal shares, providers, models, plugins and MCP configurations.
-- The patched phase created a pending 2FA challenge in the existing session table. The legacy phase could still read its normal session and application data with that row present.
-- This test does not assert zero database writes: login writes account authentication state, pending challenges use session rows, and the unchanged startup seed may update legacy metadata and fonts.
+- Existing authenticated sessions remain usable. Restart any unfinished sign-in flow after updating. Custom clients using two-step authentication must use the current client/server protocol.
+- Existing stdio MCP configurations require server-operator approval through `BLINKO_MCP_STDIO_ALLOWLIST`. Supply a JSON array of exact command, argument and environment tuples. For example: `[{"command":"node","args":["/opt/blinko-mcp/server.js"],"env":{}}]`. Approve only operator-controlled programs. HTTP MCP transports retain their existing configuration behavior.
+- Set `NEXT_PUBLIC_BASE_URL` or `NEXTAUTH_URL` to the public application origin.
+- Refresh previously cached attachment responses at the CDN/proxy when applicable. New response headers do not expire previously cached objects automatically.
+- Preserve database/file volumes, signing secrets and storage credentials throughout the upgrade.
 
-## Coordinated upgrade requirements
+## Database compatibility
 
-1. Ship the frontend and backend together. Existing authenticated sessions remain valid, but old pending 2FA logins must restart. Clients implementing 2FA must send the new first-factor challenge; older native or custom clients need the corresponding update before their users can complete a new 2FA login.
-2. Inventory enabled stdio MCP configurations before rollout. The operator must explicitly approve required command/arguments/environment tuples using `BLINKO_MCP_STDIO_ALLOWLIST`. Without approval those configurations are intentionally denied, including existing saved configurations. HTTP MCP transports retain their existing behavior. Keep operator approval separate from ordinary web administration.
-3. Configure the public application origin for RSS/Atom, and expire old publicly cached attachment responses. Newly served attachments are private/no-store; changing headers does not purge old CDN entries.
-4. Preserve database and file volumes, signing secrets, and storage credentials. Retain an immutable previous application image and the matching client build. Do not run reset, seed-repair SQL, volume deletion or inverse migrations as an automatic rollback step.
+This release introduces no Prisma schema, migration or seed-source changes. Isolated PostgreSQL 14.23 tests exercised old code, the updated code and old code again against synthetic legacy data. Account access and application data remained compatible in that test.
 
-## Release acceptance gates
+Normal runtime operations can still write authentication state and legacy metadata. No schema migration does not imply zero runtime writes. Do not reset databases or delete volumes as an upgrade or rollback step.
 
-- Local regression: 165 security tests across 15 isolated suites pass. Frontend and backend production bundles passed in the prior acceptance round.
-- Scoped browser acceptance already passed: actual ordinary-user login and session refresh, old note rendering, owner-only export download and anonymous protected-share inline/fullscreen media.
-- Server-wide TypeScript validation remains incomplete: a fresh 6GB check was stopped after a 180-second timeout without a result. A build is not a full type check.
-- Real external OAuth, live object-storage deployment, native packages, full job startup and deployment-specific load acceptance are not established by these checks.
-- Do not mark the change release-ready until the coordinated client/MCP requirements are accepted and the required deployment gates are satisfied.
+## Rollout checks
 
-## Rollback procedure
+Verify actual account access, private/public/internal/protected sharing and owner export downloads in the target deployment. Apply the deployment's usual checks for external authentication, object storage and workload capacity.
 
-Stop new traffic/background work using the deployment's normal controls, retain persistent volumes, and redeploy the previous matching application/frontend image. No database down migration is required by this patch. Restart incomplete 2FA flows and verify actual login, private/public/internal/protected attachment access and owner export downloads before restoring traffic.
+The actual Linux amd64 release image passed isolated startup and API account/file/export checks. Complete browser/device and deployment-specific acceptance in the target environment before rollout.
 
-Reverting to the vulnerable version also restores its security weaknesses. Prefer a forward correction; if rollback is necessary, restrict affected exposed functionality while preparing the corrected release. Database/file restoration is reserved for demonstrated data damage and a separately assessed recovery point, not a routine consequence of this patch.
+## Rollback
+
+Use the deployment's normal traffic controls and restore the previous matching application/client image while retaining persistent volumes. This patch requires no application database down migration.
+
+Restart unfinished sign-in flows and verify account access, sharing and exports before restoring traffic. Prefer a forward correction where possible: a rollback also changes the protections supplied by the current release. Restore a database/file backup only for demonstrated data damage and a separately assessed recovery point.
