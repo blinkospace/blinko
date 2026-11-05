@@ -16,6 +16,7 @@ for (const suite of [
   "http-auth",
   "http-files",
   "public-http",
+  "public-runtime",
   "public-routes",
   "plugin",
   "mcp",
