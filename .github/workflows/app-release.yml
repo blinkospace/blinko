@@ -1,5 +1,8 @@
 name: App Release
 
+permissions:
+  contents: read
+
 run-name: >-
   ${{
     github.event_name == 'workflow_dispatch' && format('App Released - v{0}', github.event.inputs.tag) ||
