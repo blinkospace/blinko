@@ -156,5 +156,15 @@ export const PROVIDER_TEMPLATES = [
     docs: 'https://docs.litellm.ai/docs',
     icon: 'litellm',
     description: 'AI gateway proxy - access 100+ LLM providers through a single endpoint'
+  },
+  {
+    value: 'cheaperinference',
+    label: 'Cheaper Inference',
+    defaultName: 'Cheaper Inference',
+    defaultBaseURL: 'https://api.cheaperinference.com/v1',
+    website: 'https://cheaperinference.com',
+    docs: 'https://cheaperinference.com/docs',
+    icon: 'cheaperinference',
+    description: 'OpenAI-compatible gateway for models from several labs'
   }
 ];

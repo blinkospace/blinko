@@ -56,6 +56,13 @@ export class EmbeddingProvider extends BaseProvider {
           fetch: this.proxiedFetch
         }).textEmbeddingModel(config.modelKey);
 
+      case 'cheaperinference':
+        return createOpenAI({
+          apiKey: config.apiKey,
+          baseURL: config.baseURL || 'https://api.cheaperinference.com/v1',
+          fetch: this.proxiedFetch
+        }).textEmbeddingModel(config.modelKey);
+
       case 'custom':
       default:
         // Default to OpenAI-compatible API
