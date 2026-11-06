@@ -32,6 +32,7 @@ else
       -e POSTGRES_USER=postgres \
       -e POSTGRES_PASSWORD=mysecretpassword \
       -e TZ=Asia/Shanghai \
+      -v blinko-postgres-data:/var/lib/postgresql/data \
       --restart always \
       postgres:14
 
