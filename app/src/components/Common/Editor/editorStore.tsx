@@ -1,6 +1,7 @@
 import { RootStore } from '@/store';
 import { PromiseState } from '@/store/standard/PromiseState';
 import { helper } from '@/lib/helper';
+import { convertHeicToJpeg } from '@/lib/heicConvert';
 import { FileType, OnSendContentType } from './type';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { api } from '@/lib/trpc';
@@ -203,6 +204,10 @@ export class EditorStore {
     const uploadFileType = {}
 
     const _acceptedFiles = await Promise.all(acceptedFiles.map(async file => {
+      // Convert HEIC/HEIF to JPEG in the browser so previews render and the
+      // server never has to deal with HEIC decoding.
+      file = await convertHeicToJpeg(file)
+
       const extension = helper.getFileExtension(file.name)
       const previewType = helper.getFileType(file.type, file.name)
       const isUserVoiceRecording = file.isUserVoiceRecording || false

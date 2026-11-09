@@ -59,6 +59,7 @@
     "emoji-picker-react": "^4.12.2",
     "filesize": "^8.0.7",
     "framer-motion": "^11.0.0",
+    "heic-convert": "^2.1.0",
     "i18next": "^25.6.0",
     "i18next-browser-languagedetector": "^8.0.4",
     "i18next-http-backend": "^3.0.2",

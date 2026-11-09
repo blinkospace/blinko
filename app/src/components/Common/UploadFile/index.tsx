@@ -10,6 +10,7 @@ import { BlinkoStore } from "@/store/blinkoStore";
 import { observer } from "mobx-react-lite";
 import { getBlinkoEndpoint } from "@/lib/blinkoEndpoint";
 import axiosInstance from "@/lib/axios";
+import { convertHeicToJpeg } from "@/lib/heicConvert";
 type IProps = {
   onUpload?: ({ filePath, fileName }) => void
   children?: React.ReactNode
@@ -28,12 +29,12 @@ export const UploadFileWrapper = observer(({ onUpload, children, acceptImage = f
     multiple: false,
     noClick: true,
     accept: acceptImage ? {
-      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.heic', '.heif']
     } : undefined,
     onDrop: async acceptedFiles => {
       setIsLoading(true)
       try {
-        const file = acceptedFiles[0]!
+        const file = await convertHeicToJpeg(acceptedFiles[0]!)
         const formData = new FormData();
         formData.append('file', file)
 
