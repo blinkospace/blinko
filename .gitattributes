@@ -1,0 +1,9 @@
+# Keep shell scripts LF-only.
+#
+# With core.autocrlf=true (the default on Windows) a checkout rewrites the
+# tracked *.sh files to CRLF. Bash then fails with "$'\r': command not found",
+# which is what happens when install.sh / update.sh are run inside WSL.
+#
+# The blobs in this repository are already LF, so this only changes how they
+# are checked out.
+*.sh text eol=lf
