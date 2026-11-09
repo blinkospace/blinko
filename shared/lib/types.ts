@@ -104,6 +104,7 @@ export const ZConfigKey = z.union([
   z.literal('signinFooterEnabled'),
   z.literal('signinFooterText'),
   z.literal('customTitle'),
+  z.literal('customHubUrl'),
   ZUserPerferConfigKey,
   z.any()
 ]);
@@ -193,7 +194,8 @@ export const ZConfigSchema = z.object({
   fontStyle: z.string().optional(),
   signinFooterEnabled: z.boolean().optional(),
   signinFooterText: z.string().optional(),
-  customTitle: z.string().optional()
+  customTitle: z.string().optional(),
+  customHubUrl: z.string().optional()
 });
 
 export type GlobalConfig = z.infer<typeof ZConfigSchema>;

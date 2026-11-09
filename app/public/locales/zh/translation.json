@@ -856,5 +856,8 @@
   "custom-title": "自定义标题",
   "custom-title-tip": "用于浏览器标签页和登录页标题，留空将使用默认标题。",
   "custom-title-placeholder": "请输入标题（1-50个字符）",
-  "login-with": "登录 {{title}}"
+  "login-with": "登录 {{title}}",
+  "custom-hub-url": "自定义 Hub 数据源 URL",
+  "custom-hub-url-tip": "配置自定义 Blinko Hub 的 index.json 地址，留空将默认使用官方 Hub。",
+  "custom-hub-url-placeholder": "例如：https://cdn.jsdelivr.net/gh/Inverstar/blinko-hub@main/index.json"
 }

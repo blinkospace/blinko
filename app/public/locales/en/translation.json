@@ -839,5 +839,8 @@
   "custom-title": "Custom Title",
   "custom-title-tip": "Used for browser tab and sign-in title. Leave empty to use the default title.",
   "custom-title-placeholder": "Enter a title (1-50 chars)",
-  "login-with": "Login With {{title}}"
+  "login-with": "Login With {{title}}",
+  "custom-hub-url": "Custom Hub URL",
+  "custom-hub-url-tip": "Configure custom Blinko Hub index.json URL. Leave empty to use default official Hub.",
+  "custom-hub-url-placeholder": "e.g., https://cdn.jsdelivr.net/gh/Inverstar/blinko-hub@main/index.json"
 }

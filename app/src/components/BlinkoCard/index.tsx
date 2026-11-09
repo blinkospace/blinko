@@ -67,7 +67,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
   const handleClick = () => {
     if (blinko.isMultiSelectMode) {
       blinko.onMultiSelectNote(blinkoItem.id!);
-    } else if (blinkoItem.isBlog && !isShareMode) {
+    } else if (blinkoItem.isBlog) {
       setIsFullscreenEditorOpen(true);
       blinko.fullscreenEditorNoteId = blinkoItem.id!;
     }
@@ -105,6 +105,7 @@ export const BlinkoCard = observer(({ blinkoItem, account, isShareMode = false, 
         blinkoItem={blinkoItem}
         isOpen={isFullscreenEditorOpen}
         onClose={() => setIsFullscreenEditorOpen(false)}
+        isShareMode={isShareMode}
       />
 
       {(() => {
