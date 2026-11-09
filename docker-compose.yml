@@ -1,5 +1,4 @@
-# docker-compose.dev.yml
-version: '3'
+# docker-compose.yml
 
 networks:
   blinko-network:
