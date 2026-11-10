@@ -12,6 +12,13 @@ import { aiProviders, aiModels } from '@shared/lib/prismaZodType';
 import { fetchWithProxy } from '@server/lib/proxy';
 import { visibleProvider, visibleModel } from '../lib/providerVisibility';
 import { inferModelCapabilities } from '@shared/lib/modelTemplates';
+import type { TextStreamPart } from 'ai';
+
+// These are the legacy generator's existing yielded shapes. Naming them keeps
+// published declarations from referring to Mastra's private nested copy of ai.
+type LegacyCompletionPart =
+  | { notes: any[]; chunk?: undefined }
+  | { chunk: TextStreamPart<any>; notes?: undefined };
 
 export const aiRouter = router({
   embeddingUpsert: authProcedure
@@ -50,12 +57,12 @@ export const aiRouter = router({
 
   embeddingDelete: authProcedure
     .input(z.object({
-      id: z.number()
+      id: z.number().int().positive()
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const { id } = input
       try {
-        const res = await AiService.embeddingDelete({ id })
+        const res = await AiService.embeddingDelete({ id, accountId: Number(ctx.id) })
         return res
       } catch (error) {
         return { ok: false, msg: error?.message }
@@ -71,7 +78,7 @@ export const aiRouter = router({
       conversations: z.array(z.object({ role: z.string(), content: z.string() })),
       systemPrompt: z.string().optional()
     }))
-    .mutation(async function* ({ input, ctx }) {
+    .mutation(async function* ({ input, ctx }): AsyncGenerator<LegacyCompletionPart, void, unknown> {
       try {
         const { question, conversations, withTools = false, withOnline = false, withRAG = true, systemPrompt } = input
         let _conversations = conversations as CoreMessage[]
@@ -158,7 +165,7 @@ export const aiRouter = router({
       type: z.enum(['expand', 'polish', 'custom']).optional(),
       content: z.string().optional()
     }))
-    .mutation(async function* ({ input }) {
+    .mutation(async function* ({ input }): AsyncGenerator<TextStreamPart<any>, void, unknown> {
       const { question, type = 'custom', content } = input
       const agent = await AiModelFactory.WritingAgent(type)
       const result = await agent.stream([

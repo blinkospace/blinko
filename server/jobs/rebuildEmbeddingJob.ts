@@ -2,7 +2,7 @@ import { BaseScheduleJob } from "./baseScheduleJob";
 import { prisma } from "../prisma";
 import { NotificationType } from "@shared/lib/prismaZodType";
 import { CreateNotification } from "../routerTrpc/notification";
-import { AiModelFactory } from "@server/aiServer/aiModelFactory";
+import { hostIndex } from '../services/pluginServices/HostIndex';
 import { AiService } from "@server/aiServer";
 
 export const REBUILD_EMBEDDING_TASK_NAME = "rebuildEmbedding";
@@ -175,16 +175,14 @@ export class RebuildEmbeddingJob extends BaseScheduleJob {
     try {
       this.forceStopFlag = false;
 
-      const { VectorStore } = await AiModelFactory.GetProvider();
+      // Body rebuilding uses only embedding resources. Retain the previous physical
+      // generation so an interrupted rebuild can be inspected or rolled back.
       const processedIds = new Set<number>(currentProgress.processedNoteIds || []);
       const failedIds = new Set<number>(currentProgress.failedNoteIds || []);
       const results: ResultRecord[] = [...(currentProgress.results || [])];
 
       if (!currentProgress.isIncremental) {
-        await AiModelFactory.rebuildVectorIndex({
-          vectorStore: VectorStore,
-          isDelete: true
-        });
+        await hostIndex.beginRebuild();
       }
 
       const whereClause: any = { isRecycle: false };

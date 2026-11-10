@@ -22,6 +22,7 @@ import { getAllPathTags } from '@server/lib/helper';
 import { commentWebhookInclude, sendCommentWebhook } from '@server/lib/commentWebhook';
 import { LibSQLVector } from '@mastra/libsql';
 import { RuntimeContext } from "@mastra/core/di";
+import { hostIndex } from '../services/pluginServices/HostIndex';
 
 export function isImage(filePath: string): boolean {
   if (!filePath) return false;
@@ -76,63 +77,19 @@ export class AiService {
     await VectorStore.truncateIndex({ indexName: 'blinko' });
   }
 
-  static async embeddingUpsert({ id, content, type, createTime, updatedAt }: { id: number; content: string; type: 'update' | 'insert'; createTime: Date; updatedAt?: Date }) {
+  static async embeddingUpsert({ id, content }: { id: number; content: string; type: 'update' | 'insert'; createTime: Date; updatedAt?: Date }) {
     try {
-      const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
-      if (!Embeddings) {
-        throw new Error("No embeddings model config")
-      }
       const config = await AiModelFactory.globalConfig();
-
       if (config.excludeEmbeddingTagId) {
         const tag = await prisma.tag.findUnique({ where: { id: config.excludeEmbeddingTagId } });
-        if (tag && content.includes(tag.name)) {
-          console.warn('this note is not allowed to be embedded:', tag.name);
-          return { ok: false, msg: 'tag is not allowed to be embedded' };
-        }
+        if (tag && content.includes(tag.name)) return { ok: false, msg: 'tag is not allowed to be embedded' };
       }
-
-      const note = await prisma.notes.findUnique({
-        where: { id },
-        select: { metadata: true, attachments: true }
-      });
-
-      const chunks = await MDocument.fromMarkdown(content).chunk();
-      if (type == 'update') {
-        AiModelFactory.queryAndDeleteVectorById(id);
-      }
-
-      const { embeddings } = await embedMany({
-        values: chunks.map((chunk) => chunk.text + 'Create At: ' + createTime.toISOString() + ' Update At: ' + updatedAt?.toISOString()),
-        model: Embeddings,
-      });
-
-      await VectorStore.upsert({
-        indexName: 'blinko',
-        vectors: embeddings,
-        metadata: chunks?.map((chunk) => ({ text: chunk.text, id, noteId: id, createTime, updatedAt })),
-      });
-
-      try {
-        await prisma.notes.update({
-          where: { id },
-          data: {
-            metadata: {
-              //@ts-ignore
-              ...(note?.metadata || {}),
-              isIndexed: true,
-            },
-            updatedAt,
-          },
-        });
-      } catch (error) {
-        console.log(error);
-      }
-
-      return { ok: true };
-    } catch (error) {
-      console.log(error, 'embeddingUpsert error');
-      return { ok: false, error: error?.message };
+      // Canonical SQL snapshot, complete staged revision and durable deletion fence.
+      // Background indexing never writes notes.updatedAt or replaces SQL metadata.
+      const ok = await hostIndex.upsert({ id, content });
+      return ok ? { ok: true } : { ok: false, error: 'The note changed or was deleted during indexing.' };
+    } catch {
+      return { ok: false, error: 'Index update failed.' };
     }
   }
 
@@ -198,9 +155,8 @@ export class AiService {
     }
   }
 
-  static async embeddingDelete({ id }: { id: number }) {
-    AiModelFactory.queryAndDeleteVectorById(id);
-    return { ok: true };
+  static async embeddingDelete({ id, accountId }: { id: number; accountId: number }) {
+    return { ok: await hostIndex.deleteOwned(accountId, id) };
   }
 
   static async *rebuildEmbeddingIndex({ force = false }: { force?: boolean }): AsyncGenerator<ProgressResult & { progress?: { current: number; total: number } }, void, unknown> {

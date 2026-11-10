@@ -10,6 +10,9 @@ on:
       - 'prisma/**'
       - 'package.json'
       - 'bun.lock'
+      - 'blinko-types/**'
+      - 'tsconfig.blinko.json'
+      - 'tsconfig.plugin-services.json'
       - '.github/workflows/security-checks.yml'
 
 permissions:
@@ -31,6 +34,8 @@ jobs:
       - run: bunx prisma generate --schema prisma/schema.prisma
       - name: Security regression suites
         run: cd server && bun run test:security
+      - name: Fixed editor asset regression
+        run: bun test server/__tests__/editor-assets.test.ts
       - name: Typecheck security policy modules
         run: >-
           bunx tsc --noEmit --strict --skipLibCheck --esModuleInterop
@@ -44,3 +49,46 @@ jobs:
         run: cd app && bun run build:web
       - name: Build backend
         run: cd server && bun run build:web
+
+  plugin-services:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: blinko_test
+          POSTGRES_PASSWORD: synthetic-ci-password
+          POSTGRES_DB: blinko_plugin_services_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U blinko_test -d blinko_plugin_services_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://blinko_test:synthetic-ci-password@127.0.0.1:5432/blinko_plugin_services_test?connection_limit=8
+      PLUGIN_SERVICES_REFERENCE_DATABASE_URL: postgresql://candidate_owner:synthetic-reference-password@127.0.0.1:5432/candidate_owned?connection_limit=6
+      PLUGIN_SERVICES_TEST_DB: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2.8'
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma generate --schema prisma/schema.prisma
+      - run: bunx prisma migrate deploy --schema prisma/schema.prisma
+      - name: Create ordinary-owner reference database
+        run: bun server/scripts/setup-plugin-services-test-db.ts
+      - name: Migrate reference database
+        env:
+          DATABASE_URL: ${{ env.PLUGIN_SERVICES_REFERENCE_DATABASE_URL }}
+        run: bunx prisma migrate deploy --schema prisma/schema.prisma
+      - name: Typecheck plugin service implementation
+        run: bunx tsc -p tsconfig.plugin-services.json --pretty false --incremental false
+      - name: Build, pack and consume plugin declarations
+        run: bun run build:blinko:types
+      - name: Isolated plugin service suites with real PostgreSQL
+        run: cd server && bun run test:plugin-services

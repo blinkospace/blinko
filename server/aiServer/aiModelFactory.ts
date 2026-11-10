@@ -25,68 +25,33 @@ import { PinoLogger } from '@mastra/loggers';
 import { ModelCapabilities } from './types';
 import { aiModels } from '@shared/index';
 import { MastraVoice } from '@mastra/core/voice';
+import { hostIndex, queryHostBody } from '../services/pluginServices/HostIndex';
 
 export class AiModelFactory {
-  static async queryAndDeleteVectorById(targetId: number) {
-    const { VectorStore } = await AiModelFactory.GetProvider();
+  static async queryAndDeleteVectorById(targetId: number, knownAccountId?: number) {
     try {
-      const query = `
-          WITH target_record AS (
-            SELECT vector_id 
-            FROM 'blinko'
-            WHERE metadata->>'id' = ? 
-            LIMIT 1
-          )
-          DELETE FROM 'blinko'
-          WHERE vector_id IN (SELECT vector_id FROM target_record)
-          RETURNING *;`;
-      //@ts-ignore
-      const result = await VectorStore.turso.execute({
-        sql: query,
-        args: [targetId],
-      });
-
-      if (result.rows.length === 0) {
-        throw new Error(`id  ${targetId} is not found`);
-      }
-
-      return {
-        success: true,
-        deletedData: result.rows[0],
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'unknown error',
-      };
+      const accountId = knownAccountId ?? (await prisma.notes.findUnique({ where: { id: targetId }, select: { accountId: true } }))?.accountId;
+      if (accountId == null || !Number.isSafeInteger(accountId) || accountId <= 0)
+        return { success: false, error: 'Cannot determine note ownership for index cleanup.' };
+      await hostIndex.delete(accountId, targetId);
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Index cleanup failed; SQL ownership still excludes the note.' };
     }
   }
 
   static async queryVector(query: string, accountId: number, _topK?: number) {
-    const { VectorStore, Embeddings } = await AiModelFactory.GetProvider();
-    if (!Embeddings) {
-      throw new Error("No embeddings model config")
-    }
     const config = await AiModelFactory.globalConfig();
     const topK = _topK ?? config.embeddingTopK ?? 3;
     const embeddingMinScore = config.embeddingScore ?? 0.4;
-    const { embedding } = await embed({
-      value: query,
-      model: Embeddings,
-    });
-
-    const result = await VectorStore.query({
-      indexName: 'blinko',
-      queryVector: embedding,
-      topK: topK,
-    });
-    let filteredResults = result.filter(({ score }) => score >= embeddingMinScore);
+    const filteredResults = await queryHostBody(query, accountId, topK, embeddingMinScore);
 
     const notes =
       (
         await prisma.notes.findMany({
           where: {
             accountId: accountId,
+            isRecycle: false,
             id: {
               in: _.uniqWith(filteredResults.map((i) => Number(i.metadata?.id))).filter((i) => !!i) as number[],
             },

@@ -94,6 +94,7 @@ model notes {
   comments          comments[]      @relation("NoteComments")
   histories         noteHistory[]
   internalShares    noteInternalShare[]
+  qualification     pluginNoteQualification?
 }
 
 model comments {
@@ -344,4 +345,106 @@ model fonts {
   updatedAt   DateTime @updatedAt @db.Timestamptz(6)
 
   @@unique([name])
+}
+
+// Account request frequency is shared by free vector reads and paid calls.
+model pluginServiceRate {
+  accountId Int
+  windowStart DateTime @db.Timestamptz(6)
+  used Int @default(0)
+  readNoteUsed Int @default(0)
+  sharedUsed Int @default(0)
+
+  @@id([accountId, windowStart])
+  @@index([windowStart], map: "plugin_service_rate_window_idx")
+  @@map("plugin_service_rate")
+}
+
+// Plugin services persist request metadata, never prompts, keys or result text.
+model pluginServiceRequests {
+  id                 BigInt    @id @default(autoincrement())
+  accountId          Int
+  operation          String    @db.VarChar(64)
+  idempotencyKey     String    @db.VarChar(200)
+  requestFingerprint String    @db.VarChar(128)
+  requestId          String    @unique @db.VarChar(64)
+  modelId            Int?
+  state              String    @db.VarChar(32)
+  budgetDay          DateTime  @db.Date
+  reservedTokens     Int       @default(0)
+  inputTokens        Int?
+  outputTokens       Int?
+  usageStatus        String    @default("unknown") @db.VarChar(16)
+  errorCode          String?   @db.VarChar(64)
+  retryAfterMs       Int?
+  timeoutMs          Int
+  deadlineAt         DateTime  @db.Timestamptz(6)
+  dispatchStartedAt  DateTime? @db.Timestamptz(6)
+  settledAt          DateTime? @db.Timestamptz(6)
+  outcomeUnknownAt   DateTime? @db.Timestamptz(6)
+  createdAt          DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([accountId, operation, idempotencyKey], map: "plugin_service_requests_account_operation_key")
+  @@index([accountId, createdAt], map: "plugin_service_requests_account_created_idx")
+  @@index([state, deadlineAt], map: "plugin_service_requests_recovery_idx")
+  @@map("plugin_service_requests")
+}
+
+model pluginServiceDailyUsage {
+  accountId      Int
+  day            DateTime @db.Date
+  reservedTokens Int      @default(0)
+  settledTokens  Int      @default(0)
+
+  @@id([accountId, day])
+  @@map("plugin_service_daily_usage")
+}
+
+model pluginServicePolicy {
+  id             Int      @id @default(1)
+  limits         Json     @db.Json
+  features       Json     @db.Json
+  modelAllowlist Json?    @db.Json
+  dailyTokenBudget Int    @default(200000)
+  maxRequestsPerMinute Int @default(20)
+  readNoteRequestsPerMinute Int?
+  updatedAt      DateTime @updatedAt @db.Timestamptz(6)
+  updatedBy      Int?
+
+  @@map("plugin_service_policy")
+}
+
+// Candidate B metadata; SQL migration also maintains triggers and CHECK constraints.
+model pluginNoteQualification {
+  noteId       Int     @id
+  accountId    Int?
+  instance     String  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  version      BigInt  @default(1)
+  state        String  @default("dirty")
+  snapshotHash String?
+  usableBody   Boolean?
+  bodyBytes    BigInt?
+  ruleVersion  String?
+  note         notes   @relation(fields: [noteId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([accountId, state, noteId], map: "plugin_note_qualification_account_state")
+  @@map("plugin_note_qualification")
+}
+
+model pluginNoteFence {
+  accountId Int    @id
+  version   BigInt @default(0)
+
+  @@map("plugin_note_fence")
+}
+
+model pluginNoteRegistry {
+  id              Int     @id
+  trusted         Boolean @default(false)
+  initializing    Boolean @default(false)
+  schemaSignature String  @default("")
+  ruleVersion     String
+
+  @@map("plugin_note_registry")
 }

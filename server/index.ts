@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import zlib from 'zlib';
 import fs from 'fs';
+import { sendEditorAsset } from './lib/sendEditorAsset';
 import authRoutes from './routerExpress/auth';
 import { configureSession } from './routerExpress/auth/config';
 
@@ -189,7 +190,7 @@ async function setupApiRoutes(app: express.Application) {
         readStream.pipe(gzipStream).pipe(res);
       } else {
         // Send uncompressed version (for CSS or when gzip not supported)
-        res.sendFile(fullPath);
+        sendEditorAsset(res, fullPath);
       }
     });
   };
@@ -202,7 +203,7 @@ async function setupApiRoutes(app: express.Application) {
       'Cache-Control': 'public, max-age=604800, immutable',
       'Expires': new Date(Date.now() + 604800000).toUTCString()
     });
-    res.sendFile(path.resolve(__dirname, './lute.min.js'));
+    sendEditorAsset(res, path.resolve(__dirname, './lute.min.js'));
   });
 
   // Serve vditor dependencies from local files
