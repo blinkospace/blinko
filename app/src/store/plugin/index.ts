@@ -1,6 +1,6 @@
+/// <reference types="systemjs" preserve="true" />
 import { api } from "../../lib/trpc";
 import { eventBus } from "../../lib/event";
-import * as System from 'systemjs/dist/system.js';
 import i18n from "@/lib/i18n";
 import { ToastPlugin } from "../module/Toast/Toast";
 import { BaseStore } from "../baseStore";
@@ -14,10 +14,15 @@ import { PluginApiStore } from "./pluginApiStore";
 import copy from "copy-to-clipboard"
 import { UserStore } from "../user";
 
+import type { PluginServicesSdk } from "./services";
+export * from "./services";
+
 declare global {
   interface Window {
     Blinko: {
       api: typeof api;
+      /** 通用插件服务薄 SDK；旧 api 字段保持不变。 */
+      services: PluginServicesSdk;
       eventBus: typeof eventBus;
       i18n: typeof i18n;
       version: string;

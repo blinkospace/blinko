@@ -4,10 +4,38 @@
   "version": "0.0.14",
   "description": "TypeScript type definitions for Blinko",
   "private": false,
-  "types": "dist/types/src/store/plugin/index.d.ts",
+  "types": "dist/index.d.mts",
+  "exports": {
+    ".": { "types": "./dist/index.d.mts" },
+    "./services": { "types": "./dist/services.d.mts" }
+  },
+  "typesVersions": { "*": { "services": ["dist/services.d.mts"] } },
   "files": [
-    "dist/types"
+    "dist/index.d.mts",
+    "dist/services.d.mts"
   ],
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "@trpc/client": "11.6.0",
+    "@trpc/server": "11.6.0",
+    "@types/express": "5.0.4",
+    "@types/jsonwebtoken": "9.0.10",
+    "@types/node": "20.2.5",
+    "@types/react": "18.3.26",
+    "@types/systemjs": "6.15.3",
+    "ai": "4.3.16",
+    "copy-to-clipboard": "3.3.3",
+    "i18next": "25.6.0",
+    "react-hot-toast": "2.6.0",
+    "superjson": "2.2.3",
+    "trpc-to-openapi": "3.0.0",
+    "vditor": "3.11.2",
+    "zod": "4.1.12"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
   "scripts": {
     "build": "cd .. && bun run build:blinko:types"
   },

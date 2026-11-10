@@ -24,7 +24,8 @@
     "prisma:studio": "cd prisma && prisma studio",
     "build:seed": "tsup prisma/seed.ts --outDir dist",
     "seed": "bun dist/seed.js",
-    "build:blinko:types": "tsc -p tsconfig.blinko.json"
+    "build:blinko:types": "node server/scripts/build-plugin-types.cjs && node server/scripts/test-plugin-types.cjs",
+    "test:blinko:types": "node server/scripts/test-plugin-types.cjs"
   },
   "devDependencies": {
     "@types/lru-cache": "^7.10.10",

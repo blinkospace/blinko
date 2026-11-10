@@ -1,6 +1,9 @@
 /// <reference types="systemjs" />
 import 'systemjs/dist/system.js';
 import { api } from "@/lib/trpc";
+import { createPluginServices, createPluginServicesTransport } from "./services";
+import { createBrowserPluginHostContext } from './browserHostContext';
+import type { PluginHostContextRuntime } from './hostContext';
 import { BasePlugin } from ".";
 import { Store } from "../standard/base";
 import { eventBus } from "@/lib/event";
@@ -33,6 +36,7 @@ export class PluginManagerStore implements Store {
   });
   private loadedCssFiles: Map<string, HTMLStyleElement[]> = new Map();
   private pluginRetryCount: Map<string, number> = new Map();
+  private pluginHostContext: PluginHostContextRuntime | null = null;
 
   constructor() {
     makeAutoObservable(this);
@@ -269,7 +273,14 @@ export class PluginManagerStore implements Store {
     });
   }
 
+  /** Release local identity listeners and invalidate SDK requests from this manager lifetime. */
+  disposePluginServices() {
+    this.pluginHostContext?.dispose();
+    this.pluginHostContext = null;
+  }
+
   initBlinkoContext() {
+    this.disposePluginServices();
     if (typeof window !== 'undefined') {
       const pluginApi = RootStore.Get(PluginApiStore);
       const toast = RootStore.Get(ToastPlugin);
@@ -278,9 +289,13 @@ export class PluginManagerStore implements Store {
       const hubStore = RootStore.Get(HubStore);
       const resourceStore = RootStore.Get(ResourceStore);
       const userStore = RootStore.Get(UserStore);
+      this.pluginHostContext = createBrowserPluginHostContext(userStore);
       //@ts-ignore
       window.Blinko = {
         api,
+        // 薄 SDK：与 api 并列的增量字段，每次请求经取用函数读当前客户端，
+        // 不在初始化时捕获，避免切换账户后沿用旧 token。
+        services: createPluginServices(createPluginServicesTransport(() => api), this.pluginHostContext),
         copyToClipboard: copy,
         eventBus,
         i18n,

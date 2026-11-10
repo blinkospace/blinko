@@ -96,8 +96,6 @@ export default function Component() {
 
   const userStorage = new StorageState({ key: 'username' });
 
-  const endpointStorage = new StorageState({ key: 'blinkoEndpoint' });
-
   useEffect(() => {
     try {
       RootStore.Get(UserStore).canRegister.call().then(v => {
@@ -177,7 +175,7 @@ export default function Component() {
                 value={endpoint.replace(/"/g, '')}
                 onChange={e => {
                   setEndpoint(e.target.value?.trim().replace(/"/g, ''))
-                  endpointStorage.save(e.target.value?.trim().replace(/"/g, ''))
+                  saveBlinkoEndpoint(e.target.value?.trim().replace(/"/g, ''))
                 }}
               />
             )}

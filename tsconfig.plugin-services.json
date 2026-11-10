@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "target": "ES2021",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "types": ["bun-types"],
+    "baseUrl": ".",
+    "paths": { "@shared/*": ["shared/*"] }
+  },
+  "include": [
+    "shared/lib/pluginServices/**/*.ts",
+    "server/services/pluginServices/types.ts",
+    "server/services/pluginServices/BodyInput.ts",
+    "server/services/pluginServices/errors.ts",
+    "server/services/pluginServices/indexMigrations.ts",
+    "server/services/pluginServices/VectorRepository.ts",
+    "server/services/pluginServices/IndexLifecycle.ts",
+    "server/services/pluginServices/ModelResolver.ts",
+    "server/services/pluginServices/CallPolicy.ts",
+    "server/services/pluginServices/PolicyStore.ts",
+    "server/services/pluginServices/AiGenerationService.ts",
+    "server/services/pluginServices/aiSchemas.ts",
+    "server/services/pluginServices/vectorSchemas.ts",
+    "server/services/pluginServices/VectorQueryService.ts",
+    "server/services/pluginServices/VectorQueryHost.ts",
+    "server/services/pluginServices/NoteAggregation.ts",
+    "server/services/pluginServices/SnapshotReadConnection.ts",
+    "server/services/pluginServices/VectorSnapshotStore.ts",
+    "server/services/pluginServices/VectorSnapshotService.ts"
+  ]
+}

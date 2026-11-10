@@ -7,6 +7,7 @@
     "dev": "bun --env-file ../.env --watch index.ts",
     "build:web": "bun esbuild.config.ts",
     "test:security": "bun scripts/test-security.ts",
+    "test:plugin-services": "bun scripts/test-plugin-services.ts",
     "start": "cross-env NODE_ENV=production bun --env-file ../.env ../dist/index.js"
   },
   "dependencies": {
@@ -56,6 +57,7 @@
     "file-type": "^20.4.1",
     "jsonwebtoken": "^9.0.2",
     "mcp-handler": "^1.0.2",
+    "mdast-util-from-markdown": "2.0.2",
     "music-metadata": "^11.2.0",
     "ncp": "^2.0.0",
     "ollama-ai-provider": "^1.2.0",

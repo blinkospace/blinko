@@ -183,6 +183,7 @@
         "file-type": "^20.4.1",
         "jsonwebtoken": "^9.0.2",
         "mcp-handler": "^1.0.2",
+        "mdast-util-from-markdown": "2.0.2",
         "music-metadata": "^11.2.0",
         "ncp": "^2.0.0",
         "ollama-ai-provider": "^1.2.0",

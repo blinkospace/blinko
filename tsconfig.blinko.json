@@ -7,6 +7,8 @@
         "noEmit": false,
         "rootDir": ".",
         "baseUrl": ".",
+        "types": ["node", "react", "systemjs"],
+        "noCheck": false,
         "paths": {
             "@/*": [
                 "./app/src/*"
