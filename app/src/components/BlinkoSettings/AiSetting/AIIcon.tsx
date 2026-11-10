@@ -46,6 +46,7 @@ const PROVIDER_ICONS: Record<string, React.ComponentType<any>> = {
   voyageai: Voyage.Color,
   voyage: Voyage.Color,
   litellm: OpenRouter,
+  uberllm: OpenAI,
   custom: OpenAI,
 };
 
