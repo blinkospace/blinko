@@ -66,6 +66,18 @@ Blinko 是一个AI驱动的卡片笔记项目，专为那些想要快速捕捉�
 curl -s https://raw.githubusercontent.com/blinko-space/blinko/main/install.sh | bash
 ```
 
+
+## 常见问题（FAQ）
+
+问：为什么在 macOS 设备上安装时会提示"已损坏"？
+
+答： 当下载或安装未经过苹果官方公证（notarized）的应用时，macOS 会给该应用添加一个名为 `com.apple.quarantine`（隔离）的属性。下面的命令用于手动移除该属性。运行命令：
+
+```bash
+sudo xattr -rd com.apple.quarantine /Applications/blinko.app
+```
+> 执行该命令时需要输入你的开机密码（输入时屏幕不会显示字符，属正常现象），回车确认后即可解除隔离限制，重新打开应用就不会再报“已损坏”的提示了。
+
 ## 👨🏼‍💻贡献
 贡献是开源社区充满活力、创造力和学习机会的核心。你的参与有助于推动创新和发展。我们深深感谢任何形式的贡献，并很高兴有你成为我们社区的一部分。感谢你的支持！🙌
 
