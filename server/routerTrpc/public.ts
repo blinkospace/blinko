@@ -3,8 +3,7 @@ import { router, publicProcedure, authProcedure, superAdminAuthMiddleware } from
 import { TRPCError } from '@trpc/server';
 import packageJson from '../../package.json';
 import { cache } from '@shared/lib/cache';
-import { unfurl } from 'unfurl.js';
-import { Metadata } from 'unfurl.js/dist/types';
+import { preview } from 'linkpeek';
 import pLimit from 'p-limit';
 import * as mm from 'music-metadata';
 import { UPLOAD_FILE_PATH } from '@shared/lib/pathConstant';
@@ -165,11 +164,18 @@ export const publicRouter = router({
             return limit(async () => {
               // A timed-out queued request must never start a later network request.
               if (Date.now() >= deadline) throw new Error('Remote request timed out');
-              const result: Metadata = await unfurl(input.url, {
-                fetch: (url) => fetchPublicUrl(url, { deadline }),
-                oembed: false,
+              const result = await preview(input.url, {
+                timeout: deadline - Date.now(),
+                // fetchPublicUrl pins DNS and revalidates every redirect itself, so
+                // linkpeek only ever sees the final response.
+                fetch: async (url) => {
+                  const response = await fetchPublicUrl(String(url), { deadline });
+                  const body = [204, 205, 304].includes(response.status) ? null : new Uint8Array(await response.arrayBuffer());
+                  return Object.defineProperty(new Response(body, response), 'url', { value: response.url });
+                },
               });
-              return { title: result?.title ?? '', favicon: result?.favicon ?? '', description: result?.description ?? '' };
+              if (result.statusCode >= 400) throw new Error(`Link preview failed with HTTP ${result.statusCode}`);
+              return { title: result.title ?? '', favicon: result.favicon ?? '', description: result.description ?? '' };
             });
           },
           { ttl: 60 * 60 * 1000 },
