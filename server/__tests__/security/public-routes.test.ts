@@ -17,6 +17,7 @@ const modelRead = mock(async () => ({
 }));
 const proxy = mock(async () => ({ status: 200, data: "" }));
 const preview = mock(async (_url: string, _options: any) => ({
+  statusCode: 200,
   title: "Public preview",
   description: "Description",
 }));
@@ -32,7 +33,7 @@ mock.module("../../routerExpress/auth/config", () => ({
 mock.module("../../lib/spotify", () => ({ SpotifyClient: class {} }));
 mock.module("../../lib/files", () => ({ FileService: {} }));
 mock.module("../../lib/proxy", () => ({ getWithProxy: proxy }));
-mock.module("unfurl.js", () => ({ unfurl: preview }));
+mock.module("linkpeek", () => ({ preview }));
 mock.module("../../../shared/lib/cache", () => ({
   cache: { wrap: (_key: string, fn: any) => fn() },
 }));
@@ -81,13 +82,12 @@ test.each([
   expect(result?.title).toBe("");
   expect(preview).not.toHaveBeenCalled();
 });
-test("public preview uses the guarded transport and disables secondary oEmbed fetching", async () => {
+test("public preview uses the guarded transport", async () => {
   const result = await publicRouter
     .createCaller(ctx())
     .linkPreview({ url: "https://1.1.1.1" });
   expect(result?.title).toBe("Public preview");
   const options = preview.mock.calls[0][1];
-  expect(options.oembed).toBe(false);
   expect(typeof options.fetch).toBe("function");
   await expect(options.fetch("http://127.0.0.1")).rejects.toThrow(
     "Private or reserved",
@@ -113,7 +113,7 @@ test('the preview deadline includes the limiter queue and expired queued work ne
   const blocked = new Promise<void>((resolve) => { release = resolve; });
   preview.mockImplementation(async () => {
     await blocked;
-    return { title: 'late', description: 'late' };
+    return { statusCode: 200, title: 'late', description: 'late' };
   });
   const start = Date.now();
   const jobs = Array.from({ length: 6 }, (_, index) =>
