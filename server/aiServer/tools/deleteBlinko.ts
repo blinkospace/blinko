@@ -23,13 +23,13 @@ export const deleteBlinkoTool = createTool({
         sub: String(accountId),
         role: 'superadmin'
       })
-      const note = await caller.notes.trashMany({
+      const result = await caller.notes.trashMany({
         ids: context.ids
       })
-      return true
+      return { success: true, deletedCount: result.count }
     } catch (error) {
       console.log(error)
-      return error.message
+      return { success: false, error: error.message }
     }
   }
 });
