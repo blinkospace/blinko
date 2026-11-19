@@ -89,6 +89,11 @@ export const DEFAULT_MODEL_TEMPLATES: ModelTemplate[] = [
   { modelKey: 'MiniMax-M3', title: 'MiniMax M3', capabilities: { inference: true, tools: true } },
   { modelKey: 'MiniMax-M2.7', title: 'MiniMax M2.7', capabilities: { inference: true, tools: true } },
 
+  // Atlas Cloud Models
+  { modelKey: 'deepseek-ai/deepseek-v4-flash', title: 'DeepSeek V4 Flash (Atlas Cloud)', capabilities: { inference: true, tools: true } },
+  { modelKey: 'deepseek-ai/deepseek-v4-pro', title: 'DeepSeek V4 Pro (Atlas Cloud)', capabilities: { inference: true, tools: true } },
+  { modelKey: 'zai-org/glm-5.2', title: 'GLM 5.2 (Atlas Cloud)', capabilities: { inference: true, tools: true } },
+
   // DeepSeek Models
   { modelKey: 'deepseek-chat', title: 'DeepSeek Chat', capabilities: { inference: true, tools: true } },
   { modelKey: 'deepseek-coder', title: 'DeepSeek Coder', capabilities: { inference: true, tools: true } },
