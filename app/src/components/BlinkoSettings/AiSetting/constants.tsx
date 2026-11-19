@@ -148,6 +148,16 @@ export const PROVIDER_TEMPLATES = [
     description: 'MiniMax M3, M2.7 and other MiniMax models'
   },
   {
+    value: 'atlascloud',
+    label: 'Atlas Cloud',
+    defaultName: 'Atlas Cloud',
+    defaultBaseURL: 'https://api.atlascloud.ai/v1',
+    website: 'https://www.atlascloud.ai',
+    docs: 'https://www.atlascloud.ai/docs',
+    icon: 'atlascloud',
+    description: 'OpenAI-compatible gateway for DeepSeek, Kimi, GLM, Qwen and other models'
+  },
+  {
     value: 'litellm',
     label: 'LiteLLM',
     defaultName: 'LiteLLM',
