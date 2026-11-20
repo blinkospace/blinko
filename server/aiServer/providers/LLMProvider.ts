@@ -28,12 +28,19 @@ export class LLMProvider extends BaseProvider {
           fetch: this.proxiedFetch
         }).languageModel(config.modelKey);
 
-      case 'anthropic':
+      case 'anthropic': {
+        const rawBaseURL = config.baseURL?.trim();
+        const baseURL = rawBaseURL
+          ? (rawBaseURL.replace(/\/+$/, '').endsWith('/v1')
+              ? rawBaseURL.replace(/\/+$/, '')
+              : rawBaseURL.replace(/\/+$/, '') + '/v1')
+          : undefined;
         return createAnthropic({
           apiKey: config.apiKey,
-          baseURL: config.baseURL || undefined,
+          baseURL,
           fetch: this.proxiedFetch
         }).languageModel(config.modelKey);
+      }
 
       case 'gemini':
       case 'google':

@@ -51,7 +51,7 @@ export const PROVIDER_TEMPLATES = [
     value: 'anthropic',
     label: 'Anthropic',
     defaultName: 'Anthropic',
-    defaultBaseURL: 'https://api.anthropic.com',
+    defaultBaseURL: 'https://api.anthropic.com/v1',
     website: 'https://anthropic.com',
     docs: 'https://docs.anthropic.com',
     icon: 'anthropic',
