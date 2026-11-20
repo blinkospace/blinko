@@ -271,7 +271,9 @@ export class AiService {
       if (withRAG) {
         let { notes, aiContext } = await AiModelFactory.queryVector(question, Number(ctx.id));
         ragNote = notes;
-        ragNoteString = `This is the note content ${ragNote.map((i) => i.content).join('\n')} ${aiContext}`;
+        if (ragNote.length > 0) {
+          ragNoteString = `This is the note content:\n${aiContext}`;
+        }
       }
 
       const contextParts = [

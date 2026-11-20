@@ -87,6 +87,8 @@ export class AiModelFactory {
         await prisma.notes.findMany({
           where: {
             accountId: accountId,
+            isRecycle: false,
+            isArchived: false,
             id: {
               in: _.uniqWith(filteredResults.map((i) => Number(i.metadata?.id))).filter((i) => !!i) as number[],
             },
@@ -132,7 +134,7 @@ export class AiModelFactory {
         return { ...i, score: filteredResults.find((t) => Number(t.metadata?.id) == i.id)?.score ?? 0 };
       }) ?? [];
 
-    let aiContext = notes.map((i) => i.content + '\n') || '';
+    let aiContext = notes.map((i) => i.content).join('\n');
     return { notes, aiContext: aiContext };
   }
 
