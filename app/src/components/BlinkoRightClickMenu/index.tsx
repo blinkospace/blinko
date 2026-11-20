@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ContextMenu, ContextMenuItem } from '@/components/Common/ContextMenu';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { PromiseCall } from '@/store/standard/PromiseState';
+import { getBlinkoShareUrl } from '@/lib/blinkoEndpoint';
 import { api } from '@/lib/trpc';
 import { RootStore } from "@/store";
 import { DialogStore } from "@/store/module/Dialog";
@@ -250,7 +251,7 @@ const handlePublic = () => {
     title: i18n.t('share'),
     isDismissable: false,
     content: <BlinkoShareDialog defaultSettings={{
-      shareUrl: blinko.curSelectedNote?.shareEncryptedUrl ? window.location.origin + '/share/' + blinko.curSelectedNote?.shareEncryptedUrl : undefined,
+      shareUrl: blinko.curSelectedNote?.shareEncryptedUrl ? getBlinkoShareUrl(blinko.curSelectedNote.shareEncryptedUrl) : undefined,
       expiryDate: blinko.curSelectedNote?.shareExpiryDate ?? undefined,
       password: blinko.curSelectedNote?.sharePassword ?? '',
       isShare: blinko.curSelectedNote?.isShare

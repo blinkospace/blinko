@@ -16,6 +16,7 @@ import { AvatarAccount, CommentButton, UserAvatar } from './commentButton';
 import { HistoryButton } from '../BlinkoNoteHistory/HistoryButton';
 import { api } from '@/lib/trpc';
 import { PromiseCall } from '@/store/standard/PromiseState';
+import { getBlinkoShareUrl } from '@/lib/blinkoEndpoint';
 
 interface CardHeaderProps {
   blinkoItem: Note;
@@ -210,7 +211,7 @@ const ShareButton = observer(({ blinkoItem, isIOSDevice }: { blinkoItem: Note, i
               size: 'md',
               title: t('share'),
               content: <BlinkoShareDialog defaultSettings={{
-                shareUrl: blinkoItem.shareEncryptedUrl ? window.location.origin + '/share/' + blinkoItem.shareEncryptedUrl : undefined,
+                shareUrl: blinkoItem.shareEncryptedUrl ? getBlinkoShareUrl(blinkoItem.shareEncryptedUrl) : undefined,
                 expiryDate: blinkoItem.shareExpiryDate ?? undefined,
                 password: blinkoItem.sharePassword ?? '',
                 isShare: blinkoItem.isShare
