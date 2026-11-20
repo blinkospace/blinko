@@ -25,7 +25,10 @@ import { RuntimeContext } from "@mastra/core/di";
 
 export function isImage(filePath: string): boolean {
   if (!filePath) return false;
-  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+  const imageExtensions = [
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
+    '.heic', '.heif', '.avif', '.ico', '.tiff', '.tif',
+  ];
   return imageExtensions.some((ext) => filePath.toLowerCase().endsWith(ext));
 }
 
@@ -56,8 +59,18 @@ export class AiService {
           console.log('load csv');
           loader = new CSVLoader(filePath);
           break;
-        default:
-          loader = new UnstructuredLoader(filePath);
+        default: {
+          const unstructuredApiUrl = process.env.UNSTRUCTURED_API_URL;
+          if (unstructuredApiUrl) {
+            loader = new UnstructuredLoader(filePath, {
+              apiUrl: unstructuredApiUrl,
+              apiKey: process.env.UNSTRUCTURED_API_KEY,
+            });
+            break;
+          }
+          console.warn(`[AiService] Skipping file ${filePath}: unsupported file format and UNSTRUCTURED_API_URL is not configured.`);
+          return '';
+        }
       }
       const docs = await loader.load();
       return docs.map((doc) => doc.pageContent).join('\n');
@@ -154,6 +167,11 @@ export class AiService {
           await fileResult.cleanup();
         }
       }
+      if (!content || !content.trim()) {
+        console.log(`[AiService] No extractable text content for attachment ${filePath}; skipping embedding.`);
+        return;
+      }
+
       const { VectorStore, TokenTextSplitter, Embeddings } = await AiModelFactory.GetProvider();
       if (!Embeddings) {
         throw new Error("No embeddings model config")
