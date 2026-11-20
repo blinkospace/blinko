@@ -1,6 +1,6 @@
 import { afterEach, expect, mock, test } from 'bun:test';
 import { fileUrl, isBlinkoUrl } from '../../../app/src/lib/fileUrl';
-import { getBlinkoFileUrl } from '../../../app/src/lib/blinkoEndpoint';
+import { getBlinkoFileUrl, getBlinkoShareUrl } from '../../../app/src/lib/blinkoEndpoint';
 
 mock.module('../../lib/helper', () => ({
   getNextAuthSecret: async () => 'TEST_ONLY_FILE_URL_SIGNING_KEY',
@@ -123,4 +123,13 @@ test('browser and Tauri consumers use the configured backend origin', () => {
   expect(url.origin).toBe('https://desktop-blinko.example');
   expect(url.searchParams.get('shareToken')).toBe('grant');
   expect(url.searchParams.get('download')).toBe('true');
+});
+
+test('reopened share links use the configured desktop endpoint, not the Tauri origin', () => {
+  (globalThis as any).window = {
+    __TAURI__: {},
+    location: { origin: 'http://tauri.localhost' },
+    localStorage: { getItem: () => '"https://desktop-blinko.example"' },
+  };
+  expect(getBlinkoShareUrl('abc123')).toBe('https://desktop-blinko.example/share/abc123');
 });
