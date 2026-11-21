@@ -129,7 +129,7 @@ test('reopened share links use the configured desktop endpoint, not the Tauri or
   (globalThis as any).window = {
     __TAURI__: {},
     location: { origin: 'http://tauri.localhost' },
-    localStorage: { getItem: () => '"https://desktop-blinko.example"' },
+    localStorage: { getItem: () => '"https://desktop-blinko.example/"' },
   };
   expect(getBlinkoShareUrl('abc123')).toBe('https://desktop-blinko.example/share/abc123');
 });

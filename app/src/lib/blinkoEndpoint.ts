@@ -26,7 +26,7 @@ export function getBlinkoEndpoint(path: string = ''): string {
 }
 
 export function getBlinkoShareUrl(shareEncryptedUrl: string): string {
-    return getBlinkoEndpoint() + 'share/' + shareEncryptedUrl;
+    return getBlinkoEndpoint('/share/' + shareEncryptedUrl);
 }
 
 export function isTauriAndEndpointUndefined(): boolean {
