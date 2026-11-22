@@ -90,10 +90,10 @@ export class LLMProvider extends BaseProvider {
           fetch: this.proxiedFetch
         }).languageModel(config.modelKey);
 
-      case 'uberllm':
+      case 'martllm':
         return createOpenAI({
           apiKey: config.apiKey,
-          baseURL: config.baseURL || 'https://api.uberllm.dev/v1',
+          baseURL: config.baseURL || 'https://api.martllm.com/v1',
           fetch: this.proxiedFetch
         }).languageModel(config.modelKey);
 

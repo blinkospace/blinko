@@ -38,19 +38,19 @@ mock.module('@ai-sdk/azure', () => ({
   createAzure: mock(() => ({ languageModel: mock(() => ({})) }))
 }));
 
-describe('UberLLM LLM Provider', () => {
+describe('MartLLM LLM Provider', () => {
   beforeEach(() => {
     mockCreateOpenAI.mockClear();
   });
 
-  it('should handle uberllm provider case', async () => {
+  it('should handle martllm provider case', async () => {
     const { LLMProvider } = await import('../LLMProvider');
     const provider = new LLMProvider();
 
     const result = await provider.getLanguageModel({
-      provider: 'uberllm',
+      provider: 'martllm',
       apiKey: 'test-api-key',
-      baseURL: 'https://api.uberllm.dev/v1',
+      baseURL: 'https://api.martllm.com/v1',
       modelKey: 'deepseek/deepseek-v4.1-flash'
     });
 
@@ -58,24 +58,24 @@ describe('UberLLM LLM Provider', () => {
     expect(mockCreateOpenAI).toHaveBeenCalledWith(
       expect.objectContaining({
         apiKey: 'test-api-key',
-        baseURL: 'https://api.uberllm.dev/v1'
+        baseURL: 'https://api.martllm.com/v1'
       })
     );
   });
 
-  it('should use the default UberLLM base URL when not provided', async () => {
+  it('should use the default MartLLM base URL when not provided', async () => {
     const { LLMProvider } = await import('../LLMProvider');
     const provider = new LLMProvider();
 
     await provider.getLanguageModel({
-      provider: 'uberllm',
+      provider: 'martllm',
       apiKey: 'test-api-key',
       modelKey: 'anthropic/claude-sonnet-4.6'
     });
 
     expect(mockCreateOpenAI).toHaveBeenCalledWith(
       expect.objectContaining({
-        baseURL: 'https://api.uberllm.dev/v1'
+        baseURL: 'https://api.martllm.com/v1'
       })
     );
   });
@@ -85,14 +85,14 @@ describe('UberLLM LLM Provider', () => {
     const provider = new LLMProvider();
 
     await provider.getLanguageModel({
-      provider: 'UberLLM',
+      provider: 'MartLLM',
       apiKey: 'test-api-key',
       modelKey: 'openai/gpt-5-mini'
     });
 
     expect(mockCreateOpenAI).toHaveBeenCalledWith(
       expect.objectContaining({
-        baseURL: 'https://api.uberllm.dev/v1'
+        baseURL: 'https://api.martllm.com/v1'
       })
     );
   });
@@ -102,7 +102,7 @@ describe('UberLLM LLM Provider', () => {
     const provider = new LLMProvider();
 
     await provider.getLanguageModel({
-      provider: 'uberllm',
+      provider: 'martllm',
       apiKey: 'test-api-key',
       modelKey: 'deepseek/deepseek-v4.1-flash'
     });
