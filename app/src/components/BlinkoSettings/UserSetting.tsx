@@ -24,6 +24,10 @@ const UpdateUserInfo = observer(({ id, name, password, nickname, loginType }: { 
     nickname: nickname || name,
     upsertUser: new PromiseState({
       function: async () => {
+        if (!store.username.trim()) {
+          RootStore.Get(ToastPlugin).error(t('enter-your-username'))
+          return
+        }
         const upsertItem: { name: string; password: string; nickname?: string; id?: number } = { 
           name: store.username, 
           password: store.password,
@@ -46,6 +50,7 @@ const UpdateUserInfo = observer(({ id, name, password, nickname, loginType }: { 
       labelPlacement="outside"
       variant="bordered"
       value={store.username}
+      isRequired
       onChange={e => { store.username = e.target.value }}
       isDisabled={isOauth}
     />
@@ -60,7 +65,7 @@ const UpdateUserInfo = observer(({ id, name, password, nickname, loginType }: { 
     />
     <PasswordInput placeholder={t('password')} label={t('password')} value={store.password} onChange={e => { store.password = e.target.value }} />
     <div className="flex w-full mt-2">
-      <Button isLoading={store.upsertUser.loading.value} className="ml-auto" color='primary' onPress={async e => {
+      <Button isDisabled={!store.username.trim()} isLoading={store.upsertUser.loading.value} className="ml-auto" color='primary' onPress={async e => {
         await store.upsertUser.call()
       }}>{t('save')}</Button>
     </div>
