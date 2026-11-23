@@ -502,6 +502,11 @@ export const userRouter = router({
       return prisma.$transaction(async () => {
         const { id, nickname, name, password } = input
 
+        // Omitted names remain valid for partial updates, but never for creation.
+        if ((name !== undefined && !name.trim()) || (!id && !name)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Username is required' });
+        }
+
         const update: Prisma.accountsUpdateInput = {}
 
         if (name && (!id || (id && (await prisma.accounts.findUnique({ where: { id } }))?.name !== name))) {
