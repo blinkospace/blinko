@@ -11,12 +11,6 @@
   min-height: 20px;
 }
 
-@media screen and (max-width: 520px) {
-  .vditor-toolbar__item {
-    padding: 0 !important;
-  }
-}
-
 .vditor a {
   color: var(--primary);
   font-weight: 700;
@@ -392,4 +386,86 @@
 .vditor-theme-dark .vditor-preview .vditor-mindmap .echarts,
 .vditor-theme-dark .vditor-ir__preview .vditor-mindmap .echarts {
   background-color: transparent;
+}
+/* Mobile: iOS HIG minimum 44px tap targets for toolbar items (kept last so it wins the cascade) */
+@media screen and (max-width: 768px) {
+  .vditor-toolbar {
+    height: 44px;
+    /* vditor's default is block layout with floated items, which wraps onto a second row;
+       force a single horizontally swipeable row instead */
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+  .vditor-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+  .vditor-toolbar__item {
+    padding: 0 !important;
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .vditor-toolbar__item svg {
+    width: 22px;
+    height: 22px;
+  }
+  /* Toolbar panels (emoji picker, headings, table, export...) are absolutely positioned
+     children of toolbar items, so a scrolling toolbar would clip them.
+     Unclip the toolbar while any panel is open — except the last item's (the "more"
+     menu) panel, which is position:fixed below and doesn't need it. Un-clipping would
+     reset scrollLeft and snap the row back, so it must not fire for the more menu. */
+  .vditor-toolbar:has(> .vditor-toolbar__item:not(:last-child) > .vditor-panel[style*="display: block"]),
+  .vditor-toolbar:has(> .vditor-toolbar__item:not(:last-child) > .vditor-hint[style*="display: block"]) {
+    overflow: visible;
+  }
+  /* The "more" menu is reparented to <body> by setupMobileMoreMenu() and styled as a
+     viewport-docked action sheet: z-index above every app layer (dialog sheet 2001,
+     its internals, the mobile tab bar 50), immune to any ancestor overflow/stacking
+     context, so it can never be clipped, covered, or lose hit-testing again. */
+  .blinko-more-sheet {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+    top: auto !important;
+    margin: 0 !important;
+    max-width: none !important;
+    max-height: 45vh !important;
+    overflow-y: auto !important;
+    z-index: 3000 !important;
+  }
+  /* iOS HIG: 44px tap targets and native :active pressed feedback (works on
+     iPhone too since the vditor patch binds click everywhere and a document-level
+     touchstart listener is present to activate :active on iOS Safari) */
+  .blinko-more-sheet button {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .blinko-more-sheet button:not(.vditor-menu--disabled):active {
+    background-color: var(--toolbar-background-color) !important;
+    color: var(--toolbar-icon-hover-color) !important;
+  }
+  /* Nested submenus (Headings -> H1-H6, Export -> formats) expand inline like an
+     accordion instead of floating beside/above, so they are never clipped by the
+     sheet's own overflow-y and always receive their own clicks. */
+  .blinko-more-sheet .vditor-hint {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    padding-left: 12px !important;
+  }
 }
