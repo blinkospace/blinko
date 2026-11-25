@@ -3,7 +3,7 @@ import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
 import { BaseStore } from "@/store/baseStore";
 import { BlinkoStore } from "@/store/blinkoStore";
-import { getFixedHeaderBackground, SideBarItem } from "./index";
+import { getMobileGlassStyle, SideBarItem } from "./index";
 import { useTranslation } from "react-i18next";
 import { useSwiper } from "@/lib/hooks";
 import { motion } from "framer-motion";
@@ -49,9 +49,7 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
         paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))',
         height: 'calc(49px + env(safe-area-inset-bottom))',
         minHeight: 'calc(49px + env(safe-area-inset-bottom))',
-        background: getFixedHeaderBackground(),
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)'
+        ...getMobileGlassStyle(),
       }}
     >
       {mobileItems.map((i, index) => (

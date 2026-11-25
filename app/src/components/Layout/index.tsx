@@ -27,11 +27,16 @@ import { useLocation, useSearchParams, Link } from 'react-router-dom';
 
 export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl !transition-all';
 
-export const getFixedHeaderBackground = () => {
-  if (document?.documentElement?.classList?.contains('dark')) {
-    return '#00000080';
-  }
-  return '#ffffff80';
+export const getMobileGlassStyle = () => {
+  const background = document?.documentElement?.classList?.contains('dark')
+    ? '#00000080'
+    : '#ffffff80';
+
+  return {
+    background,
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+  };
 };
 
 export const CommonLayout = observer(({ children, header }: { children?: React.ReactNode; header?: React.ReactNode }) => {
@@ -107,9 +112,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
             borderRadius:'0 0 12px 12px',
             zIndex: 11,
             width: '100%',
-            background: getFixedHeaderBackground(),
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)'
+            ...getMobileGlassStyle(),
           } : undefined}
         >
           {/* <div className="hidden md:block absolute bottom-[20%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
