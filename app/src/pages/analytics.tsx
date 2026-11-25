@@ -34,7 +34,7 @@ const Analytics = observer(() => {
   const stats = analyticsStore.monthlyStats.value
 
   return (
-    <ScrollArea onBottom={() => { }} fixMobileTopBar className="px-6 space-y-2 md:p-6 md:space-y-6  mx-auto max-w-7xl" >
+    <ScrollArea onBottom={() => { }} fixMobileTopBar reserveMobileBottomBar className="px-6 space-y-2 md:p-6 md:space-y-6  mx-auto max-w-7xl" >
       <div className="w-72">
         <Dropdown>
           <DropdownTrigger>

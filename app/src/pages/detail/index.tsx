@@ -20,7 +20,7 @@ const Detail = observer(() => {
   }, [location.pathname, searchParams.get('id'), blinko.updateTicker, blinko.forceQuery]);
 
   return (
-    <ScrollArea fixMobileTopBar>
+    <ScrollArea fixMobileTopBar reserveMobileBottomBar>
       <div className="max-w-[800px] mx-auto p-4">
         <LoadingAndEmpty
           isLoading={blinko.noteDetail.loading.value}

@@ -1,5 +1,7 @@
 import i18n from "@/lib/i18n";
 import { _ } from "@/lib/lodash";
+import { RootStore } from "@/store";
+import { BlinkoStore } from "@/store/blinkoStore";
 import { observer } from "mobx-react-lite";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
@@ -13,6 +15,9 @@ type IProps = {
   pullDownThreshold?: number;
   maxPullDownDistance?: number;
   fixMobileTopBar?: boolean
+  // Pad the scroller on mobile so its last rows clear the fixed bottom bar.
+  // For page-level scrollers only; lists inside popovers and dialogs render above the bar.
+  reserveMobileBottomBar?: boolean
 };
 
 export type ScrollAreaHandles = {
@@ -28,10 +33,13 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
   onRefresh,
   pullDownThreshold = 60,
   maxPullDownDistance = 100,
-  fixMobileTopBar = false
+  fixMobileTopBar = false,
+  reserveMobileBottomBar = false
 }, ref) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isPc = useMediaQuery('(min-width: 768px)');
+  const blinkoStore = RootStore.Get(BlinkoStore);
+  const showMobileBottomBar = reserveMobileBottomBar && !isPc && !blinkoStore.config.value?.isHiddenMobileBar;
 
   // Pull to refresh states
   const [pullDistance, setPullDistance] = useState(0);
@@ -227,11 +235,12 @@ export const ScrollArea = observer(forwardRef<ScrollAreaHandles, IProps>(({
       style={{
         ...style,
         paddingTop: showRefreshIndicator ? `${pullDistance}px` : undefined,
+        paddingBottom: showMobileBottomBar ? 'calc(49px + env(safe-area-inset-bottom))' : undefined,
         transition: isDragging ? 'none' : 'padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}
       className={`${className} overflow-y-scroll overflow-x-hidden ${isPc ? '' : 'scrollbar-hide'} scroll-smooth scroll-area`}
     >
-      {fixMobileTopBar && !isPc && <div className="h-16"></div>}
+      {fixMobileTopBar && !isPc && <div className="h-14"></div>}
       {/* Pull to refresh indicator */}
       {showRefreshIndicator && (
         <div
