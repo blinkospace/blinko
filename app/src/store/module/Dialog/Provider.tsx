@@ -2,7 +2,7 @@ import { Button, Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/rea
 import { observer } from "mobx-react-lite";
 import { DialogStore } from ".";
 import { RootStore } from "@/store/root";
-import { useHistoryBack, useIsIOS } from "@/lib/hooks";
+import { useHistoryBack } from "@/lib/hooks";
 import { useMediaQuery } from "usehooks-ts";
 import { motion } from "motion/react";
 import { Icon } from '@/components/Common/Iconify/icons';
@@ -43,7 +43,6 @@ const Dialog = observer(() => {
   const isPc = useMediaQuery('(min-width: 768px)')
   const { className, classNames, isOpen, placement, title, size, content, isDismissable, onlyContent = false, noPadding = false, showOnlyContentCloseButton = false, transparent = false } = modal;
   const Content = typeof content === 'function' ? content : () => content;
-  const isIOS = useIsIOS()
   useHistoryBack({
     state: isOpen,
     onStateChange: () => modal.close(),
@@ -68,39 +67,13 @@ const Dialog = observer(() => {
     }
   };
 
-  const containerClass = isPc
-    ? "fixed inset-0 z-[2001] flex justify-center items-center pointer-events-none max-w-screen-2xl mx-auto left-0 right-0"
-    : "fixed bottom-0 left-0 right-0 z-[2001] flex flex-col items-center pointer-events-none";
+  // Mobile (below the md breakpoint) always uses the bottom-sheet form,
+  // regardless of platform, so Android/iOS/narrow desktop share one strategy.
+  const mobileSheetMaxHeight = 'calc(85dvh - max(0.5rem, env(safe-area-inset-bottom)))';
+  // The titled sheet adds p-1 (0.5rem total) around its body, so subtract it too.
+  const mobileSheetMaxHeightWithHeader = 'calc(85dvh - max(0.5rem, env(safe-area-inset-bottom)) - 0.5rem)';
 
-  const modalSizeClass = (() => {
-    const baseClass = 'mx-auto ';
-    switch (size) {
-      case 'xs':
-        return baseClass + 'w-1/4';
-      case 'sm':
-        return baseClass + 'w-1/3';
-      case 'md':
-        return baseClass + 'w-1/2';
-      case 'lg':
-        return baseClass + 'w-2/3';
-      case 'xl':
-        return baseClass + 'w-3/4';
-      case '2xl':
-        return baseClass + 'w-4/5';
-      case '3xl':
-        return baseClass + 'w-5/6';
-      case '4xl':
-        return baseClass + 'w-11/12';
-      case '5xl':
-        return baseClass + 'w-full';
-      case 'full':
-        return baseClass + 'w-full';
-      default:
-        return baseClass + 'w-full';
-    }
-  })();
-
-  if (isIOS && isOpen) {
+  if (!isPc && isOpen) {
     return (
       <>
         <div
@@ -112,7 +85,7 @@ const Dialog = observer(() => {
           }}
         />
         <motion.div
-          className={`${containerClass} ${isPc ? modalSizeClass : ''} `}
+          className="fixed bottom-0 left-0 right-0 z-[2001] flex flex-col items-center pointer-events-none"
           {...motionConfig}
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
@@ -121,16 +94,20 @@ const Dialog = observer(() => {
           {!onlyContent && (
             <motion.div
               className="w-full bg-background border-secondbackground p-1 rounded-t-lg shadow-lg pointer-events-auto"
+              style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
               {...motionConfig}
             >
-              <div className="flex flex-col justify-between items-center p-2 gap-2 w-full">
-                <div className="flex gap-2 w-full items-center">
+              <div
+                className="flex flex-col justify-between items-center p-2 gap-2 w-full"
+                style={{ maxHeight: mobileSheetMaxHeightWithHeader }}
+              >
+                <div className="flex gap-2 w-full items-center shrink-0">
                   <div className="text-lg font-semibold">{title ?? ''}</div>
                   <Button isIconOnly variant="light" onPress={() => modal.close()} className="ml-auto">
                     <Icon icon="tabler:x" width="16" height="16" />
                   </Button>
                 </div>
-                <div className="w-full" >
+                <div className="w-full overflow-y-auto overscroll-contain min-h-0" >
                   <Content />
                 </div>
               </div>
@@ -146,8 +123,20 @@ const Dialog = observer(() => {
                   showOnlyContentCloseButton &&
                   <CloseButton onClose={() => modal.close()} />
                 }
-                <div className="w-full">
-                  <Content />
+                {/* The sheet surface (bg + radius + safe-area padding) lives here instead of the
+                    outer fixed wrapper, so the rounded corner notches reveal the dark backdrop
+                    rather than a white strip. rounded-large matches the inner HeroUI Card radius,
+                    so overflow-hidden clips it cleanly with no double rounding. */}
+                <div
+                  className="w-full bg-background rounded-large overflow-hidden"
+                  style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+                >
+                  <div
+                    className="w-full overflow-y-auto overscroll-contain"
+                    style={{ maxHeight: mobileSheetMaxHeight }}
+                  >
+                    <Content />
+                  </div>
                 </div>
               </div>
             </motion.div>
