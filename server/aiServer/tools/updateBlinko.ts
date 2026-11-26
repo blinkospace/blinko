@@ -50,7 +50,11 @@ export const updateBlinkoTool = createTool({
       return await caller.notes.upsert({
         content: context.content,
         type: noteType,
-        id: context.id
+        id: context.id,
+        isArchived: context.isArchived,
+        isTop: context.isTop,
+        isShare: context.isShare,
+        isRecycle: context.isRecycle
       })
     } catch (error) {
       console.log(error)
