@@ -209,7 +209,7 @@ const Page = observer(() => {
               />
             </div>
           </div>
-          <ScrollArea onBottom={() => { }} className="flex-1">
+          <ScrollArea onBottom={() => { }} reserveMobileBottomBar className="flex-1">
             <div className="max-w-[1024px] mx-auto flex flex-col gap-6 px-2 py-4">
               {getCurrentComponent()}
             </div>

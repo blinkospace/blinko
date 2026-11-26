@@ -27,11 +27,16 @@ import { useLocation, useSearchParams, Link } from 'react-router-dom';
 
 export const SideBarItem = 'p-2 flex flex-row items-center cursor-pointer gap-2 hover:bg-hover rounded-xl !transition-all';
 
-export const getFixedHeaderBackground = () => {
-  if (document?.documentElement?.classList?.contains('dark')) {
-    return '#00000080';
-  }
-  return '#ffffff80';
+export const getMobileGlassStyle = () => {
+  const background = document?.documentElement?.classList?.contains('dark')
+    ? '#00000080'
+    : '#ffffff80';
+
+  return {
+    background,
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+  };
 };
 
 export const CommonLayout = observer(({ children, header }: { children?: React.ReactNode; header?: React.ReactNode }) => {
@@ -107,9 +112,7 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
             borderRadius:'0 0 12px 12px',
             zIndex: 11,
             width: '100%',
-            background: getFixedHeaderBackground(),
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)'
+            ...getMobileGlassStyle(),
           } : undefined}
         >
           {/* <div className="hidden md:block absolute bottom-[20%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
@@ -202,7 +205,12 @@ export const CommonLayout = observer(({ children, header }: { children?: React.R
 
 
         {/* backdrop  pt-6 -mt-6 to fix the editor tooltip position */}
-        <ScrollArea onBottom={() => { }} className={`${isPc ? 'h-[calc(100%_-_70px)]' : 'h-full'} !overflow-y-auto overflow-x-hidden mt-[-4px]`}>
+        {/* Pages with their own ScrollArea reserve bottom-bar space there. The AI page uses this outer container. */}
+        <ScrollArea
+          onBottom={() => { }}
+          reserveMobileBottomBar={location.pathname === '/ai'}
+          className={`${isPc ? 'h-[calc(100%_-_70px)]' : 'h-[calc(100%_+_4px)]'} !overflow-y-auto overflow-x-hidden mt-[-4px]`}
+        >
           <div className="relative flex h-full w-full flex-col rounded-medium layout-container">
             <div className="hidden md:block absolute top-[-37%] right-[5%] z-[0] h-[350px] w-[350px] overflow-hidden blur-3xl ">
               <div className="w-full h-[356px] bg-[#9936e6] opacity-20" style={{ clipPath: 'circle(50% at 50% 50%)' }} />

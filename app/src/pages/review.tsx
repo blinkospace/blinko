@@ -60,7 +60,7 @@ const App = observer(() => {
     : blinko.dailyReviewNoteList.value ?? []
 
   return (
-    <ScrollArea fixMobileTopBar className="App h-full overflow-hidden mt-2">
+    <ScrollArea fixMobileTopBar reserveMobileBottomBar className="App h-full overflow-hidden mt-2">
       <div className="flex justify-center mb-2">
         <Button
           color={store.isRandomReviewMode ? "primary" : "default"}

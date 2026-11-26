@@ -79,7 +79,7 @@ const Hub = observer(({ className }: { className?: string }) => {
 
   const currentSelectedKey = store.currentListType === 'home' ? 'site' : store.currentListType === 'site' ? store.currentSiteURL : store.currentListType;
 
-  return <ScrollArea fixMobileTopBar className={'h-full bg-background px-5'} onBottom={() => store.shareNoteList.callNextPage({})}>
+  return <ScrollArea fixMobileTopBar reserveMobileBottomBar className={'h-full bg-background px-5'} onBottom={() => store.shareNoteList.callNextPage({})}>
     <div className="border-2 border-hover w-full h-[150px] md:h-fit md:max-w-screen-xl glass-effect mx-auto md:mt-8 rounded-2xl p-4 md:p-6">
       <div className="flex items-start gap-2 md:gap-6">
         <UserAvatar

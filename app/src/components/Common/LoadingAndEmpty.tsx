@@ -12,6 +12,8 @@ interface LoadingAndEmptyProps {
 export const LoadingAndEmpty = ({ isLoading, isEmpty, emptyMessage, className, isAbsolute = true }: LoadingAndEmptyProps) => {
   const { t } = useTranslation();
 
+  if (!isLoading && !isEmpty) return null;
+
   return (
     <div className={`text-ignore flex flex-col items-center justify-center gap-1 w-full ${className}`}>
       <Icon

@@ -15,7 +15,6 @@ import { UserStore } from '@/store/user';
 import { useTranslation } from 'react-i18next';
 import { BaseStore } from '@/store/baseStore';
 import i18n from '@/lib/i18n';
-import { useSwiper } from '@/lib/hooks';
 const AIPage = observer(() => {
   const [prompt, setPrompt] = useState('');
   const isPc = useMediaQuery('(min-width: 768px)');
@@ -26,7 +25,6 @@ const AIPage = observer(() => {
   const InputBoxRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const [inputHeight, setInputHeight] = useState(0);
-  const isVisible = useSwiper();
   useEffect(() => {
     if (!InputBoxRef.current) return;
 
@@ -82,7 +80,7 @@ const AIPage = observer(() => {
   return (
     <div
       style={{
-        height: isPc ? '100%' : `calc(100% - ${!isVisible ? '0px' : '60px'})`
+        height: '100%'
       }}
       className={`flex flex-col items-center ${aiStore.isChatting ? 'pt-0' : 'pt-[10vh] md:pt-[20vh]'} w-full gap-4 relative  md:h-[calc(100vh_-_80px)]`}>
       {!aiStore.isChatting ? (

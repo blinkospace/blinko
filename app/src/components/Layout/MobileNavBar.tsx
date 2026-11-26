@@ -3,7 +3,7 @@ import { observer } from "mobx-react-lite";
 import { RootStore } from "@/store";
 import { BaseStore } from "@/store/baseStore";
 import { BlinkoStore } from "@/store/blinkoStore";
-import { getFixedHeaderBackground, SideBarItem } from "./index";
+import { getMobileGlassStyle, SideBarItem } from "./index";
 import { useTranslation } from "react-i18next";
 import { useSwiper } from "@/lib/hooks";
 import { motion } from "framer-motion";
@@ -36,7 +36,7 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
 
   return (
     <motion.div
-      className="blinko-bottom-bar h-[60px] flex w-full px-3 py-2 gap-1 bg-background block md:hidden overflow-hidden fixed bottom-0 z-50"
+      className="blinko-bottom-bar flex w-full px-3 pb-1 pt-2 gap-1 bg-background block md:hidden overflow-hidden fixed bottom-0 z-50"
       animate={{ y: isVisible ? 0 : 100 }}
       transition={{
         type: "spring",
@@ -46,9 +46,10 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
         bounce: 0.3
       }}
       style={{
-        background: getFixedHeaderBackground(),
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)'
+        paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))',
+        height: 'calc(49px + env(safe-area-inset-bottom))',
+        minHeight: 'calc(49px + env(safe-area-inset-bottom))',
+        ...getMobileGlassStyle(),
       }}
     >
       {mobileItems.map((i, index) => (
@@ -78,7 +79,7 @@ export const MobileNavBar = observer(({ onItemClick }: MobileNavBarProps) => {
               whileHover={{ scale: 1.1 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <Icon className={`text-center`} icon={i.icon} width="24" height="24" />
+              <Icon className={`text-center`} icon={i.icon} width="28" height="28" />
             </motion.div>
           </Link>
         </motion.div>

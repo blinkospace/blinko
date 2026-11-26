@@ -149,6 +149,7 @@ const Home = observer(() => {
         <ScrollArea
           ref={scrollAreaRef}
           fixMobileTopBar
+          reserveMobileBottomBar
           onRefresh={async () => {
             await currentListState.resetAndCall({})
           }}
