@@ -25,6 +25,10 @@ export function getBlinkoEndpoint(path: string = ''): string {
     }
 }
 
+export function getBlinkoShareUrl(shareEncryptedUrl: string): string {
+    return getBlinkoEndpoint('/share/' + shareEncryptedUrl);
+}
+
 export function isTauriAndEndpointUndefined(): boolean {
     const isTauri = !!(window as any).__TAURI__;
     const blinkoEndpoint = window.localStorage.getItem('blinkoEndpoint')
