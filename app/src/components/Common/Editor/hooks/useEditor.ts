@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { eventBus } from '@/lib/event';
 import { EditorStore } from '../editorStore';
-import { FocusEditorFixMobile, HandleFileType } from '../editorUtils';
+import { FocusEditorFixMobile, HandleFileType, setupMobileMoreMenu } from '../editorUtils';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { OnSendContentType } from '../type';
 import Vditor from 'vditor';
@@ -489,8 +489,12 @@ export const useEditorInit = (
         isPc ? store.focus() : FocusEditorFixMobile()
       },
     });
+    // Mobile: dock the "more" toolbar menu to the viewport as an action sheet
+    // (reparented to body so no ancestor can clip it or paint above it)
+    const disposeMoreMenu = setupMobileMoreMenu(document.getElementById(`vditor-${mode}`));
     // Clear the effect
     return () => {
+      disposeMoreMenu();
       store.vditor?.destroy();
       store.vditor = null;
     };

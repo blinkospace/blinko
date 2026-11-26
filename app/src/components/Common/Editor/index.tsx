@@ -126,7 +126,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
   };
 
   const renderRightToolbar = () => (
-    <div className='flex items-center gap-1 ml-auto'>
+    <div className='flex items-center gap-1 ml-auto shrink-0'>
       {store.showIsEditText && <div className="text-red-500 text-xs mr-2">{t('edited')}</div>}
       {isPc && !showTopToolbar && <FullScreenButton isFullscreen={store.isFullscreen} onClick={handleFullScreenToggle} />}
       <ViewModeButton viewMode={store.viewMode} />
@@ -271,7 +271,12 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
 
           {!showTopToolbar && (
             <div className='flex w-full items-center gap-1 mt-auto'>
-              {renderToolbar()}
+              {/* On mobile the left toolbar becomes a horizontally scrollable strip so every
+                  button keeps a 44x44 iOS tap target; on desktop the wrapper is display:contents
+                  and the layout is exactly as before. */}
+              <div className='flex items-center gap-1 min-w-0 flex-1 overflow-x-auto hide-scrollbar [&>*]:shrink-0 md:contents'>
+                {renderToolbar()}
+              </div>
               {renderRightToolbar()}
             </div>
           )}

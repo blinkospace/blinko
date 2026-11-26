@@ -6,6 +6,7 @@ import dayjs from "@/lib/dayjs"
 import { useEffect, useRef } from "react"
 import { NoteType } from "@shared/lib/types"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
+import { useMediaQuery } from "usehooks-ts"
 
 type IProps = {
   mode: 'create' | 'edit',
@@ -20,6 +21,7 @@ type IProps = {
 
 export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDialog, withoutOutline, initialData, showTopToolbar = false }: IProps) => {
   const isCreateMode = mode == 'create'
+  const isPc = useMediaQuery('(min-width: 768px)')
   const blinko = RootStore.Get(BlinkoStore)
   const editorRef = useRef<any>(null)
   const navigate = useNavigate()
@@ -95,7 +97,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
     blinko.isCreateMode = mode == 'create'
     if (mode == 'create') {
       if (isInDialog) {
-        document.documentElement.style.setProperty('--min-editor-height', `50vh`)
+        document.documentElement.style.setProperty('--min-editor-height', isPc ? `50vh` : `34vh`)
       }
       const local = blinko.createContentStorage.value
       if (local && local.content != '') {
@@ -113,7 +115,7 @@ export const BlinkoEditor = observer(({ mode, onSended, onHeightChange, isInDial
         console.error(error)
       }
     }
-  }, [mode])
+  }, [mode, isPc])
 
   // Use Tauri hotkey hook
 
