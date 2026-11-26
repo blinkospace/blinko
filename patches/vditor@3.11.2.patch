@@ -1,0 +1,43 @@
+diff --git a/dist/index.js b/dist/index.js
+index b76cd1e703c5532e13453ef21ba7126efcd44c06..241c87ae7cbafd3162147614826a67cec00e7a31 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -4176,14 +4176,9 @@ var accessLocalStorage = function () {
+         return false;
+     }
+ };
+-// 用户 iPhone 点击延迟/需要双击的处理
++// [blinko patch] see src/ts/util/compatibility.ts
+ var getEventName = function () {
+-    if (navigator.userAgent.indexOf("iPhone") > -1) {
+-        return "touchstart";
+-    }
+-    else {
+-        return "click";
+-    }
++    return "click";
+ };
+ // 区别 mac 上的 ctrl 和 meta
+ var isCtrl = function (event) {
+diff --git a/src/ts/util/compatibility.ts b/src/ts/util/compatibility.ts
+index 4e245f3d8c463d6ce7a7b1df7ffeb7699b88f811..617606e824fc26dabf1446bea3b58b068e1aee46 100644
+--- a/src/ts/util/compatibility.ts
++++ b/src/ts/util/compatibility.ts
+@@ -14,13 +14,11 @@ export const accessLocalStorage = () => {
+     }
+ };
+ 
+-// 用户 iPhone 点击延迟/需要双击的处理
++// [blinko patch] the 300ms click delay no longer exists on iOS Safari with
++// user-scalable=no viewports; touchstart made actions fire on finger-down
++// with no pressed feedback, so always use click.
+ export const getEventName = () => {
+-    if (navigator.userAgent.indexOf("iPhone") > -1) {
+-        return "touchstart";
+-    } else {
+-        return "click";
+-    }
++    return "click";
+ };
+ 
+ // 区别 mac 上的 ctrl 和 meta
