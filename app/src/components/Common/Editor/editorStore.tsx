@@ -104,7 +104,31 @@ export class EditorStore {
     this.files = newFiles;
   }
 
+  // When the caret sits inside a block preview (e.g. a rendered code block),
+  // Vditor's insertValue drops the inserted text. Move the caret to right
+  // after the top-level block so the text is actually inserted.
+  moveCaretOutOfPreview = () => {
+    const vditor = this.vditor?.vditor;
+    if (!vditor) return;
+    const element = vditor[vditor.currentMode]?.element;
+    const selection = getSelection();
+    if (!element || !selection || selection.rangeCount === 0) return;
+    const start = selection.getRangeAt(0).startContainer;
+    const node = start.nodeType === Node.TEXT_NODE ? start.parentElement : (start as Element);
+    const preview = node?.closest?.('.vditor-wysiwyg__preview, .vditor-ir__preview');
+    if (!preview || !element.contains(preview)) return;
+    let block: Element = preview;
+    while (block.parentElement && block.parentElement !== element) block = block.parentElement;
+    const range = document.createRange();
+    range.setStartAfter(block);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    vditor[vditor.currentMode]!.range = range;
+  }
+
   insertMarkdown = (text) => {
+    this.moveCaretOutOfPreview()
     this.vditor?.insertValue(text)
     this.onChange?.(this.vditor?.getValue() ?? '')
     this.focus()

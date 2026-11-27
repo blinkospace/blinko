@@ -12,10 +12,9 @@ import { useEffect, useRef } from 'react';
 import { Icon } from '@/components/Common/Iconify/icons';
 import { SendIcon } from '@/components/Common/Icons';
 import { MarkdownRender } from '@/components/Common/MarkdownRender';
-import { eventBus } from '@/lib/event';
 import { PluginApiStore } from '@/store/plugin/pluginApiStore';
 
-export const AIWriteButton = observer(() => {
+export const AIWriteButton = observer(({ store }: { store: EditorStore }) => {
   const { t } = useTranslation();
   const blinko = RootStore.Get(BlinkoStore);
   const ai = RootStore.Get(AiStore);
@@ -117,10 +116,13 @@ export const AIWriteButton = observer(() => {
             <div className='flex gap-2 items-center'>
               <Button onPress={() => {
                 ai.isWriting = false;
+                // Write into the editor this toolbar belongs to. Emitting on the global
+                // eventBus reached every mounted editor (including hidden ones such as
+                // the home composer), so the text could land in the wrong note.
                 if (ai.currentWriteType == 'polish') {
-                  eventBus.emit('editor:replace', ai.writingResponseText);
+                  store.replaceMarkdown(ai.writingResponseText);
                 } else {
-                  eventBus.emit('editor:insert', ai.writingResponseText);
+                  store.insertMarkdown(ai.writingResponseText);
                 }
                 ai.writingResponseText = '';
                 localStore.setShow(false);
