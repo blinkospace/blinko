@@ -86,7 +86,7 @@ const Editor = observer(({ content, onChange, onSend, isSendLoading, originFiles
           <ReferenceButton store={store} />
           <ResourceReferenceButton store={store} />
           {blinko.config.value?.mainModelId && (
-            <AIWriteButton />
+            <AIWriteButton store={store} />
           )}
           <UploadButtons
             getInputProps={getInputProps}
