@@ -27,9 +27,9 @@ export const tagRouter = router({
       id: z.number()
     }))
     .output(z.string())
-    .query(async function ({ input }) {
+    .query(async function ({ input, ctx }) {
       const { id } = input
-      const tag = await prisma.tag.findFirst({ where: { id } })
+      const tag = await prisma.tag.findFirst({ where: { id, accountId: Number(ctx.id) } })
       if (!tag) {
         throw new Error('Tag not found')
       }
@@ -44,7 +44,7 @@ export const tagRouter = router({
         }
         
         const parentTag = await prisma.tag.findFirst({
-          where: { id: currentTag.parent }
+          where: { id: currentTag.parent, accountId: Number(ctx.id) }
         });
         
         if (!parentTag) {
@@ -72,10 +72,10 @@ export const tagRouter = router({
     .output(z.boolean())
     .mutation(async function ({ input, ctx }) {
       const { ids, tag } = input
-      const notes = await prisma.notes.findMany({ where: { id: { in: ids } } })
+      const notes = await prisma.notes.findMany({ where: { id: { in: ids }, accountId: Number(ctx.id) } })
       for (const note of notes) {
-        const newContent = note.content += ' #' + tag
-        await userCaller(ctx).notes.upsert({ content: newContent, id: note.id, type: -1 })
+        const newContent = `${note.content} #${tag}`
+        await userCaller(ctx).notes.upsert({ content: newContent, id: note.id, type: note.type })
       }
       return true
     }),
@@ -96,13 +96,23 @@ export const tagRouter = router({
       const { id, oldName, newName } = input
       const tagToNote = await prisma.tagsToNote.findMany({ where: { tagId: id } })
       const noteIds = tagToNote.map(i => i.noteId)
-      const hasTagNote = await prisma.notes.findMany({ where: { id: { in: noteIds } } })
-      hasTagNote.map(i => {
-        i.content = i.content.replace(new RegExp(`#${oldName}`, 'g'), "#" + newName)
-      })
+      const hasTagNote = await prisma.notes.findMany({ where: { id: { in: noteIds }, accountId: Number(ctx.id) } })
+
+      const escapedOldName = oldName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const tagRegex = new RegExp(`(?<=^|\\s)#${escapedOldName}(?=\\s|$)`, 'g');
+
       for (const note of hasTagNote) {
-        await userCaller(ctx).notes.upsert({ content: note.content, id: note.id, type: note.type })
+        const updatedContent = note.content.replace(tagRegex, `#${newName}`);
+        if (updatedContent !== note.content) {
+          await userCaller(ctx).notes.upsert({ content: updatedContent, id: note.id, type: note.type })
+        }
       }
+
+      await prisma.tag.updateMany({
+        where: { id, accountId: Number(ctx.id) },
+        data: { name: newName }
+      });
+
       return true
     }),
   updateTagIcon: authProcedure
@@ -112,9 +122,9 @@ export const tagRouter = router({
       icon: z.string()
     }))
     .output(tagSchema)
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { id, icon } = input
-      return await prisma.tag.update({ where: { id }, data: { icon } })
+      return await prisma.tag.update({ where: { id, accountId: Number(ctx.id) }, data: { icon } })
     }),
   deleteOnlyTag: authProcedure.use(demoAuthMiddleware)
     .meta({
@@ -226,10 +236,10 @@ export const tagRouter = router({
       id: z.number(),
       sortOrder: z.number()
     }))
-    .mutation(async function ({ input }) {
+    .mutation(async function ({ input, ctx }) {
       const { id, sortOrder } = input
       return await prisma.tag.update({
-        where: { id },
+        where: { id, accountId: Number(ctx.id) },
         data: { sortOrder }
       })
     }),

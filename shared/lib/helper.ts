@@ -55,7 +55,7 @@ export const helper = {
       }
     }
     for (const path of paths) {
-      const pathArray = path.replace(/#/g, '').split('/');
+      const pathArray = path.replace(/#/g, '').split('/').filter(Boolean);
       insertIntoTree(pathArray, root);
     }
     return root;
@@ -143,7 +143,7 @@ export const helper = {
   json: {
     isJsonString(str: string) {
       if (!str || typeof str !== 'string') return false;
-      if (!str?.includes('{')) return false;
+      if (!str?.includes('{') && !str?.includes('[')) return false;
       try {
         JSON.parse(str);
       } catch (e) {
