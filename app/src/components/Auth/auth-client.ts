@@ -3,6 +3,7 @@ import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
 import { eventBus } from '@/lib/event';
 import { RootStore } from '@/store';
 import { UserStore } from '@/store/user';
+import { newPendingTwoFactor } from '@/lib/pendingTwoFactor';
 
 let navigateFunction: ((path: string) => void) | null = null;
 
@@ -30,6 +31,8 @@ export interface TokenData {
   token?: string;
   expires?: string;
   requiresTwoFactor?: boolean;
+  challenge?: string;
+  challengeExpiresAt?: number;
   [key: string]: any;
 }
 
@@ -45,6 +48,7 @@ type SignInResponse = {
   status: number;
   url?: string;
   requiresTwoFactor?: boolean;
+  challenge?: string;
   userId?: number;
   token?: string;
 };
@@ -105,19 +109,16 @@ export async function signIn(
       const data = await response.json();
 
       if (data.requiresTwoFactor) {
-        const tokenData = {
-          requiresTwoFactor: true,
-          user: {
-            id: String(data.userId)
-          }
-        };
-        
+        const tokenData = newPendingTwoFactor(data.userId, data.challenge);
+        if (!tokenData) return { ok: false, status: 401, error: 'Invalid login challenge' };
+
         eventBus.emit('user:token', tokenData);
         eventBus.emit('user:showTwoFactor', { userId: data.userId });
         
         return {
           ok: true,
           requiresTwoFactor: true,
+          challenge: data.challenge,
           userId: data.userId,
           status: response.status,
         };
@@ -154,6 +155,7 @@ export async function signIn(
         body: JSON.stringify({
           userId: options.userId,
           code: options.twoFactorCode,
+          challenge: options.challenge || RootStore.Get(UserStore).tokenData.value?.challenge,
         }),
       });
 

@@ -1,6 +1,7 @@
 import { router, authProcedure } from '../middleware';
 import { z } from 'zod';
 import { prisma } from '../prisma';
+import { requireOwnedConversation, requireOwnedMessage } from '../lib/conversationAccess';
 
 export const messageRouter = router({
   create: authProcedure
@@ -11,16 +12,7 @@ export const messageRouter = router({
       metadata: z.any(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const conversation = await prisma.conversation.findFirst({
-        where: {
-          id: input.conversationId,
-          accountId: Number(ctx.id),
-        },
-      });
-      if (!conversation) {
-        throw new Error('Conversation not found or access denied');
-      }
-
+      await requireOwnedConversation(input.conversationId, Number(ctx.id));
       return await prisma.message.create({
         data: {
           content: input.content,
@@ -38,26 +30,19 @@ export const messageRouter = router({
       size: z.number().default(20),
     }))
     .query(async ({ input, ctx }) => {
-      const conversation = await prisma.conversation.findFirst({
-        where: {
-          id: input.conversationId,
-          accountId: Number(ctx.id),
-        },
-      });
-      if (!conversation) {
-        throw new Error('Conversation not found or access denied');
-      }
-
+      await requireOwnedConversation(input.conversationId, Number(ctx.id));
       const skip = (input.page - 1) * input.size;
       const [total, messages] = await Promise.all([
         prisma.message.count({
           where: {
             conversationId: input.conversationId,
+            conversation: { accountId: Number(ctx.id) },
           }
         }),
         prisma.message.findMany({
           where: {
             conversationId: input.conversationId,
+            conversation: { accountId: Number(ctx.id) },
           },
           skip,
           take: input.size,
@@ -73,21 +58,11 @@ export const messageRouter = router({
       content: z.string(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const message = await prisma.message.findFirst({
-        where: {
-          id: input.id,
-          conversation: {
-            accountId: Number(ctx.id),
-          },
-        },
-      });
-      if (!message) {
-        throw new Error('Message not found or access denied');
-      }
-
+      await requireOwnedMessage(input.id, Number(ctx.id));
       return await prisma.message.update({
         where: {
           id: input.id,
+          conversation: { accountId: Number(ctx.id) },
         },
         data: {
           content: input.content,
@@ -100,34 +75,20 @@ export const messageRouter = router({
       id: z.number()
     }))
     .mutation(async ({ input, ctx }) => {
-      const message = await prisma.message.findFirst({
-        where: {
-          id: input.id,
-          conversation: {
-            accountId: Number(ctx.id),
-          },
-        },
-        select: {
-          id: true,
-          conversationId: true,
-          createdAt: true,
-        },
-      });
-
-      if (!message) {
-        throw new Error('Message not found or access denied');
-      }
+      const message = await requireOwnedMessage(input.id, Number(ctx.id));
 
       return await prisma.$transaction(async (prisma) => {
         await prisma.message.delete({
           where: {
             id: input.id,
+            conversation: { accountId: Number(ctx.id) },
           },
         });
 
         await prisma.message.deleteMany({
           where: {
             conversationId: message.conversationId,
+            conversation: { accountId: Number(ctx.id) },
             createdAt: {
               gt: message.createdAt,
             },
@@ -141,27 +102,12 @@ export const messageRouter = router({
       id: z.number()
     }))
     .mutation(async ({ input, ctx }) => {
-      const message = await prisma.message.findFirst({
-        where: {
-          id: input.id,
-          conversation: {
-            accountId: Number(ctx.id),
-          },
-        },
-        select: {
-          id: true,
-          conversationId: true,
-          createdAt: true,
-        },
-      });
-
-      if (!message) {
-        throw new Error('Message not found or access denied');
-      }
+      const message = await requireOwnedMessage(input.id, Number(ctx.id));
 
       await prisma.message.deleteMany({
         where: {
           conversationId: message.conversationId,
+          conversation: { accountId: Number(ctx.id) },
           createdAt: {
             gt: message.createdAt,
           },
@@ -173,4 +119,3 @@ export const messageRouter = router({
       }
     }),
 });
- 

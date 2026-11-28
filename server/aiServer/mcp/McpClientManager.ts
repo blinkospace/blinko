@@ -1,3 +1,4 @@
+import { approvedStdioConfig } from '../../lib/mcpStdioPolicy';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
@@ -187,14 +188,7 @@ export class McpClientManager {
       throw new Error('stdio transport requires a command');
     }
 
-    const args = (config.args as string[]) || [];
-    const env = (config.env as Record<string, string>) || {};
-
-    return new StdioClientTransport({
-      command: config.command,
-      args,
-      env: { ...process.env, ...env } as Record<string, string>
-    });
+    return new StdioClientTransport(approvedStdioConfig(config));
   }
 
   private createSseTransport(config: mcpServers): SSEClientTransport {

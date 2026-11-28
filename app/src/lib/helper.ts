@@ -7,6 +7,7 @@ import { GlobalConfig } from '@shared/lib/types';
 import { RootStore } from '@/store';
 import { BlinkoStore } from '@/store/blinkoStore';
 import { UserStore } from '@/store/user';
+import { getBlinkoFileUrl } from './blinkoEndpoint';
 
 const valMap = {
   undefined: '',
@@ -226,7 +227,7 @@ export const helper = {
     },
     downloadByLink(href: string) {
       const a = document.createElement('a');
-      a.href = href + '?download=true&token='+RootStore.Get(UserStore).tokenData?.value?.token;
+      a.href = getBlinkoFileUrl(href, { download: true, token: RootStore.Get(UserStore).tokenData?.value?.token });
       a.click();
     },
   },

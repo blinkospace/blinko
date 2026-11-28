@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Blinko
+Comment=Self-hosted, AI-powered personal note tool
+Exec=Blinko %U
+Icon=space.blinko.Blinko
+Terminal=false
+Categories=Utility;TextEditor;
+Keywords=notes;note-taking;markdown;ai;self-hosted;memo;
+StartupNotify=true
+StartupWMClass=Blinko

@@ -1,3 +1,8 @@
+import { fileUrl, type FileUrlOptions } from './fileUrl';
+
+export function getBlinkoFileUrl(path: string, options: FileUrlOptions = {}): string {
+    return fileUrl(path, getBlinkoEndpoint('/'), options);
+}
 
 export function getBlinkoEndpoint(path: string = ''): string {
     try {

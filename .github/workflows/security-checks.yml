@@ -1,0 +1,46 @@
+name: Security regression checks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/src/**'
+      - 'server/**'
+      - 'shared/**'
+      - 'prisma/**'
+      - 'package.json'
+      - 'bun.lock'
+      - '.github/workflows/security-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.2.8'
+      - run: bun install --frozen-lockfile
+      - run: bunx prisma generate --schema prisma/schema.prisma
+      - name: Security regression suites
+        run: cd server && bun run test:security
+      - name: Typecheck security policy modules
+        run: >-
+          bunx tsc --noEmit --strict --skipLibCheck --esModuleInterop
+          --moduleResolution bundler --module ESNext --target ES2020
+          server/lib/fileAccessPolicy.ts server/lib/providerVisibility.ts
+          server/lib/pluginPaths.ts server/lib/mcpStdioPolicy.ts
+          server/lib/publicHttp.ts server/lib/twoFactorLogin.ts
+          server/lib/attachmentBinding.ts app/src/lib/fileUrl.ts
+          app/src/lib/pendingTwoFactor.ts
+      - name: Build frontend
+        run: cd app && bun run build:web
+      - name: Build backend
+        run: cd server && bun run build:web

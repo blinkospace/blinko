@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import path from 'path';
 import fs from 'fs';
 import { writeFile } from 'fs/promises';
@@ -427,9 +428,10 @@ export class DBJob extends BaseScheduleJob {
     if (notes.length === 0) {
       throw new Error('No notes found');
     }
-    const exportDir = path.join(TEMP_PATH, 'exports');
+    await fs.promises.mkdir(TEMP_PATH, { recursive: true });
+    const exportDir = await fs.promises.mkdtemp(path.join(TEMP_PATH, 'export-'));
     const attachmentsDir = path.join(exportDir, 'files');
-    const zipFilePath = TEMP_PATH + `/notes_export_${Date.now()}.zip`;
+    const zipFilePath = path.join(TEMP_PATH, `notes_export_${randomUUID()}.zip`);
 
     try {
       if (!fs.existsSync(exportDir)) {
@@ -456,20 +458,21 @@ export class DBJob extends BaseScheduleJob {
           if (note.attachments?.length) {
             await Promise.all(note.attachments.map(async (attachment) => {
               try {
-                // Fix: Add authentication token to allow downloading private note attachments
-                const tokenParam = ctx.token ? `?token=${ctx.token}` : '';
-                const response = await fetch(`${baseURL}${attachment.path}${tokenParam}`);
-                const buffer = await response.arrayBuffer();
-                const attachmentPath = path.join(attachmentsDir, attachment.name);
+                // The query above selects only this account's notes. Read their
+                // registered attachments directly; never send credentials to a
+                // caller-supplied baseURL. Keep every write inside this export.
+                const buffer = await FileService.getFileBuffer(attachment.path);
+                const attachmentName = `${attachment.id}-${path.basename(attachment.name.replace(/\\/g, '/'))}`;
+                const attachmentPath = path.join(attachmentsDir, attachmentName);
                 //@ts-ignore
                 await writeFile(attachmentPath, Buffer.from(buffer));
 
                 const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(attachment.name);
 
                 if (isImage) {
-                  mdContent += `\n![${attachment.name}](./files/${attachment.name})`;
+                  mdContent += `\n![${attachment.name}](./files/${attachmentName})`;
                 } else {
-                  mdContent += `\n[${attachment.name}](./files/${attachment.name})`;
+                  mdContent += `\n[${attachment.name}](./files/${attachmentName})`;
                 }
               } catch (error) {
                 console.error(`Failed to download attachment: ${attachment.name}`, error);

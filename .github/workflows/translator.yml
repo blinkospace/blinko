@@ -15,13 +15,15 @@ on:
   workflow_dispatch:
 jobs:
   translate:
+    if: github.event.repository.private == false
     permissions:
+      contents: read
       issues: write
       discussions: write
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: lizheming/github-translate-action@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

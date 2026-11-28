@@ -1,7 +1,7 @@
 import { makeAutoObservable } from 'mobx';
 import { Store } from './standard/base';
 import { FileType } from '@/components/Common/Editor/type';
-import { getBlinkoEndpoint } from '@/lib/blinkoEndpoint';
+import { getBlinkoFileUrl } from '@/lib/blinkoEndpoint';
 import { RootStore } from './root';
 import { UserStore } from './user';
 
@@ -222,8 +222,9 @@ export class MusicManagerStore implements Store {
 
     if (track.file.preview) {
       try {
-        let audioUrl = getBlinkoEndpoint(track.file.preview);
-        audioUrl = `${audioUrl}?token=${RootStore.Get(UserStore).tokenData?.value?.token}`;
+        const audioUrl = getBlinkoFileUrl(track.file.preview, {
+          token: RootStore.Get(UserStore).tokenData?.value?.token,
+        });
 
         this.audioElement.src = audioUrl;
 

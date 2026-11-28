@@ -289,7 +289,11 @@ export class FileService {
   static async getFileBuffer(filePath: string): Promise<Buffer> {
     const config = await getGlobalConfig({ useAdmin: true });
 
-    if (config.objectStorage === 's3') {
+    // Existing attachments retain their original storage after a configuration
+    // switch. Only unprefixed internal paths use the current storage setting.
+    const isS3 = filePath.startsWith('/api/s3file/') ||
+      (!filePath.startsWith('/api/file/') && config.objectStorage === 's3');
+    if (isS3) {
       const { s3ClientInstance } = await this.getS3Client();
       const fileName = this.extractAndValidatePath(filePath);
       const command = new GetObjectCommand({
